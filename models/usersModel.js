@@ -4,17 +4,17 @@ const { Model, DataTypes } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 
 module.exports = (sequelize) => {
-  class User extends Model {}
+  class User extends Model { }
 
   User.init({
     id: {
       type: DataTypes.UUID,
-      defaultValue: uuidv4, 
       primaryKey: true,
+      autoIncrement: true
     },
     username: {
       type: DataTypes.STRING,
-      allowNull: false, 
+      allowNull: false,
     },
     email: {
       type: DataTypes.STRING,
@@ -23,21 +23,21 @@ module.exports = (sequelize) => {
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: false, 
+      allowNull: false,
     },
     createdAt: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW, 
+      defaultValue: DataTypes.NOW,
     },
     updatedAt: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW, 
+      defaultValue: DataTypes.NOW,
     },
   }, {
     sequelize,
     modelName: 'User',
     tableName: 'Users',
-    timestamps: true, 
+    timestamps: true,
   });
 
   return User;

@@ -1,8 +1,8 @@
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  class Role extends Model {}
-  
+  class Role extends Model { }
+
   Role.init({
     id: {
       type: DataTypes.UUID,

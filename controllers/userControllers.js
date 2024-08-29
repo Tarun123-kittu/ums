@@ -1,7 +1,7 @@
 const { sequelize } = require('../models');
 const router = require('../routes/route');
 const bcrypt = require('bcrypt');
-const saltRounds = 10; 
+const saltRounds = 10;
 
 
 //### test route
@@ -47,7 +47,6 @@ exports.createUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
     return res.status(500).json({
       type: "error",
       message: error?.message,

@@ -2,7 +2,7 @@
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  class Permission extends Model {}
+  class Permission extends Model { }
 
   Permission.init({
     id: {

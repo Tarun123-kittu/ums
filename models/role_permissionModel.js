@@ -2,7 +2,7 @@
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  class RolesPermissions extends Model {}
+  class RolesPermissions extends Model { }
 
   RolesPermissions.init({
     id: {
@@ -13,14 +13,14 @@ module.exports = (sequelize) => {
     role_id: {
       type: DataTypes.UUID,
       references: {
-        model: 'Roles', 
+        model: 'Roles',
         key: 'id',
       },
     },
     permission_id: {
       type: DataTypes.UUID,
       references: {
-        model: 'Permissions', 
+        model: 'Permissions',
         key: 'id',
       },
     },
@@ -54,7 +54,7 @@ module.exports = (sequelize) => {
     sequelize,
     modelName: 'RolesPermissions',
     tableName: 'roles_permissions',
-    underscored: true, 
+    underscored: true,
   });
 
   return RolesPermissions;
