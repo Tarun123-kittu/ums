@@ -37,7 +37,3 @@ exports.createUser = async (req, res) => {
 
 
 
-// ## get user 
-exports.getUser = async(req,res)=>{
-
-}

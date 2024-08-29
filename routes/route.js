@@ -7,6 +7,5 @@ let {createUserValidator} = require('../middleware/validationMiddleware')
 router.get("/test",user.test)
 
 router.post("/create_user",createUserValidator,user.createUser)
-router.get("/get_user",user.getUser)
 
 module.exports = router
