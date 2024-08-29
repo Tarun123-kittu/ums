@@ -27,7 +27,19 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      status: {
+      can_view: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
+      can_create: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
+      can_update: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
+      can_delete: {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
       },

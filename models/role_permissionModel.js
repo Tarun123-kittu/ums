@@ -1,3 +1,4 @@
+'use strict';
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
@@ -12,38 +13,48 @@ module.exports = (sequelize) => {
     role_id: {
       type: DataTypes.UUID,
       references: {
-        model: 'Roles',
+        model: 'Roles', 
         key: 'id',
       },
-      onUpdate: 'CASCADE',
-      onDelete: 'CASCADE',
     },
     permission_id: {
       type: DataTypes.UUID,
       references: {
-        model: 'Permissions',
+        model: 'Permissions', 
         key: 'id',
       },
-      onUpdate: 'CASCADE',
-      onDelete: 'CASCADE',
     },
-    status: {
+    can_view: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    can_create: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    can_update: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    can_delete: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
+      field: 'createdAt',
     },
     updatedAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
+      field: 'updatedAt',
     },
   }, {
     sequelize,
     modelName: 'RolesPermissions',
     tableName: 'roles_permissions',
-    timestamps: true,
+    underscored: true, 
   });
 
   return RolesPermissions;

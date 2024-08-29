@@ -1,12 +1,14 @@
 'use strict';
 
-const { Role, Permission, RolesPermissions } = require('../models'); 
+const { Role, Permission, RolesPermissions } = require('../models');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
+   
     const roles = await Role.findAll({ attributes: ['id'] });
     const permissions = await Permission.findAll({ attributes: ['id'] });
 
+   
     for (const role of roles) {
       for (const permission of permissions) {
         await RolesPermissions.findOrCreate({
@@ -15,7 +17,10 @@ module.exports = {
             permission_id: permission.id,
           },
           defaults: {
-            status: true,
+            can_view: true,  
+            can_create: true,
+            can_update: true,
+            can_delete: true 
           },
         });
       }
@@ -23,6 +28,7 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.bulkDelete('roles_permissions', null, {}); 
+
+    await queryInterface.bulkDelete('roles_permissions', null, {});
   },
 };
