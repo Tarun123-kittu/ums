@@ -1,6 +1,6 @@
 'use strict';
 
-const { Roles } = require('../models'); 
+const { Role } = require('../models'); 
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -8,15 +8,17 @@ module.exports = {
       { role: 'Admin', createdAt: new Date(), updatedAt: new Date() },
       { role: 'HR', createdAt: new Date(), updatedAt: new Date() },
       { role: 'Candidate', createdAt: new Date(), updatedAt: new Date() },
-      { role:'Developer', createdAt: new Date(), updatedAt:new Date() }
+      { role: 'Developer', createdAt: new Date(), updatedAt: new Date() }
     ];
 
     for (const role of roles) {
-      const [existingRole, created] = await Roles.findOrCreate({
+      const [existingRole, created] = await Role.findOrCreate({
         where: { role: role.role },
         defaults: role,
       });
-      if (!created) { console.log(`Role '${role.role}' already exists.`); }
+      if (!created) {
+        console.log(`Role '${role.role}' already exists.`);
+      }
     }
   },
 

@@ -1,30 +1,29 @@
 'use strict';
 
-const { Permissions } = require('../models'); 
-
+const { Permission } = require('../models'); 
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     const permissions = [
-      { permission: 'Salary create' },
-      { permission: 'Salary update' },
-      { permission: 'Salary read' },
-      { permission: 'Attandence read'},
-      { permission: 'Attandence update'},
-      { permission:'Candidate create'},
-      { permission:'Candidate read'},
-      { permission:'Candidate update'},
-      { permission:'Candidate delete'},
-      { permission: 'HR create'},
-      { permission: 'HR delete'},
-      { permission: 'Test create'},
-      { permission: 'Test read'},
-      { permission: 'Test update'},
-      { permission: 'Test delete'},
+      { permission: 'Salary create', createdAt: new Date(), updatedAt: new Date() },
+      { permission: 'Salary update', createdAt: new Date(), updatedAt: new Date() },
+      { permission: 'Salary read', createdAt: new Date(), updatedAt: new Date() },
+      { permission: 'Attendance read', createdAt: new Date(), updatedAt: new Date() },
+      { permission: 'Attendance update', createdAt: new Date(), updatedAt: new Date() },
+      { permission: 'Candidate create', createdAt: new Date(), updatedAt: new Date() },
+      { permission: 'Candidate read', createdAt: new Date(), updatedAt: new Date() },
+      { permission: 'Candidate update', createdAt: new Date(), updatedAt: new Date() },
+      { permission: 'Candidate delete', createdAt: new Date(), updatedAt: new Date() },
+      { permission: 'HR create', createdAt: new Date(), updatedAt: new Date() },
+      { permission: 'HR delete', createdAt: new Date(), updatedAt: new Date() },
+      { permission: 'Test create', createdAt: new Date(), updatedAt: new Date() },
+      { permission: 'Test read', createdAt: new Date(), updatedAt: new Date() },
+      { permission: 'Test update', createdAt: new Date(), updatedAt: new Date() },
+      { permission: 'Test delete', createdAt: new Date(), updatedAt: new Date() },
     ];
 
     for (const permission of permissions) {
-      const [existingPermission, created] = await Permissions.findOrCreate({
+      const [existingPermission, created] = await Permission.findOrCreate({
         where: { permission: permission.permission },
         defaults: permission,
       });

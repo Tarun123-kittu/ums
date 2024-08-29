@@ -1,35 +1,33 @@
-'use strict';
-const { Model } = require('sequelize');
+// models/role.js
+const { Model, DataTypes } = require('sequelize');
 
-module.exports = (sequelize, DataTypes) => {
-  class Roles extends Model {
-    static associate(models) {
-      Roles.belongsToMany(models.Permissions, {
-        through: 'Roles_Permissions',
-        foreignKey: 'role_id',
-        otherKey: 'permission_id',
-        as: 'permissions',
-      });
-    }
-  }
+module.exports = (sequelize) => {
+  class Role extends Model {}
 
-  Roles.init({
+  Role.init({
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
-      autoIncrement: true,
-      allowNull: false,
     },
     role: {
       type: DataTypes.STRING,
       allowNull: false,
     },
+    createdAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
   }, {
     sequelize,
-    modelName: 'Roles',
+    modelName: 'Role',
     tableName: 'Roles',
     timestamps: true,
   });
 
-  return Roles;
+  return Role;
 };
