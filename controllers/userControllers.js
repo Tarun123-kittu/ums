@@ -56,32 +56,32 @@ exports.login = async (req, res) => {
 
   const getUserAndRolesQuery = `
     SELECT 
-    u.id AS user_id, 
-    u.username, 
-    u.password, 
-    r.role AS role_name, 
-    p.permission AS permission_name,
-    rp.can_view,
-    rp.can_update,
-    rp.can_create,
-    rp.can_delete
-FROM 
-    Users u
-LEFT JOIN 
-    user_roles ur ON u.id = ur.user_id
-LEFT JOIN 
-    roles r ON ur.role_id = r.id
-LEFT JOIN 
-    roles_permissions rp ON r.id = rp.role_id
-LEFT JOIN 
-    permissions p ON rp.permission_id = p.id
-WHERE 
-    u.email = ?;
+        u.id AS user_id, 
+        u.username, 
+        u.password, 
+        r.role AS role_name, 
+        p.permission AS permission_name,
+        rp.can_view,
+        rp.can_update,
+        rp.can_create,
+        rp.can_delete
+    FROM 
+        Users u
+    LEFT JOIN 
+        user_roles ur ON u.id = ur.user_id
+    LEFT JOIN 
+        roles r ON ur.role_id = r.id
+    LEFT JOIN 
+        roles_permissions rp ON r.id = rp.role_id
+    LEFT JOIN 
+        permissions p ON rp.permission_id = p.id
+    WHERE 
+        u.email = :email;
   `;
 
   try {
     const userRolesData = await sequelize.query(getUserAndRolesQuery, {
-      replacements: [email],
+      replacements: { email },
       type: sequelize.QueryTypes.SELECT
     });
 
@@ -119,5 +119,3 @@ WHERE
     return res.status(500).json({ type: 'error', message: 'Internal Server Error' });
   }
 };
-
-
