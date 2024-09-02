@@ -1,13 +1,12 @@
-
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  class Permission extends Model {}
+  class Permission extends Model { }
 
   Permission.init({
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER, // Changed to INTEGER for auto-incrementing
+      autoIncrement: true, // Added for auto-increment
       primaryKey: true,
     },
     permission: {

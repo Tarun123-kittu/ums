@@ -1,20 +1,18 @@
-
 'use strict';
 const { Model, DataTypes } = require('sequelize');
-const { v4: uuidv4 } = require('uuid');
 
 module.exports = (sequelize) => {
-  class User extends Model {}
+  class User extends Model { }
 
   User.init({
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER, // Changed to INTEGER for auto-incrementing
+      autoIncrement: true, // Added for auto-increment
       primaryKey: true,
     },
     username: {
       type: DataTypes.STRING,
-      allowNull: false, 
+      allowNull: false,
     },
     email: {
       type: DataTypes.STRING,
@@ -23,21 +21,29 @@ module.exports = (sequelize) => {
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: false, 
+      allowNull: false,
+    },
+    password_reset_token: {
+      type: DataTypes.STRING, // Adjust the type as needed
+      allowNull: true, // Allowing null since not all users will have a reset token
+    },
+    password_reset_token_expires_in: {
+      type: DataTypes.DATE, // New field added
+      allowNull: true, // Allowing null if the token expiration date is not set
     },
     createdAt: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW, 
+      defaultValue: DataTypes.NOW,
     },
     updatedAt: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW, 
+      defaultValue: DataTypes.NOW,
     },
   }, {
     sequelize,
     modelName: 'User',
     tableName: 'Users',
-    timestamps: true, 
+    timestamps: true,
   });
 
   return User;
