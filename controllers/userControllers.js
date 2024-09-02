@@ -2,6 +2,7 @@ const { sequelize } = require('../models');
 const router = require('../routes/route');
 const bcrypt = require('bcrypt');
 const saltRounds = 10; 
+const {User}  = require('../models')
 
 
 //### test route
@@ -15,14 +16,18 @@ exports.createUser = async (req, res) => {
   try {
     const { email, username, password, confirm_password } = req.body;
 
-    const checkEmail = `SELECT * FROM Users WHERE email = ?`;
-    const [isEmailExist] = await sequelize.query(checkEmail, {
+   
+    const checkEmailQuery = `SELECT * FROM Users WHERE email = ?`;
+    const [existingUser] = await sequelize.query(checkEmailQuery, {
       replacements: [email],
-      type: sequelize.QueryTypes.SELECT,
+      type: sequelize.QueryTypes.SELECT
     });
-    if (isEmailExist) return res.status(409).json({ type: "failed", message: "user with this email is already exist.Please sign up with diffrent email" })
 
-    if (confirm_password !== password) return res.status(400).json({ type: "failed", message: "Password and confirm pasword doesn't matched" })
+    if (existingUser) {return res.status(400).json({ message: "Email already exists. Please use another email.", type: 'error' });}
+
+    if (confirm_password !== password) {
+      return res.status(400).json({ type: "failed", message: "Password and confirm password do not match." });
+    }
 
     const passwordValidationRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]).+$/;
     if (!passwordValidationRegex.test(password)) {
@@ -31,33 +36,31 @@ exports.createUser = async (req, res) => {
         message: "Password must contain at least one uppercase letter and one special character.",
       });
     }
+
+    
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const createUserQuery = `INSERT INTO Users (username,email,password) VALUES (?,?,?)`;
-    const createNewUser = await sequelize.query(createUserQuery, {
-      replacements: [username, email, hashedPassword],
-      type: sequelize.QueryTypes.INSERT
-    })
-
-    if (!createNewUser) return res.status(400).json({ type: "failed", message: "Error while create new user" })
+    const newUser = await User.create({
+      username,
+      email,
+      password: hashedPassword
+    });
 
     return res.status(201).json({
       type: "success",
       message: "User created successfully.",
+      data: {
+        id: newUser.id, 
+        username: newUser.username,
+        email: newUser.email
+      }
     });
 
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      type: "error",
-      message: error?.message,
-    });
+  console.log("ERROR::",error)
+  return res.status(500).json({message:"Internal Server Error.",type:"error",error:error.message})
   }
 };
-
-
-
-
 
 // ## get user 
 exports.getUser = async (req, res) => {
