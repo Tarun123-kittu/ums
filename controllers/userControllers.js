@@ -207,7 +207,7 @@ exports.reset_password = async (req, res, next) => {
 
     const timeDifference = localDate.getTime() - tokenExpiryDate.getTime();
 
-    const tenMinutesInMillis = 10  60  1000;
+    const tenMinutesInMillis = 10 * 60 * 1000;
 
 
     if (timeDifference > tenMinutesInMillis) {
