@@ -149,7 +149,7 @@ exports.forgot_password = async (req, res) => {
       return res.status(400).json({ type: "error", message: "Unable to generate the key, please try again later" });
     }
 
-    const resetUrl = `${req.protocol}://${req.get('host')}/resetPassword/${resetToken}`;
+    const resetUrl = `${req.protocol}://${req.get('host')}/reset_password/${resetToken}`;
     const message = `You can reset your password from this URL ${resetUrl}. Ignore if you don't need to reset your password.`;
 
     await send_email({
@@ -217,12 +217,12 @@ exports.reset_password = async (req, res, next) => {
     const hashedPassword = await encrypt_password(password);
     const email = isUser[0].email;
 
+
     const update_password_query = `UPDATE Users SET password = ? WHERE email = ?`;
-    const [updatePassword] = await sequelize.query(update_password_query, {
+    const updatePassword = await sequelize.query(update_password_query, {
       replacements: [hashedPassword, email],
       type: sequelize.QueryTypes.UPDATE
     });
-
     if (!updatePassword) return res.status(400).json({ type: "error", message: "Problem while updating the password" })
 
     res.status(200).json({ type: "success", message: "Password updated successfully" });
