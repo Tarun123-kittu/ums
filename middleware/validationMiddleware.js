@@ -1,4 +1,4 @@
-const { check, validationResult } = require('express-validator')
+const { check, validationResult,body } = require('express-validator')
 
 
 const createUserValidator = [
@@ -39,7 +39,32 @@ const forgot_password_validator = [
     }
 ]
 
+
+const validateChangePassword = [
+    check('password', 'Please enter password.').not().isEmpty(),
+    check('newPassword', 'Please enter new password.').not().isEmpty(),
+    check('confirmPassword', 'Please enter confirm password.').not().isEmpty(),
+    body('confirmPassword').custom((value, { req }) => {
+      if (value !== req.body.newPassword) {
+        throw new Error('Confirm password does not match new password.');
+      }
+      return true;
+    }),
+    (req, res, next) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ message: errors.array()[0].msg, type: 'error' });
+      }
+      next();
+    }
+  ];
+
+
+
 module.exports = {
-    createUserValidator, loginValidator, forgot_password_validator
+    createUserValidator, 
+    loginValidator, 
+    forgot_password_validator,
+    validateChangePassword
 }
 

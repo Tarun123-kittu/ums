@@ -1,16 +1,19 @@
 const { sequelize } = require('../models');
 const { User } = require("../models")
-const { encrypt_password, password_compare } = require("../commom/password_hashing")
-const send_email = require("../commom/sendEmail")
-const { createToken } = require("../commom/create_token")
-const passwordResetToken = require("../commom/forgot-password-token")
+const bcrypt = require('bcrypt')
+const { successResponse, errorResponse } = require("../utils/responseHandler")
+const {
+  encrypt_password,
+  password_compare,
+  send_email,
+  createToken,
+  passwordResetToken } = require("../utils/commonFuntions")
 
 
 
-exports.createUser = async (req, res) => {
+exports.create_user = async (req, res) => {
   try {
     const { email, username, password, confirm_password } = req.body;
-
 
     const checkEmailQuery = ` SELECT * FROM Users WHERE email = ?`;
     const [existingUser] = await sequelize.query(checkEmailQuery, {
@@ -19,13 +22,11 @@ exports.createUser = async (req, res) => {
     });
 
     if (existingUser) { return res.status(400).json({ message: "Email already exists. Please use another email.", type: 'error' }); }
-
     if (confirm_password !== password) {
       return res.status(400).json({ type: "failed", message: "Password and confirm password do not match." });
     }
 
     const hashedPassword = await encrypt_password(password)
-
     const newUser = await User.create({
       username,
       email,
@@ -51,6 +52,11 @@ exports.createUser = async (req, res) => {
     });
   }
 };
+
+
+
+
+
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
@@ -118,9 +124,15 @@ exports.login = async (req, res) => {
 
   } catch (error) {
     console.error("Error during login:", error);
-    return res.status(500).json({ type: 'error', message: 'Internal Server Error' });
+    return res.status(500).json(errorResponse(error.message));
   }
 };
+
+
+
+
+
+
 
 exports.forgot_password = async (req, res) => {
   const { email } = req.body;
@@ -180,6 +192,11 @@ exports.forgot_password = async (req, res) => {
   }
 };
 
+
+
+
+
+
 exports.reset_password = async (req, res, next) => {
   try {
     const hashed_token = req.params.token;
@@ -196,9 +213,7 @@ exports.reset_password = async (req, res, next) => {
       type: sequelize.QueryTypes.SELECT
     });
 
-    if (isUser.length === 0) {
-      return res.status(400).json({ type: "error", message: "Invalid or expired token" });
-    }
+    if (isUser.length === 0) { return res.status(400).json(errorResponse("Invalid or expired token.")); }
 
     const tokenExpiryDate = new Date(isUser[0].password_reset_token_expires_in);
     const currentDate = new Date();
@@ -211,25 +226,66 @@ exports.reset_password = async (req, res, next) => {
 
 
     if (timeDifference > tenMinutesInMillis) {
-      return res.status(400).json({ type: "error", message: "Token Expired" });
+      return res.status(400).json(errorResponse("Token Expired."));
     }
 
     const hashedPassword = await encrypt_password(password);
     const email = isUser[0].email;
 
-
-    const update_password_query = `UPDATE Users SET password = ? WHERE email = ?`;
+    const update_password_query = `UPDATE Users SET password = :hashedPassword WHERE email = :email`;
     const updatePassword = await sequelize.query(update_password_query, {
-      replacements: [hashedPassword, email],
+      replacements: { hashedPassword, email },
       type: sequelize.QueryTypes.UPDATE
     });
-    if (!updatePassword) return res.status(400).json({ type: "error", message: "Problem while updating the password" })
+    if (!updatePassword) return res.status(400).json(errorResponse("Problem while updating the password."))
 
-    res.status(200).json({ type: "success", message: "Password updated successfully" });
+    res.status(200).json(successResponse("Password updated successfully."));
   } catch (error) {
     console.error('Error resetting password:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json(errorResponse(error.message));
   }
 };
 
 
+
+
+
+exports.change_password = async (req, res) => {
+  try {
+    const id = req.user.userId;
+    const { password, newPassword } = req.body;
+
+    const GetUserQuery = `
+        SELECT * FROM Users WHERE id = :id
+      `;
+    const [users] = await sequelize.query(GetUserQuery, {
+      replacements: { id },
+      type: sequelize.QueryTypes.SELECT
+    });
+
+    if (users.length === 0) {
+      return res.status(400).json(errorResponse('Logged-in user not found'));
+    }
+
+    const isPassCorrect = await bcrypt.compare(password, users.password);
+    if (!isPassCorrect) {
+      return res.status(400).json(errorResponse('Entered current password is not correct'));
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passhash = await bcrypt.hash(newPassword, salt);
+
+    const updateQuery = `
+        UPDATE Users SET password = :passhash WHERE id = :id
+      `;
+    await sequelize.query(updateQuery, {
+      replacements: { passhash, id },
+      type: sequelize.QueryTypes.UPDATE
+    });
+
+    return res.status(200).json(successResponse('Password changed successfully.'));
+  } catch (error) {
+    console.error('ERROR', error);
+    return res.status(500).json(errorResponse(error.message));
+  }
+}
