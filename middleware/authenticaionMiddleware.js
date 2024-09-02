@@ -18,11 +18,11 @@ const authenticateToken = (req, res, next) => {
             return res.status(403).json({ type: "error", message: "Token is invalid or expired" });
         }
 
-        if (!user.allUserRoles || !Array.isArray(user.allUserRoles)) {
+        if (!user.roles || !Array.isArray(user.roles)) {
             return res.status(403).json({ type: "error", message: "Invalid user roles data" });
         }
 
-        const isAdmin = user.allUserRoles.some(role => role.role_name === 'Admin');
+        const isAdmin = user.roles.some(role => role.role_name === 'Admin');
 
         if (!isAdmin) {
             return res.status(403).json({ type: "error", message: "You don't have permission to create users only HR can create new user" });

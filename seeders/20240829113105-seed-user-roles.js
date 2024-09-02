@@ -6,7 +6,7 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
 
     const userRolesMappings = [
-      { userId: '1c260ab2-df12-4890-b55f-20f277b00a1c', roleId: 'dc077294-0f06-4839-bd7d-e2843431996f' },  // ------here id shoud be admin user and the admin role it is static
+      { userId: '1', roleId: '1' },  // ------here id shoud be admin user and the admin role it is static
 
     ];
 

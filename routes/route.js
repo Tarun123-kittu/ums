@@ -1,7 +1,7 @@
 let express = require('express')
 let router = express.Router()
 let user = require('../controllers/userControllers')
-let { createUserValidator, loginValidator } = require('../middleware/validationMiddleware')
+let { createUserValidator, loginValidator, forgot_password_validator } = require('../middleware/validationMiddleware')
 const authenticateToken = require("../middleware/authenticaionMiddleware")
 
 //test route
@@ -9,5 +9,7 @@ const authenticateToken = require("../middleware/authenticaionMiddleware")
 
 router.post("/create_user", createUserValidator, authenticateToken, user.createUser)
 router.post("/login", loginValidator, user.login)
+router.post("/forgot_password", forgot_password_validator, user.forgot_password)
+router.post("/resetPassword/:token", user.reset_password)
 
 module.exports = router

@@ -6,23 +6,27 @@ module.exports = (sequelize) => {
 
   RolesPermissions.init({
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER, // Changed to INTEGER for auto-incrementing
+      autoIncrement: true, // Added for auto-increment
       primaryKey: true,
     },
     role_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER, // Changed to INTEGER to match the Roles table
       references: {
         model: 'Roles',
         key: 'id',
       },
+      onUpdate: 'CASCADE', // Optional: Define behavior on update
+      onDelete: 'CASCADE', // Optional: Define behavior on delete
     },
     permission_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER, // Changed to INTEGER to match the Permissions table
       references: {
         model: 'Permissions',
         key: 'id',
       },
+      onUpdate: 'CASCADE', // Optional: Define behavior on update
+      onDelete: 'CASCADE', // Optional: Define behavior on delete
     },
     can_view: {
       type: DataTypes.BOOLEAN,

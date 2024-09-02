@@ -6,22 +6,26 @@ module.exports = {
       id: {
         allowNull: false,
         primaryKey: true,
-        type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4,
+        type: Sequelize.INTEGER, // Change to INTEGER for auto-incrementing
+        autoIncrement: true, // Add this line for auto-incrementing
       },
       user_id: {
-        type: Sequelize.UUID,
+        type: Sequelize.INTEGER, // Change to INTEGER to match the Users table
         references: {
-          model: 'Users',
+          model: 'Users', // Ensure this matches the name of the Users table
           key: 'id',
         },
+        onUpdate: 'CASCADE', // Optional: Define behavior on update
+        onDelete: 'CASCADE', // Optional: Define behavior on delete
       },
       role_id: {
-        type: Sequelize.UUID,
+        type: Sequelize.INTEGER, // Change to INTEGER to match the Roles table
         references: {
-          model: 'Roles',
+          model: 'Roles', // Ensure this matches the name of the Roles table
           key: 'id',
         },
+        onUpdate: 'CASCADE', // Optional: Define behavior on update
+        onDelete: 'CASCADE', // Optional: Define behavior on delete
       },
       created_at: {
         type: Sequelize.DATE,

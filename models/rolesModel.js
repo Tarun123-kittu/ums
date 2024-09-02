@@ -5,8 +5,8 @@ module.exports = (sequelize) => {
 
   Role.init({
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER, // Changed to INTEGER for auto-incrementing
+      autoIncrement: true, // Added for auto-increment
       primaryKey: true,
     },
     role: {
