@@ -28,15 +28,13 @@ module.exports = (sequelize) => {
       onUpdate: 'CASCADE', // Optional: Define behavior on update
       onDelete: 'CASCADE', // Optional: Define behavior on delete
     },
-    createdAt: {
+    created_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
-      field: 'created_at',
     },
-    updatedAt: {
+    updated_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
-      field: 'updated_at',
     },
   }, {
     sequelize,

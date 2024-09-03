@@ -13,7 +13,7 @@ const {
 
 exports.create_user = async (req, res) => {
   try {
-    const { email, username, password, confirm_password } = req.body;
+    const { email, username, password, confirm_password, role_id } = req.body;
 
     const checkEmailQuery = ` SELECT * FROM Users WHERE email = ?`;
     const [existingUser] = await sequelize.query(checkEmailQuery, {
@@ -32,6 +32,16 @@ exports.create_user = async (req, res) => {
       email,
       password: hashedPassword
     });
+    if (!newUser) return res.status(400).json({ type: "error", message: "Problem while creating new user please try again later" })
+    const user_id = newUser.dataValues.id;
+    const create_role_query = `INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)`
+    const create_role = await sequelize.query(create_role_query, {
+      replacements: [user_id, role_id],
+      type: sequelize.QueryTypes.INSERT
+    });
+
+    if (!create_role) return res.status(400).json({ type: "error", message: "Error While assigning the new role" })
+
 
     await send_email({
       email: email,
@@ -52,11 +62,6 @@ exports.create_user = async (req, res) => {
     });
   }
 };
-
-
-
-
-
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
@@ -105,16 +110,9 @@ exports.login = async (req, res) => {
       return res.status(401).json({ type: "error", message: "Invalid Password" });
     }
 
-    const roles = userRolesData.map(({ role_name, permission_name, can_view, can_update, can_create, can_delete }) => ({
-      role_name,
-      permission_name,
-      can_view,
-      can_update,
-      can_create,
-      can_delete
-    }));
+    const role = userRolesData[0].role_name
+    const token = await createToken(role, user_id, username, email);
 
-    const token = await createToken(roles, user_id, username, email);
 
     return res.status(200).json({
       type: "success",
@@ -127,12 +125,6 @@ exports.login = async (req, res) => {
     return res.status(500).json(errorResponse(error.message));
   }
 };
-
-
-
-
-
-
 
 exports.forgot_password = async (req, res) => {
   const { email } = req.body;
@@ -192,14 +184,10 @@ exports.forgot_password = async (req, res) => {
   }
 };
 
-
-
-
-
-
-exports.reset_password = async (req, res, next) => {
+exports.reset_password = async (req, res) => {
   try {
     const hashed_token = req.params.token;
+    if (!hashed_token) return res.status(400).json({ type: "error", message: "Token is required" })
     const { password, confirm_password } = req.body;
 
     if (confirm_password !== password) {
@@ -246,10 +234,6 @@ exports.reset_password = async (req, res, next) => {
   }
 };
 
-
-
-
-
 exports.change_password = async (req, res) => {
   try {
     const id = req.user.userId;
@@ -273,13 +257,13 @@ exports.change_password = async (req, res) => {
     }
 
     const salt = await bcrypt.genSalt(10);
-    const passhash = await bcrypt.hash(newPassword, salt);
+    const hashed_pass = await bcrypt.hash(newPassword, salt);
 
     const updateQuery = `
-        UPDATE Users SET password = :passhash WHERE id = :id
+        UPDATE Users SET password = :hashed_pass WHERE id = :id
       `;
     await sequelize.query(updateQuery, {
-      replacements: { passhash, id },
+      replacements: { hashed_pass, id },
       type: sequelize.QueryTypes.UPDATE
     });
 
