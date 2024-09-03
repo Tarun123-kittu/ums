@@ -1,5 +1,5 @@
 'use strict';
-// @type {import('sequelize-cli').Migration} /
+
 
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -7,8 +7,8 @@ module.exports = {
       id: {
         allowNull: false,
         primaryKey: true,
-        type: Sequelize.INTEGER, // Change to INTEGER for auto-incrementing
-        autoIncrement: true, // Add this line for auto-incrementing
+        type: Sequelize.INTEGER, 
+        autoIncrement: true, 
       },
       username: {
         type: Sequelize.STRING,
@@ -24,12 +24,12 @@ module.exports = {
         allowNull: false,
       },
       password_reset_token: {
-        type: Sequelize.STRING, // Adjust the type as needed
-        allowNull: true, // Allowing null since not all users will have a reset token
+        type: Sequelize.STRING, 
+        allowNull: true, 
       },
       password_reset_token_expires_in: {
-        type: Sequelize.DATE, // Add the new field here
-        allowNull: true, // Allowing null if the token expiration date is not set
+        type: Sequelize.DATE, 
+        allowNull: true, 
       },
       createdAt: {
         allowNull: false,
@@ -48,3 +48,4 @@ module.exports = {
     await queryInterface.dropTable('Users');
   },
 };
+

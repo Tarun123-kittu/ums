@@ -28,7 +28,7 @@ const loginValidator = [
     }
 ]
 
-const forgot_password_validator = [
+const forgetPasswordValidator = [
     check("email", "Email is required.").not().isEmpty(),
     (req, res, next) => {
         const errors = validationResult(req);
@@ -64,7 +64,7 @@ const validateChangePassword = [
 module.exports = {
     createUserValidator, 
     loginValidator, 
-    forgot_password_validator,
+    forgetPasswordValidator,
     validateChangePassword
 }
 

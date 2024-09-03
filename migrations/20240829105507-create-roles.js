@@ -1,5 +1,5 @@
 'use strict';
-// @type {import('sequelize-cli').Migration} /
+
 
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -7,8 +7,8 @@ module.exports = {
       id: {
         allowNull: false,
         primaryKey: true,
-        type: Sequelize.INTEGER, // Change to INTEGER for auto-incrementing
-        autoIncrement: true, // Add this line for auto-incrementing
+        type: Sequelize.INTEGER, 
+        autoIncrement: true, 
       },
       role: {
         type: Sequelize.STRING,

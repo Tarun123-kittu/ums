@@ -21,10 +21,9 @@ exports.create_user = async (req, res) => {
       type: sequelize.QueryTypes.SELECT
     });
 
-    if (existingUser) { return res.status(400).json({ message: "Email already exists. Please use another email.", type: 'error' }); }
-    if (confirm_password !== password) {
-      return res.status(400).json({ type: "failed", message: "Password and confirm password do not match." });
-    }
+    if (existingUser) { return res.status(400).json(errorResponse("Email already exists. Please use another email.")); }
+
+    if (confirm_password !== password) { return res.status(400).json(errorResponse("Password and confirm password do not match.")); }
 
     const hashedPassword = await encrypt_password(password)
     const newUser = await User.create({
@@ -39,22 +38,13 @@ exports.create_user = async (req, res) => {
       message: `Hey your account for ultivic has been creadted please login with these credwntials. Email : ${email} and password : ${password}`
     })
 
-    return res.status(201).json({
-      type: "success",
-      message: "User has been created successfully a confirmation Email has been sent to the user email",
-    });
+    return res.status(201).json(successResponse("User has been created successfully a confirmation Email has been sent to the user email"));
 
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      type: "error",
-      message: error.message,
-    });
+    console.error("ERROR::",error);
+    return res.status(500).json(errorResponse(error.message));
   }
 };
-
-
-
 
 
 
@@ -105,16 +95,9 @@ exports.login = async (req, res) => {
       return res.status(401).json({ type: "error", message: "Invalid Password" });
     }
 
-    const roles = userRolesData.map(({ role_name, permission_name, can_view, can_update, can_create, can_delete }) => ({
-      role_name,
-      permission_name,
-      can_view,
-      can_update,
-      can_create,
-      can_delete
-    }));
+    const role = userRolesData[0].role_name
+    const token = await createToken(role, user_id, username, email);
 
-    const token = await createToken(roles, user_id, username, email);
 
     return res.status(200).json({
       type: "success",
@@ -144,9 +127,7 @@ exports.forgot_password = async (req, res) => {
       type: sequelize.QueryTypes.SELECT
     });
 
-    if (isUserExist.length === 0) {
-      return res.status(404).json({ type: "error", message: "No user found related to this email" });
-    }
+    if (isUserExist.length === 0) { return res.status(404).json(errorResponse("No user found related to this email")); }
 
     const resetToken = await passwordResetToken();
     const expirationTime = new Date();
@@ -157,9 +138,7 @@ exports.forgot_password = async (req, res) => {
       type: sequelize.QueryTypes.UPDATE
     });
 
-    if (isUserUpdated) {
-      return res.status(400).json({ type: "error", message: "Unable to generate the key, please try again later" });
-    }
+    if (isUserUpdated) { return res.status(400).json(errorResponse("Unable to generate the key, please try again later"));}
 
     const resetUrl = `${req.protocol}://${req.get('host')}/reset_password/${resetToken}`;
     const message = `You can reset your password from this URL ${resetUrl}. Ignore if you don't need to reset your password.`;
@@ -170,10 +149,7 @@ exports.forgot_password = async (req, res) => {
       message
     });
 
-    res.status(200).json({
-      status: "success",
-      message: "Email sent successfully"
-    });
+    res.status(200).json(successResponse("Email sent successfully"));
 
   } catch (error) {
     const resetToken = null;
@@ -191,7 +167,6 @@ exports.forgot_password = async (req, res) => {
     res.status(500).json({ type: "error", message: "An error occurred. Please try again later." });
   }
 };
-
 
 
 
@@ -263,14 +238,10 @@ exports.change_password = async (req, res) => {
         type: sequelize.QueryTypes.SELECT
       });
   
-      if (users.length === 0) {
-        return res.status(400).json(errorResponse('Logged-in user not found'));
-      }
+      if (users.length === 0) {return res.status(400).json(errorResponse('Logged-in user not found')) }
   
       const isPassCorrect = await bcrypt.compare(password, users.password);
-      if (!isPassCorrect) {
-        return res.status(400).json(errorResponse('Entered current password is not correct'));
-      }
+      if (!isPassCorrect) {  return res.status(400).json(errorResponse('Entered current password is not correct')); }
   
       const salt = await bcrypt.genSalt(10);
       const passhash = await bcrypt.hash(newPassword, salt);
@@ -284,6 +255,7 @@ exports.change_password = async (req, res) => {
       });
   
       return res.status(200).json(successResponse('Password changed successfully.'));
+
     } catch (error) {
       console.error('ERROR', error);
       return res.status(500).json(errorResponse(error.message));

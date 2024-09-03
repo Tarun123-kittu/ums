@@ -1,5 +1,5 @@
 'use strict';
-// @type {import('sequelize-cli').Migration} /
+
 
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -7,22 +7,22 @@ module.exports = {
       id: {
         allowNull: false,
         primaryKey: true,
-        type: Sequelize.INTEGER, // Change to INTEGER for auto-incrementing
-        autoIncrement: true, // Add this line for auto-incrementing
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
       },
       role_id: {
-        type: Sequelize.INTEGER, // Change to INTEGER to match Roles table
+        type: Sequelize.INTEGER, 
         references: {
-          model: 'Roles', // Table name in plural or singular depending on your convention
+          model: 'Roles', 
           key: 'id',
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
       permission_id: {
-        type: Sequelize.INTEGER, // Change to INTEGER to match Permissions table
+        type: Sequelize.INTEGER,
         references: {
-          model: 'Permissions', // Table name in plural or singular depending on your convention
+          model: 'Permissions', 
           key: 'id',
         },
         onUpdate: 'CASCADE',
