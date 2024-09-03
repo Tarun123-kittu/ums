@@ -17,8 +17,7 @@ const { validateCreateUserDataTypes,
     validateForgotPasswordDataTypes,
     validateResetPasswordDataTypes,
     validateChangePasswordDataTypes,
-    validateNewRoledDataTypes,
-    validateNewPermissionDataTypes } = require("../middleware/validateUserDataTypes")
+} = require("../middleware/validateUserDataTypes")
 
 
 
