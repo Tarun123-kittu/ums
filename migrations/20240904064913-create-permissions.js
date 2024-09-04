@@ -3,16 +3,21 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Roles', {
+    await queryInterface.createTable('Permissions', {
       id: {
         allowNull: false,
         primaryKey: true,
-        type: Sequelize.INTEGER, 
+        type: Sequelize.INTEGER,
         autoIncrement: true, 
       },
-      role: {
+      permission: {
         type: Sequelize.STRING,
         allowNull: false,
+      },
+      is_disabled: { 
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,  
       },
       createdAt: {
         allowNull: false,
@@ -28,6 +33,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Roles');
+    await queryInterface.dropTable('Permissions');
   },
 };

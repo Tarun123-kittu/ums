@@ -6,27 +6,32 @@ module.exports = (sequelize) => {
 
   RolesPermissions.init({
     id: {
-      type: DataTypes.INTEGER, // Changed to INTEGER for auto-incrementing
-      autoIncrement: true, // Added for auto-increment
+      type: DataTypes.INTEGER, 
+      autoIncrement: true, 
       primaryKey: true,
     },
     role_id: {
-      type: DataTypes.INTEGER, // Changed to INTEGER to match the Roles table
+      type: DataTypes.INTEGER, 
       references: {
         model: 'Roles',
         key: 'id',
       },
-      onUpdate: 'CASCADE', // Optional: Define behavior on update
-      onDelete: 'CASCADE', // Optional: Define behavior on delete
+      onUpdate: 'CASCADE', 
+      onDelete: 'CASCADE', 
     },
     permission_id: {
-      type: DataTypes.INTEGER, // Changed to INTEGER to match the Permissions table
+      type: DataTypes.INTEGER, 
       references: {
         model: 'Permissions',
         key: 'id',
       },
-      onUpdate: 'CASCADE', // Optional: Define behavior on update
-      onDelete: 'CASCADE', // Optional: Define behavior on delete
+      onUpdate: 'CASCADE', 
+      onDelete: 'CASCADE', 
+    },
+    is_disabled: { 
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,  
     },
     can_view: {
       type: DataTypes.BOOLEAN,

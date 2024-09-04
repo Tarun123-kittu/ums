@@ -6,8 +6,8 @@ module.exports = (sequelize) => {
 
   User.init({
     id: {
-      type: DataTypes.INTEGER, // Changed to INTEGER for auto-incrementing
-      autoIncrement: true, // Added for auto-increment
+      type: DataTypes.INTEGER, 
+      autoIncrement: true, 
       primaryKey: true,
     },
     username: {
@@ -24,12 +24,17 @@ module.exports = (sequelize) => {
       allowNull: false,
     },
     password_reset_token: {
-      type: DataTypes.STRING, // Adjust the type as needed
-      allowNull: true, // Allowing null since not all users will have a reset token
+      type: DataTypes.STRING, 
+      allowNull: true, 
     },
     password_reset_token_expires_in: {
-      type: DataTypes.DATE, // New field added
-      allowNull: true, // Allowing null if the token expiration date is not set
+      type: DataTypes.DATE,
+      allowNull: true, 
+    },
+    is_disabled: { 
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,  
     },
     createdAt: {
       type: DataTypes.DATE,
