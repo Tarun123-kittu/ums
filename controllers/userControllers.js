@@ -103,6 +103,7 @@ exports.login = async (req, res) => {
 
     if (!isPasswordTrue) { return res.status(401).json({ type: "error", message: "Invalid Password" });}
 
+
     const roles = [...new Set(userRolesData.map(roleData => roleData.role_name))];
 
     const permissions = userRolesData.reduce((acc, roleData) => {

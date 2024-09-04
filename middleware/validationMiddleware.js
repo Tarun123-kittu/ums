@@ -82,33 +82,54 @@ const validateNewPermission = [
 
 const validateAssignRolesPermission = [
     check("role", "Role is required and must be a string").optional().not().isEmpty().isString(),
+
     check("permission_data")
         .if((value, { req }) => !req.body.role)
         .isArray().withMessage("permission_data must be an array"),
+
     check("permission_data.*.role_id")
         .if((value, { req }) => !req.body.role)
         .not().isEmpty().withMessage("Role ID is required and must be an integer")
         .isInt(),
+
     check("permission_data.*.permission_id")
         .if((value, { req }) => !req.body.role)
         .not().isEmpty().withMessage("Permission ID is required and must be an integer")
         .isInt(),
+
     check("permission_data.*.can_view")
         .if((value, { req }) => !req.body.role)
         .not().isEmpty().withMessage("Can View is required and must be a boolean value")
         .isBoolean(),
+
     check("permission_data.*.can_create")
-        .if((value, { req }) => !req.body.role)
-        .not().isEmpty().withMessage("Can Read is required and must be a boolean value")
-        .isBoolean(),
-    check("permission_data.*.can_update")
         .if((value, { req }) => !req.body.role)
         .not().isEmpty().withMessage("Can Create is required and must be a boolean value")
         .isBoolean(),
+
+    check("permission_data.*.can_update")
+        .if((value, { req }) => !req.body.role)
+        .not().isEmpty().withMessage("Can Update is required and must be a boolean value")
+        .isBoolean(),
+
     check("permission_data.*.can_delete")
         .if((value, { req }) => !req.body.role)
         .not().isEmpty().withMessage("Can Delete is required and must be a boolean value")
         .isBoolean(),
+
+    check("user_id")
+        .optional()
+        .isArray().withMessage("user_id must be an array")
+        .custom((value) => {
+            if (value && value.length > 0) {
+                const allIntegers = value.every(Number.isInteger);
+                if (!allIntegers) {
+                    throw new Error("Each user_id must be an integer");
+                }
+            }
+            return true;
+        }),
+
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -118,6 +139,9 @@ const validateAssignRolesPermission = [
     }
 ];
 
+module.exports = validateAssignRolesPermission;
+
+
 const validateUpdateRolesPermission = [
     check("permission_data").isArray().withMessage("permission_data must be an array"),
     check("permission_data.*.role_id", "Role ID is required and must be an integer").not().isEmpty().isInt(),
@@ -126,6 +150,28 @@ const validateUpdateRolesPermission = [
     check("permission_data.*.can_create", "Can Create is required and must be a boolean value").not().isEmpty().isBoolean(),
     check("permission_data.*.can_update", "Can Update is required and must be a boolean value").not().isEmpty().isBoolean(),
     check("permission_data.*.can_delete", "Can Delete is required and must be a boolean value").not().isEmpty().isBoolean(),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ message: errors.array()[0].msg, type: 'error' });
+        }
+        next();
+    }
+];
+
+const assignRoleValidations = [
+    check("user_id", "User ID is required and must be an integer").not().isEmpty().isInt(),
+    check("role_id", "Role ID is required and must be an integer").not().isEmpty().isInt(),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ message: errors.array()[0].msg, type: 'error' });
+        }
+        next();
+    }
+];
+const disableRoleValidations = [
+    check("role_id", "Role ID is required").not().isEmpty(),
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -159,6 +205,8 @@ module.exports = {
     validateNewPermission,
     validateAssignRolesPermission,
     validateUpdateRolesPermission,
+    assignRoleValidations,
+    disableRoleValidations,
     validateDeleteUserRole
 }
 

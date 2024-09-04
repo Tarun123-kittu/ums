@@ -150,6 +150,26 @@ const validateNewPermissionDataTypes = (req, res, next) => {
     next();
 };
 
+const validateDisableRoleDataTypes = (req, res, next) => {
+    const body = req.body;
+    const expectedTypes = {
+        role_id: "number",
+    };
+
+    for (const [field, expectedType] of Object.entries(expectedTypes)) {
+        const actualType = typeof body[field];
+        console.log(`Checking field: ${field}, Expected: ${expectedType}, Actual: ${actualType}`); // Log field check
+
+        if (actualType !== expectedType) {
+            return res.status(400).json({
+                type: 'error',
+                message: `Invalid data type for field '${field}'. Expected '${expectedType}', but got '${actualType}'.`
+            });
+        }
+    }
+
+    next();
+};
 
 
 module.exports = {
@@ -159,5 +179,6 @@ module.exports = {
     validateResetPasswordDataTypes,
     validateChangePasswordDataTypes,
     validateNewRoledDataTypes,
-    validateNewPermissionDataTypes
+    validateNewPermissionDataTypes,
+    validateDisableRoleDataTypes
 };
