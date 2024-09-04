@@ -15,14 +15,9 @@ exports.get_user_permissions = async (req, res) => {
         return res.status(200).json(successResponse("successfully fetched.", permissions))
 
     } catch (error) {
-
-        console.log("ERROR::", error)
         return res.status(500).json(errorResponse(error.message))
     }
 }
-
-
-
 
 exports.get_roles_and_users = async (req, res) => {
     try {
@@ -66,8 +61,6 @@ exports.get_roles_and_users = async (req, res) => {
     }
 }
 
-
-
 exports.assign_role = async (req, res) => {
     try {
 
@@ -76,6 +69,7 @@ exports.assign_role = async (req, res) => {
         return res.status(500).json(errorResponse(error.response))
     }
 }
+
 
 exports.assign_new_permissions_to_new_role = async (req, res) => {
     const { permission_data, role } = req.body;
