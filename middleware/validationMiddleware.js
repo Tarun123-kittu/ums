@@ -137,6 +137,19 @@ const validateUpdateRolesPermission = [
 
 
 
+const validateDeleteUserRole = [
+    check('roleId', 'Please provide role Id.').not().isEmpty(),
+    (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
+    next();
+    }
+  
+]
+
+
+
+
 module.exports = {
     createUserValidator,
     loginValidator,
@@ -145,6 +158,7 @@ module.exports = {
     validateNewRole,
     validateNewPermission,
     validateAssignRolesPermission,
-    validateUpdateRolesPermission
+    validateUpdateRolesPermission,
+    validateDeleteUserRole
 }
 

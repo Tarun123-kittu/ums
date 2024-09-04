@@ -1,45 +1,54 @@
-const {successResponse,errorResponse} = require("../utils/responseHandler")
-const getPermissionsForRole = require("../utils/getPermissions")
+const { errorResponse } = require("../utils/responseHandler");
+const getPermissionsForRoles = require("../utils/getPermissions");
+
+
 
 const verifyAccess = (permissionName, action) => {
+  return async (req, res, next) => {
+    try {
+      const userRoles = req.result.roles;
 
-    return async (req, res, next) => {
-        try {
-            
-            const userRoles = req.user.roles;
+      const permissionsByRoles = await getPermissionsForRoles(userRoles);
 
-            let permissions = await getPermissionsForRole(userRoles);
+      const actionMap = {
+        view: "can_view",
+        update: "can_update",
+        create: "can_create",
+        delete: "can_delete",
+      };
 
-            const permission = permissions.find(p => p.permission_name === permissionName);
+      if (!actionMap[action]) {
+        return res.status(400).json(errorResponse("Invalid action: " + action));
+      }
 
-            if (!permission) {
-                console.warn(`Warning: No permissions found for ${permissionName}`);
-                return next(); 
-            }
+     
+      let hasPermission = false;
 
-            const actionMap = {
-                'view': 'can_view',
-                'update': 'can_update',
-                'create': 'can_create',
-                'delete': 'can_delete'
-            };
+      for (const rolePermissions of permissionsByRoles) {
+        const permission = rolePermissions.permissions.find(
+          (perm) => perm.permission_name === permissionName
+        );
 
-            if (!actionMap[action]) {
-                return res.status(400).json(errorResponse('Invalid action : '+ action) );
-            }
-
-            if (permission[actionMap[action]] === 1) {
-                return next();
-            }
-
-            return res.status(403).json(errorResponse( `Access Denied: You do not have ${action} permission for ${permissionName}`));
-        } catch (error) {
-            console.error("ERROR::", error);
-            return res.status(500).json(errorResponse(error.message));
+        if (permission && permission[actionMap[action]] === 1) {
+          hasPermission = true;
+          break; 
         }
-    };
+      }
+
+      if (hasPermission) {
+        return next(); 
+      }
+
+      return res.status(403).json(
+        errorResponse(
+          `Access Denied: You do not have ${action} permission for ${permissionName}`
+        )
+      );
+    } catch (error) {
+      console.error("ERROR::", error);
+      return res.status(500).json(errorResponse(error.message));
+    }
+  };
 };
-
-
 
 module.exports = verifyAccess;

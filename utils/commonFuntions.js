@@ -59,17 +59,17 @@ const password_compare = async (user_password, password) => {
 const send_email = async (options) => {
     try {
         const transporter = nodemailer.createTransport({
-            host: config.email_host,
-            secure: config.email_port === '465',
+            host: config.development.email_host,
+            secure: config.development.email_port === '465',
             auth: {
-                user: config.email_username,
-                pass: config.email_password,
+                user: config.development.email_username,
+                pass: config.development.email_password,
             }
         });
 
 
         const mailOptions = {
-            from: 'Ultivic Technologies <hankish@gmail.com>',
+            from: 'Ultivic Technologies',
             to: options.email,
             subject: options.subject,
             text: options.message

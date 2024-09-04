@@ -78,7 +78,6 @@ exports.assign_role = async (req, res) => {
 }
 
 exports.assign_new_permissions_to_new_role = async (req, res) => {
-    // name : hankish , 3-9-2024
     const { permission_data, role } = req.body;
     try {
         var add_new_role_query = `INSERT INTO roles (role) VALUES (?)`;
@@ -118,8 +117,10 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
     }
 };
 
+
+
+
 exports.update_permissions_assigned_to_role = async (req, res) => {
-    // name : hankish , 3-9-2024
     const { permission_data } = req.body;
     try {
         const updatePromises = permission_data.map(obj => {
@@ -155,8 +156,11 @@ exports.update_permissions_assigned_to_role = async (req, res) => {
     }
 };
 
+
+
+
+
 exports.disabled_role = async (req, res) => {
-    // name: hankish, 4-9-2024
     const { role_id } = req.body;
 
     try {
@@ -220,6 +224,52 @@ exports.disabled_role = async (req, res) => {
         res.status(500).json({
             type: "error",
             message: error.message
+        });
+    }
+};
+
+
+
+
+exports.delete_user_role = async (req, res) => {
+    try {
+        const userId = req.result.userId;
+        const roleId = req.query.roleId;
+
+
+            const [existingRelationship] = await sequelize.query(
+                `SELECT * FROM user_roles WHERE user_id = :userId AND role_id = :roleId`,
+                {
+                    replacements: { userId, roleId },
+                    type: sequelize.QueryTypes.SELECT
+                }
+            );
+    
+            if (!existingRelationship) {
+                return res.status(404).json({
+                    message: "User-role assignment not found.",
+                    type: 'error'
+                });
+            }
+
+        const result = await sequelize.query(
+            `DELETE FROM user_roles WHERE user_id = :userId AND role_id = :roleId`,
+            {
+                replacements: { userId, roleId },
+                type: sequelize.QueryTypes.DELETE
+            }
+        );
+    
+
+        return res.status(200).json({
+            message: "User-role assignment removed successfully.",
+            type: 'success'
+        });
+    } catch (error) {
+        console.log("ERROR::", error);
+        return res.status(500).json({
+            message: error.message,
+            type: 'error'
         });
     }
 };

@@ -9,11 +9,13 @@ let {
     loginValidator,
     forgetPasswordValidator,
     validateChangePassword,
-    validateNewRole,
-    validateNewPermission,
     validateUpdateRolesPermission,
-    validateAssignRolesPermission } = require('../middleware/validationMiddleware')
-const { validateCreateUserDataTypes,
+    validateAssignRolesPermission,
+    validateDeleteUserRole
+ } = require('../middleware/validationMiddleware')
+
+const { 
+    validateCreateUserDataTypes,
     validateLoginDAtaTypes,
     validateForgotPasswordDataTypes,
     validateResetPasswordDataTypes,
@@ -37,6 +39,7 @@ router.post("/assign_role", authenticateToken, rolesPermissions.assign_role)
 router.post("/assign_new_permissions_to_roles", authenticateToken, validateAssignRolesPermission, rolesPermissions.assign_new_permissions_to_new_role)
 router.patch("/update_permissions_assigned_to_role", authenticateToken, validateUpdateRolesPermission, rolesPermissions.update_permissions_assigned_to_role)
 router.patch("/delete_role", authenticateToken, rolesPermissions.disabled_role)
+router.delete("/delete_user_role",authenticateToken,validateDeleteUserRole,rolesPermissions.delete_user_role)
 
 
 
