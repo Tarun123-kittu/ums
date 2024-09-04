@@ -22,7 +22,8 @@ module.exports = {
               can_view: true,
               can_create: true,
               can_update: true,
-              can_delete: true
+              can_delete: true,
+              is_disabled: false
             },
           });
         }

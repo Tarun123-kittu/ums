@@ -1,7 +1,7 @@
 'use strict';
 
 const bcrypt = require('bcrypt');
-const { User } = require('../models'); 
+const { User } = require('../models');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -14,7 +14,7 @@ module.exports = {
         return;
       }
 
-    
+
       const hashedPassword = await bcrypt.hash('admin1234', 10);
 
 
@@ -22,6 +22,7 @@ module.exports = {
         username: 'admin',
         email: 'admin@gmail.com',
         password: hashedPassword,
+        is_disabled: false
       });
 
       console.log('User created successfully.');

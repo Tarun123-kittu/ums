@@ -1,6 +1,6 @@
 'use strict';
 
-const { Role } = require('../models'); 
+const { Role } = require('../models');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -14,7 +14,10 @@ module.exports = {
     for (const role of roles) {
       const [existingRole, created] = await Role.findOrCreate({
         where: { role: role.role },
-        defaults: role,
+        defaults: {
+          role: role.role, // Pass the string value of role here
+          is_disabled: false
+        },
       });
       if (!created) {
         console.log(`Role '${role.role}' already exists.`);

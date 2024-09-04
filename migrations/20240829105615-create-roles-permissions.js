@@ -11,9 +11,9 @@ module.exports = {
         autoIncrement: true,
       },
       role_id: {
-        type: Sequelize.INTEGER, 
+        type: Sequelize.INTEGER,
         references: {
-          model: 'Roles', 
+          model: 'Roles',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -22,7 +22,7 @@ module.exports = {
       permission_id: {
         type: Sequelize.INTEGER,
         references: {
-          model: 'Permissions', 
+          model: 'Permissions',
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -41,6 +41,10 @@ module.exports = {
         defaultValue: false,
       },
       can_delete: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
+      is_disabled: {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
       },
