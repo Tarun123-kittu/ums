@@ -31,6 +31,10 @@ module.exports = (sequelize) => {
       type: DataTypes.DATE, // New field added
       allowNull: true, // Allowing null if the token expiration date is not set
     },
+    is_disabled: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,

@@ -12,6 +12,7 @@ const {
 
 
 exports.create_user = async (req, res) => {
+  // hankish 2-9-2024
   try {
     const { email, username, password, confirm_password, role_id } = req.body;
 
@@ -59,6 +60,7 @@ exports.create_user = async (req, res) => {
 
 
 exports.login = async (req, res) => {
+  // hankish 2-9-2024
   const { email, password } = req.body;
 
   const getUserAndRolesQuery = `
@@ -122,6 +124,7 @@ exports.login = async (req, res) => {
 };
 
 exports.forgot_password = async (req, res) => {
+  // hankish 3-9-2024
   const { email } = req.body;
   const getUser = `SELECT * FROM Users WHERE email = ?`;
 
@@ -177,6 +180,7 @@ exports.forgot_password = async (req, res) => {
 
 
 exports.reset_password = async (req, res, next) => {
+  // hankish 3-9-2024
   try {
     const hashed_token = req.params.token;
     if (!hashed_token) return res.status(400).json({ type: "error", message: "Token is required" })
