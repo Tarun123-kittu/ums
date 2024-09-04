@@ -10,24 +10,19 @@ let {
     forgetPasswordValidator,
     validateChangePassword,
     validateUpdateRolesPermission,
-<<<<<<< HEAD
     validateAssignRolesPermission,
-    validateDeleteUserRole
- } = require('../middleware/validationMiddleware')
-
-const { 
-    validateCreateUserDataTypes,
-=======
-    assignRoleValidations,
+    validateDeleteUserRole,
     disableRoleValidations,
-    validateAssignRolesPermission } = require('../middleware/validationMiddleware')
+    assignRoleValidations
+} = require('../middleware/validationMiddleware')
+
 const { validateCreateUserDataTypes,
->>>>>>> a6787e3738b34330d9ebeb7a5ccbad5f0be5c1ba
     validateLoginDAtaTypes,
     validateForgotPasswordDataTypes,
     validateResetPasswordDataTypes,
     validateChangePasswordDataTypes,
     validateDisableRoleDataTypes,
+
 } = require("../middleware/validateUserDataTypes")
 
 
@@ -46,17 +41,6 @@ router.get("/get_roles_and_users", authenticateToken, verifyAccess("Users", "vie
 router.post("/assign_role", authenticateToken, assignRoleValidations, rolesPermissions.assign_role)
 router.post("/assign_new_permissions_to_roles", authenticateToken, validateAssignRolesPermission, rolesPermissions.assign_new_permissions_to_new_role)
 router.patch("/update_permissions_assigned_to_role", authenticateToken, validateUpdateRolesPermission, rolesPermissions.update_permissions_assigned_to_role)
-<<<<<<< HEAD
-router.patch("/delete_role", authenticateToken, rolesPermissions.disabled_role)
-router.delete("/delete_user_role",authenticateToken,validateDeleteUserRole,rolesPermissions.delete_user_role)
-=======
-router.patch("/delete_role", authenticateToken, disableRoleValidations, validateDisableRoleDataTypes, rolesPermissions.disabled_role)
->>>>>>> a6787e3738b34330d9ebeb7a5ccbad5f0be5c1ba
-
-
-
-
-
-
-
+router.patch("/delete_role", disableRoleValidations, validateDisableRoleDataTypes, authenticateToken, rolesPermissions.disabled_role)
+router.delete("/delete_user_role", authenticateToken, validateDeleteUserRole, rolesPermissions.delete_user_role)
 module.exports = router

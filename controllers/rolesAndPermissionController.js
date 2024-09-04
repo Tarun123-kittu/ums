@@ -88,7 +88,7 @@ exports.assign_role = async (req, res) => {
 }
 
 exports.assign_new_permissions_to_new_role = async (req, res) => {
- 
+    // hankish 4-9-2024
     const { permission_data, role, user_id } = req.body;
 
     const transaction = await sequelize.transaction();
@@ -155,6 +155,7 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
 
 
 exports.update_permissions_assigned_to_role = async (req, res) => {
+    // hankish 3-9-2024
     const { permission_data } = req.body;
     try {
         const updatePromises = permission_data.map(obj => {
@@ -195,6 +196,7 @@ exports.update_permissions_assigned_to_role = async (req, res) => {
 
 
 exports.disabled_role = async (req, res) => {
+    // hankish 4-9-2024
     const { role_id } = req.body;
 
     try {
@@ -271,20 +273,20 @@ exports.delete_user_role = async (req, res) => {
         const roleId = req.query.roleId;
 
 
-            const [existingRelationship] = await sequelize.query(
-                `SELECT * FROM user_roles WHERE user_id = :userId AND role_id = :roleId`,
-                {
-                    replacements: { userId, roleId },
-                    type: sequelize.QueryTypes.SELECT
-                }
-            );
-    
-            if (!existingRelationship) {
-                return res.status(404).json({
-                    message: "User-role assignment not found.",
-                    type: 'error'
-                });
+        const [existingRelationship] = await sequelize.query(
+            `SELECT * FROM user_roles WHERE user_id = :userId AND role_id = :roleId`,
+            {
+                replacements: { userId, roleId },
+                type: sequelize.QueryTypes.SELECT
             }
+        );
+
+        if (!existingRelationship) {
+            return res.status(404).json({
+                message: "User-role assignment not found.",
+                type: 'error'
+            });
+        }
 
         const result = await sequelize.query(
             `DELETE FROM user_roles WHERE user_id = :userId AND role_id = :roleId`,
@@ -293,7 +295,7 @@ exports.delete_user_role = async (req, res) => {
                 type: sequelize.QueryTypes.DELETE
             }
         );
-    
+
 
         return res.status(200).json({
             message: "User-role assignment removed successfully.",
