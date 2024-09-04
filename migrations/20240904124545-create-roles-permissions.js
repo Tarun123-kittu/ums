@@ -28,10 +28,10 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      is_disabled: { 
+      is_disabled: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
-        defaultValue: false,  
+        defaultValue: false,
       },
       can_view: {
         type: Sequelize.BOOLEAN,

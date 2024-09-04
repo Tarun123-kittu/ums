@@ -107,6 +107,8 @@ exports.login = async (req, res) => {
       return res.status(401).json({ type: "error", message: "Invalid Password" });
     }
 
+    console.log(userRolesData)
+
     const role = userRolesData[0].role_name
     const token = await createToken(role, user_id, username, email);
 

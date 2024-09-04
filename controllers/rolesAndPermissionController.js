@@ -69,41 +69,72 @@ exports.get_roles_and_users = async (req, res) => {
 
 
 exports.assign_role = async (req, res) => {
+    // hankish,4-9-2024
+    const { user_id, role_id } = req.body
     try {
+        const assign_new_role_query = `INSERT INTO user_roles (user_id,role_id) VALUES (?,?)`;
 
+        const is_role_assigned = await sequelize.query(assign_new_role_query, {
+            replacements: [user_id, role_id],
+            type: sequelize.QueryTypes.INSERT
+        });
+
+        if (!is_role_assigned) return res.status(400).json(errorResponse(error.response))
+
+        res.status(200).json(successResponse("Role assigned to the User Successfully"))
     } catch (error) {
-        console.log("ERROR:: ", error)
         return res.status(500).json(errorResponse(error.response))
     }
 }
 
 exports.assign_new_permissions_to_new_role = async (req, res) => {
-    // name : hankish , 3-9-2024
-    const { permission_data, role } = req.body;
+    // hankish,4-9-2024
+    const { permission_data, role, user_id } = req.body;
+
+    const transaction = await sequelize.transaction();
+
     try {
-        var add_new_role_query = `INSERT INTO roles (role) VALUES (?)`;
-        var [insert_role] = await sequelize.query(add_new_role_query, {
+        // Insert new role
+        const add_new_role_query = `INSERT INTO roles (role) VALUES (?)`;
+        const [insert_role_result] = await sequelize.query(add_new_role_query, {
             replacements: [role],
-            type: sequelize.QueryTypes.INSERT
+            type: sequelize.QueryTypes.INSERT,
+            transaction
         });
 
-        if (!insert_role) return res.status(400).json({ type: "error", message: "Error while creating new role" })
-        const values = permission_data.map(obj =>
-            `(${insert_role}, ${obj.permission_id}, ${obj.can_view}, ${obj.can_create}, ${obj.can_update}, ${obj.can_delete})`
+        const role_id = insert_role_result;
+
+        if (!role_id) throw new Error("Error while creating new role");
+
+        // Batch insert user roles
+        if (user_id?.length > 0) {
+            const userRolesValues = user_id.map(id => `(${id}, ${role_id})`).join(', ');
+            const insert_user_roles_query = `
+                INSERT INTO user_roles (user_id, role_id) 
+                VALUES ${userRolesValues}
+            `;
+            await sequelize.query(insert_user_roles_query, {
+                type: sequelize.QueryTypes.INSERT,
+                transaction
+            });
+        }
+
+        // Batch insert role permissions
+        const permissionValues = permission_data.map(obj =>
+            `(${role_id}, ${obj.permission_id}, ${obj.can_view}, ${obj.can_create}, ${obj.can_update}, ${obj.can_delete})`
         ).join(', ');
 
-        const query = `
-                INSERT INTO roles_permissions (role_id, permission_id, can_view, can_create, can_update, can_delete)
-                VALUES ${values}
-            `;
-
-        const insert_permissions = await sequelize.query(query, {
-            type: sequelize.QueryTypes.INSERT
+        const insert_permissions_query = `
+            INSERT INTO roles_permissions (role_id, permission_id, can_view, can_create, can_update, can_delete)
+            VALUES ${permissionValues}
+        `;
+        await sequelize.query(insert_permissions_query, {
+            type: sequelize.QueryTypes.INSERT,
+            transaction
         });
 
-        if (!insert_permissions) {
-            return res.status(400).json({ type: "error", message: "Error while creating new Permissions" });
-        }
+        // Commit transaction
+        await transaction.commit();
 
         res.status(200).json({
             type: "success",
@@ -111,6 +142,8 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
         });
 
     } catch (error) {
+        // Rollback transaction in case of error
+        await transaction.rollback();
         res.status(400).json({
             type: "error",
             message: error.message
@@ -168,7 +201,7 @@ exports.disabled_role = async (req, res) => {
         });
 
         if (!isRoleDisabled) {
-            return res.status(400).json({ type: "error", message: "Error while disabling role, please try again later" });
+            return res.status(400).json({ type: "error", message: "Error while deleting role, please try again later" });
         }
 
         // Check if the role exists in 'user_roles'
@@ -194,7 +227,7 @@ exports.disabled_role = async (req, res) => {
             });
 
             if (!isRoleDisabledInRolePermissions) {
-                return res.status(400).json({ type: "error", message: "123456Error while disabling role in roles_permissions, please try again later" });
+                return res.status(400).json({ type: "error", message: "Error while deleting role in roles_permissions, please try again later" });
             }
         }
 
@@ -207,7 +240,7 @@ exports.disabled_role = async (req, res) => {
             });
 
             if (!isRoleDisabledInUserRoles) {
-                return res.status(400).json({ type: "error", message: "Error while disabling role in user_roles, please try again later" });
+                return res.status(400).json({ type: "error", message: "Error while deleting role in user_roles, please try again later" });
             }
         }
 

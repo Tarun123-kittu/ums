@@ -12,12 +12,15 @@ let {
     validateNewRole,
     validateNewPermission,
     validateUpdateRolesPermission,
+    assignRoleValidations,
+    disableRoleValidations,
     validateAssignRolesPermission } = require('../middleware/validationMiddleware')
 const { validateCreateUserDataTypes,
     validateLoginDAtaTypes,
     validateForgotPasswordDataTypes,
     validateResetPasswordDataTypes,
     validateChangePasswordDataTypes,
+    validateDisableRoleDataTypes,
 } = require("../middleware/validateUserDataTypes")
 
 
@@ -33,10 +36,10 @@ router.post("/change_password", validateChangePassword, validateChangePasswordDa
 // roles and permissions
 router.get("/get_user_permissions", authenticateToken, verifyAccess('Users', "view"), rolesPermissions.get_user_permissions)
 router.get("/get_roles_and_users", authenticateToken, verifyAccess("Users", "view"), rolesPermissions.get_roles_and_users)
-router.post("/assign_role", authenticateToken, rolesPermissions.assign_role)
+router.post("/assign_role", authenticateToken, assignRoleValidations, rolesPermissions.assign_role)
 router.post("/assign_new_permissions_to_roles", authenticateToken, validateAssignRolesPermission, rolesPermissions.assign_new_permissions_to_new_role)
 router.patch("/update_permissions_assigned_to_role", authenticateToken, validateUpdateRolesPermission, rolesPermissions.update_permissions_assigned_to_role)
-router.patch("/delete_role", authenticateToken, rolesPermissions.disabled_role)
+router.patch("/delete_role", authenticateToken, disableRoleValidations, validateDisableRoleDataTypes, rolesPermissions.disabled_role)
 
 
 

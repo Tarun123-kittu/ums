@@ -11,7 +11,7 @@ let verifyToken = (req, res, next) => {
 
             token = token.split(' ')[1];
 
-            let user = jwt.verify(token, config.secret_key)
+            let user = jwt.verify(token, config.development.secret_key)
 
             req.result = user
 
