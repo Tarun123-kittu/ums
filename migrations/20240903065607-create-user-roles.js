@@ -6,26 +6,30 @@ module.exports = {
       id: {
         allowNull: false,
         primaryKey: true,
-        type: Sequelize.INTEGER, 
-        autoIncrement: true, 
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
       },
       user_id: {
         type: Sequelize.INTEGER,
         references: {
-          model: 'Users', 
+          model: 'Users',
           key: 'id',
         },
-        onUpdate: 'CASCADE', 
-        onDelete: 'CASCADE', 
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       role_id: {
-        type: Sequelize.INTEGER, 
+        type: Sequelize.INTEGER,
         references: {
-          model: 'Roles', 
+          model: 'Roles',
           key: 'id',
         },
-        onUpdate: 'CASCADE', 
-        onDelete: 'CASCADE', 
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      },
+      is_disabled: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
       },
       created_at: {
         type: Sequelize.DATE,

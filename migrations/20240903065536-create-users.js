@@ -7,8 +7,8 @@ module.exports = {
       id: {
         allowNull: false,
         primaryKey: true,
-        type: Sequelize.INTEGER, 
-        autoIncrement: true, 
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
       },
       username: {
         type: Sequelize.STRING,
@@ -24,12 +24,16 @@ module.exports = {
         allowNull: false,
       },
       password_reset_token: {
-        type: Sequelize.STRING, 
-        allowNull: true, 
+        type: Sequelize.STRING,
+        allowNull: true,
       },
       password_reset_token_expires_in: {
-        type: Sequelize.DATE, 
-        allowNull: true, 
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      is_disabled: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
       },
       createdAt: {
         allowNull: false,

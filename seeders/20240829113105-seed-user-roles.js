@@ -7,11 +7,11 @@ module.exports = {
 
     const userRolesMappings = [
       { userId: '1', roleId: '1' },  // ------here id shoud be admin user and the admin role it is static
-      {userId:'2',roleId:"1"},
-      {userId:'3',roleId:"1"},
-      {userId:'4',roleId:"2"},
-      {userId:"5",roleId:"2"},
-      {userId:"6",roleId:"3"}
+      { userId: '2', roleId: "1" },
+      { userId: '3', roleId: "1" },
+      { userId: '4', roleId: "2" },
+      { userId: "5", roleId: "2" },
+      { userId: "6", roleId: "3" }
     ];
 
     for (const mapping of userRolesMappings) {
@@ -37,7 +37,7 @@ module.exports = {
           role_id: roleId,
         },
         defaults: {
-
+          is_disabled: false
         },
       });
 

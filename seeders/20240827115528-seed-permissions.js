@@ -1,6 +1,6 @@
 'use strict';
 
-const { Permission } = require('../models'); 
+const { Permission } = require('../models');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -14,7 +14,10 @@ module.exports = {
     for (const permission of permissions) {
       const [existingPermission, created] = await Permission.findOrCreate({
         where: { permission: permission.permission },
-        defaults: permission,
+        defaults: {
+          permission: permission.permission,
+          is_disabled: false
+        },
       });
 
       if (!created) {

@@ -7,12 +7,16 @@ module.exports = {
       id: {
         allowNull: false,
         primaryKey: true,
-        type: Sequelize.INTEGER, 
-        autoIncrement: true, 
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
       },
       role: {
         type: Sequelize.STRING,
         allowNull: false,
+      },
+      is_disabled: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
       },
       createdAt: {
         allowNull: false,
