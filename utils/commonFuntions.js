@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 const saltRounds = 10;
+const config = require("../config/config")
 
 
 
@@ -58,15 +59,15 @@ const password_compare = async (user_password, password) => {
 const send_email = async (options) => {
     try {
         const transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST,
-            secure: process.env.EMAIL_PORT === '465',
+            host: config.email_host,
+            secure: config.email_port === '465',
             auth: {
-                user: process.env.EMAIL_USERNAME,
-                pass: process.env.EMAIL_PASSWORD,
+                user: config.email_username,
+                pass: config.email_password,
             }
         });
 
- 
+
         const mailOptions = {
             from: 'Ultivic Technologies <hankish@gmail.com>',
             to: options.email,
@@ -81,6 +82,6 @@ const send_email = async (options) => {
 };
 
 
-module.exports = {createToken,passwordResetToken,encrypt_password,password_compare,send_email}
+module.exports = { createToken, passwordResetToken, encrypt_password, password_compare, send_email }
 
 

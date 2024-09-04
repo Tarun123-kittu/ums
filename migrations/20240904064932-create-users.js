@@ -35,6 +35,11 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
       },
+      is_disabled: { 
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,  
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -52,4 +57,3 @@ module.exports = {
     await queryInterface.dropTable('Users');
   },
 };
-

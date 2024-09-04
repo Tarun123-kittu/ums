@@ -1,14 +1,22 @@
 'use strict';
 
-
 module.exports = {
-  async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Roles_Permissions', {
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.createTable('user_roles', {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.INTEGER,
         autoIncrement: true,
+      },
+      user_id: {
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       role_id: {
         type: Sequelize.INTEGER,
@@ -19,49 +27,27 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      permission_id: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'Permissions',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
-      },
-      can_view: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false,
-      },
-      can_create: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false,
-      },
-      can_update: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false,
-      },
-      can_delete: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false,
-      },
       is_disabled: {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
       },
-      createdAt: {
+      is_disabled: { 
+        type: Sequelize.BOOLEAN,
         allowNull: false,
+        defaultValue: false,  
+      },
+      created_at: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
       },
-      updatedAt: {
-        allowNull: false,
+      updated_at: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
       },
     });
   },
 
-  async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Roles_Permissions');
-  },
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('user_roles');
+  }
 };

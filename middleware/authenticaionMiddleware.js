@@ -1,30 +1,32 @@
-const jwt = require('jsonwebtoken');
+let jwt = require('jsonwebtoken')
+const config = require('../config/config')
 
-const authenticateToken = (req, res, next) => {
 
-    const authHeader = req.headers['authorization'];
+let verifyToken = (req, res, next) => {
+    try {
 
-    if (!authHeader) { return res.status(401).json({ type: "error", message: "Authorization header missing" }); }
+        let token = req.headers.authorization;
 
-    const token = authHeader.split(' ')[1];
+        if (token) {
 
-    if (!token) { return res.status(401).json({ type: "error", message: "Token missing" }); }
+            token = token.split(' ')[1];
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+            let user = jwt.verify(token, config.secret_key)
 
-        if (err) { return res.status(403).json({ type: "error", message: "Token is invalid or expired" }); }
+            req.result = user
 
-        const isAdmin = user.roles === "Admin"
-
-        if (!isAdmin) { return res.status(403).json({ type: "error", message: "You don't have permission to create users only Admin can create new user" }); }
-
-        req.user = user;
-
+        } else {
+            return res.status(401).json({ message: "Token is required for authentication.", type: 'error' })
+        }
         next();
-    });
-};
 
-module.exports = authenticateToken;
+    } catch (error) {
+
+        console.log("ERROR::", error)
+
+        return res.status(401).json({ message: "Unauthorized user", type: "error", data: error.message })
+    }
+}
 
 
-
+module.exports = verifyToken
