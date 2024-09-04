@@ -15,7 +15,7 @@ module.exports = {
       const [existingRole, created] = await Role.findOrCreate({
         where: { role: role.role },
         defaults: {
-          role: role.role, // Pass the string value of role here
+          role: role.role, 
           is_disabled: false
         },
       });

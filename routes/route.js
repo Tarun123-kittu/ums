@@ -12,6 +12,7 @@ let {
     validateUpdateRolesPermission,
     validateAssignRolesPermission,
     validateDeleteUserRole,
+    assignRoleValidations
  } = require('../middleware/validationMiddleware')
 
 const { 
