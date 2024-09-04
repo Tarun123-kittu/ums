@@ -6,27 +6,32 @@ module.exports = (sequelize) => {
 
   UserRoles.init({
     id: {
-      type: DataTypes.INTEGER, // Changed to INTEGER for auto-incrementing
-      autoIncrement: true, // Added for auto-increment
+      type: DataTypes.INTEGER, 
+      autoIncrement: true, 
       primaryKey: true,
     },
     user_id: {
-      type: DataTypes.INTEGER, // Changed to INTEGER to match the Users table
+      type: DataTypes.INTEGER, 
       references: {
         model: 'Users',
         key: 'id',
       },
-      onUpdate: 'CASCADE', // Optional: Define behavior on update
-      onDelete: 'CASCADE', // Optional: Define behavior on delete
+      onUpdate: 'CASCADE', 
+      onDelete: 'CASCADE', 
     },
     role_id: {
-      type: DataTypes.INTEGER, // Changed to INTEGER to match the Roles table
+      type: DataTypes.INTEGER, 
       references: {
         model: 'Roles',
         key: 'id',
       },
-      onUpdate: 'CASCADE', // Optional: Define behavior on update
-      onDelete: 'CASCADE', // Optional: Define behavior on delete
+      onUpdate: 'CASCADE', 
+      onDelete: 'CASCADE', 
+    },
+    is_disabled: { 
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,  
     },
     created_at: {
       type: DataTypes.DATE,

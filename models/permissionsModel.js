@@ -5,13 +5,18 @@ module.exports = (sequelize) => {
 
   Permission.init({
     id: {
-      type: DataTypes.INTEGER, // Changed to INTEGER for auto-incrementing
-      autoIncrement: true, // Added for auto-increment
+      type: DataTypes.INTEGER, 
+      autoIncrement: true,
       primaryKey: true,
     },
     permission: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    is_disabled: { 
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,  
     },
     createdAt: {
       type: DataTypes.DATE,

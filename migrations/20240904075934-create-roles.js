@@ -1,6 +1,5 @@
 'use strict';
 
-
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('Roles', {
@@ -16,6 +15,7 @@ module.exports = {
       },
       is_disabled: {
         type: Sequelize.BOOLEAN,
+        allowNull: false,
         defaultValue: false,
       },
       createdAt: {
