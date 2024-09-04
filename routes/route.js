@@ -31,7 +31,7 @@ router.post("/change_password", validateChangePassword, validateChangePasswordDa
 
 
 // roles and permissions
-router.get("/get_user_permissions", authenticateToken, verifyAccess('Users', "view"), rolesPermissions.get_user_permissions)
+router.get("/get_user_permissions", authenticateToken, verifyAccess("Users", "view"), rolesPermissions.get_user_permissions)
 router.get("/get_roles_and_users", authenticateToken, verifyAccess("Users", "view"), rolesPermissions.get_roles_and_users)
 router.post("/assign_role", authenticateToken, rolesPermissions.assign_role)
 router.post("/assign_new_permissions_to_roles", authenticateToken, validateAssignRolesPermission, rolesPermissions.assign_new_permissions_to_new_role)
