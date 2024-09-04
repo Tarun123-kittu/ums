@@ -78,6 +78,7 @@ exports.assign_role = async (req, res) => {
 }
 
 exports.assign_new_permissions_to_new_role = async (req, res) => {
+    // name : hankish , 3-9-2024
     const { permission_data, role } = req.body;
     try {
         var add_new_role_query = `INSERT INTO roles (role) VALUES (?)`;
@@ -118,6 +119,7 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
 };
 
 exports.update_permissions_assigned_to_role = async (req, res) => {
+    // name : hankish , 3-9-2024
     const { permission_data } = req.body;
     try {
         const updatePromises = permission_data.map(obj => {
@@ -152,3 +154,23 @@ exports.update_permissions_assigned_to_role = async (req, res) => {
         });
     }
 };
+
+exports.disabled_role = async (req, res) => {
+    // name : hankish , 4-9-2024
+    const { role_id } = req.body;
+    if (!role_id) return res.status(400).json({ type: "error", message: "Role id is required" })
+    try {
+        const disable_role_query = `UPDATE roles SET is_disabled = 1 WHERE role_id = ?`;
+        const is_role_disabled = await sequelize.query(disable_role_query, {
+            replacements: [role_id],
+            type: sequelize.QueryTypes.UPDATE
+        });
+        if (!is_role_disabled) return res.status(400).json({ type: "error", message: "Error while deleting role,please try again later" })
+        res.status(200).json({ type: "success", message: "Role deleted successfully" })
+    } catch (error) {
+        res.status(400).json({
+            type: "error",
+            message: error.message
+        })
+    }
+}

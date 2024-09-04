@@ -34,6 +34,7 @@ router.patch("/update_permissions_assigned_to_role", validateUpdateRolesPermissi
 router.get("/get_user_permissions", authenticateToken, rolesPermissions.get_user_permissions)
 router.get("/get_roles_and_users", authenticateToken, rolesPermissions.get_roles_and_users)
 router.post("/assign_role", authenticateToken, rolesPermissions.assign_role)
+router.patch("/delete_role", rolesPermissions.disabled_role)
 
 
 
