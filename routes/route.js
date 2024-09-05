@@ -1,6 +1,6 @@
 let express = require('express')
 let router = express.Router()
-let user = require('../controllers/userControllers')
+let user = require('../controllers/employeeController')
 let rolesPermissions = require("../controllers/rolesAndPermissionController")
 let verifyAccess = require("../middleware/verifyAccessMiddleware")
 const authenticateToken = require("../middleware/authenticaionMiddleware")

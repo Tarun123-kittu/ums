@@ -2,17 +2,17 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('user_roles', {
+    await queryInterface.createTable('employee_roles', {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.INTEGER,
         autoIncrement: true,
       },
-      user_id: {
+      employee_id: {
         type: Sequelize.INTEGER,
         references: {
-          model: 'Users',
+          model: 'Employees', 
           key: 'id',
         },
         onUpdate: 'CASCADE',
@@ -26,10 +26,6 @@ module.exports = {
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
-      },
-      is_disabled: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false,
       },
       is_disabled: {
         type: Sequelize.BOOLEAN,
@@ -48,6 +44,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('user_roles');
+    await queryInterface.dropTable('employee_roles');
   }
 };
