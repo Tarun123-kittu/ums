@@ -12,15 +12,17 @@ let {
     validateUpdateRolesPermission,
     validateAssignRolesPermission,
     validateDeleteUserRole,
+    disableRoleValidations,
     assignRoleValidations
- } = require('../middleware/validationMiddleware')
+} = require('../middleware/validationMiddleware')
 
-const { 
+const {
     validateCreateUserDataTypes,
     validateLoginDAtaTypes,
     validateForgotPasswordDataTypes,
     validateResetPasswordDataTypes,
     validateChangePasswordDataTypes,
+    validateDisableRoleDataTypes,
 } = require("../middleware/validateUserDataTypes")
 
 
@@ -32,6 +34,9 @@ router.post("/login", loginValidator, validateLoginDAtaTypes, user.login)
 router.post("/forgot_password", forgetPasswordValidator, validateForgotPasswordDataTypes, user.forgot_password)
 router.post("/reset_password/:token", validateResetPasswordDataTypes, user.reset_password)
 router.post("/change_password", validateChangePassword, validateChangePasswordDataTypes, user.change_password)
+router.get("/get_employee_details/:id", authenticateToken, user.get_employee_details)
+router.get("/get_employees", authenticateToken, user.get_employees)
+router.patch("/delete_employee/:id", authenticateToken, user.delete_employee)
 
 
 

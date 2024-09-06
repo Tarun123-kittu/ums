@@ -2,7 +2,7 @@
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  class Employee extends Model {}
+  class Employee extends Model { }
 
   Employee.init({
     id: {
@@ -114,6 +114,10 @@ module.exports = (sequelize) => {
     role: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    password_reset_token: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     is_disabled: {
       type: DataTypes.BOOLEAN,
