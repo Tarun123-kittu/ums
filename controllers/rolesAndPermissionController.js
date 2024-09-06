@@ -33,11 +33,7 @@ exports.get_roles_and_employees = async (req, res) => {
             FROM 
                 employee_roles er
             JOIN 
-<<<<<<< HEAD
                 employees e ON er.employee_id = e.id
-=======
-                employees u ON er.employee_id = ueid
->>>>>>> 53d93227a3f368715baa3c52bdc49c956f007a8b
             JOIN 
                 roles r ON er.role_id = r.id;
         `, {
@@ -79,7 +75,6 @@ exports.assign_role = async (req, res) => {
     const { employee_id, role_id } = req.body;
     
     try {
-<<<<<<< HEAD
        
         const check_existing_role_query = `
             SELECT * FROM employee_roles 
@@ -99,9 +94,6 @@ exports.assign_role = async (req, res) => {
         const assign_new_role_query = `
             INSERT INTO employee_roles (employee_id, role_id, created_at, updated_at) 
             VALUES (?, ?, NOW(), NOW())`;
-=======
-        const assign_new_role_query = `INSERT INTO employee_roles (user_id,role_id) VALUES (?,?)`;
->>>>>>> 53d93227a3f368715baa3c52bdc49c956f007a8b
 
         const is_role_assigned = await sequelize.query(assign_new_role_query, {
             replacements: [employee_id, role_id],
@@ -127,12 +119,7 @@ exports.assign_role = async (req, res) => {
 
 
 exports.assign_new_permissions_to_new_role = async (req, res) => {
-<<<<<<< HEAD
     const { permission_data, role, employee_id } = req.body;
-=======
-    // hankish 4-9-2024
-    const { permission_data, role, user_id } = req.body;
->>>>>>> 53d93227a3f368715baa3c52bdc49c956f007a8b
 
     const transaction = await sequelize.transaction();
 
@@ -149,21 +136,12 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
 
         if (!role_id) throw new Error("Error while creating new role");
 
-<<<<<<< HEAD
         // Step 2: Assign the new role to employees
         if (employee_id?.length > 0) {
             const employeeRolesValues = employee_id.map(id => `(${id}, ${role_id})`).join(', ');
             const insert_employee_roles_query = `
                 INSERT INTO employee_roles (employee_id, role_id) 
                 VALUES ${employeeRolesValues}
-=======
-        // Batch insert user roles
-        if (user_id?.length > 0) {
-            const userRolesValues = user_id.map(id => `(${id}, ${role_id})`).join(', ');
-            const insert_user_roles_query = `
-                INSERT INTO employee_roles (employee_id, role_id) 
-                VALUES ${userRolesValues}
->>>>>>> 53d93227a3f368715baa3c52bdc49c956f007a8b
             `;
             await sequelize.query(insert_employee_roles_query, {
                 type: sequelize.QueryTypes.INSERT,
@@ -267,15 +245,9 @@ exports.disabled_role = async (req, res) => {
             throw new Error("Error while disabling role in 'roles' table");
         }
 
-<<<<<<< HEAD
         // Step 2: Check if the role exists in 'employee_roles'
         const checkRoleInEmployeeRoles = `SELECT * FROM employee_roles WHERE role_id = ?`;
         const isRoleExistInEmployeeRoles = await sequelize.query(checkRoleInEmployeeRoles, {
-=======
-        // Check if the role exists in 'user_roles'
-        const checkRoleInUserRoles = `SELECT * FROM employee_roles WHERE role_id = ?`;
-        const isRoleExistInUserRoles = await sequelize.query(checkRoleInUserRoles, {
->>>>>>> 53d93227a3f368715baa3c52bdc49c956f007a8b
             replacements: [role_id],
             type: sequelize.QueryTypes.SELECT,
             transaction
@@ -303,17 +275,10 @@ exports.disabled_role = async (req, res) => {
             }
         }
 
-<<<<<<< HEAD
         // Step 5: Disable the role in 'employee_roles' if it exists
         if (isRoleExistInEmployeeRoles.length > 0) {
             const disableRoleInEmployeeRoles = `UPDATE employee_roles SET is_disabled = 1 WHERE role_id = ?`;
             const [isRoleDisabledInEmployeeRoles] = await sequelize.query(disableRoleInEmployeeRoles, {
-=======
-        // Disable the role in 'user_roles' if it exists
-        if (isRoleExistInUserRoles > 0) {
-            const disableRoleInUserRoles = `UPDATE employee_roles SET is_disabled = 1 WHERE role_id = ?`;
-            const [isRoleDisabledInUserRoles] = await sequelize.query(disableRoleInUserRoles, {
->>>>>>> 53d93227a3f368715baa3c52bdc49c956f007a8b
                 replacements: [role_id],
                 type: sequelize.QueryTypes.UPDATE,
                 transaction
@@ -352,7 +317,6 @@ exports.delete_employee_role = async (req, res) => {
         const employeeId = req.result.userId;  
         const roleId = req.query.roleId;
 
-<<<<<<< HEAD
         // Check if the relationship exists
         const [existingRelationship] = await sequelize.query(
             `SELECT * FROM employee_roles WHERE employee_id = :employeeId AND role_id = :roleId`,
@@ -365,43 +329,19 @@ exports.delete_employee_role = async (req, res) => {
         if (!existingRelationship) {
             return res.status(404).json({
                 message: "Employee-role assignment not found.",
-=======
-
-        const [existingRelationship] = await sequelize.query(
-            `SELECT * FROM employee_roles WHERE employee_id = :userId AND role_id = :roleId`,
-            {
-                replacements: { userId, roleId },
-                type: sequelize.QueryTypes.SELECT
-            }
-        );
-
-        if (!existingRelationship) {
-            return res.status(404).json({
-                message: "User-role assignment not found.",
->>>>>>> 53d93227a3f368715baa3c52bdc49c956f007a8b
                 type: 'error'
             });
         }
 
-<<<<<<< HEAD
         // Delete the relationship
         await sequelize.query(
             `DELETE FROM employee_roles WHERE employee_id = :employeeId AND role_id = :roleId`,
-=======
-        const result = await sequelize.query(
-            `DELETE FROM employee_roles WHERE employee_id = :userId AND role_id = :roleId`,
->>>>>>> 53d93227a3f368715baa3c52bdc49c956f007a8b
             {
                 replacements: { employeeId, roleId },
                 type: sequelize.QueryTypes.DELETE
             }
         );
-<<<<<<< HEAD
     
-=======
-
-
->>>>>>> 53d93227a3f368715baa3c52bdc49c956f007a8b
         return res.status(200).json({
             message: "Employee-role assignment removed successfully.",
             type: 'success'
