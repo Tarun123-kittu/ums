@@ -2,10 +2,45 @@ const { check, validationResult, body } = require('express-validator')
 
 
 const createUserValidator = [
+    check("name", "Name is required.").not().isEmpty(),
     check("username", "Username is required.").not().isEmpty(),
     check("email", "Email is required.").not().isEmpty(),
     check("email", "Please enter a correct email format.").isEmail(),
+    check("mobile", "Mobile number is required.").not().isEmpty(),
+    check("mobile", "Mobile number must be numeric and 10 digits.").isLength({ min: 10, max: 10 }).isNumeric(),
+    check("emergency_contact_relationship", "Emergency contact relationship is required.").not().isEmpty(),
+    check("emergency_contact_name", "Emergency contact name is required.").not().isEmpty(),
+    check("emergency_contact", "Emergency contact number is required.").not().isEmpty(),
+    check("emergency_contact", "Emergency contact number must be numeric and 10 digits.").isLength({ min: 10, max: 10 }).isNumeric(),
+    check("bank_name", "Bank name is required.").not().isEmpty(),
+    check("account_number", "Account number is required.").not().isEmpty(),
+    check("account_number", "Account number must be numeric.").isNumeric(),
+    check("ifsc", "IFSC code is required.").not().isEmpty(),
+    check("increment_date", "Increment date is required.").not().isEmpty(),
+    check("increment_date", "Invalid date format. Use YYYY-MM-DD.").isISO8601(),
+    check("gender", "Gender is required.").not().isEmpty(),
+    check("dob", "Date of birth is required.").not().isEmpty(),
+    check("dob", "Invalid date format for DOB. Use YYYY-MM-DD.").isISO8601(),
+    check("doj", "Date of joining is required.").not().isEmpty(),
+    check("doj", "Invalid date format for DOJ. Use YYYY-MM-DD.").isISO8601(),
+    check("skype_email", "Skype email is required.").not().isEmpty(),
+    check("skype_email", "Invalid Skype email format.").isEmail(),
+    check("ultivic_email", "Ultivic email is required.").not().isEmpty(),
+    check("ultivic_email", "Invalid Ultivic email format.").isEmail(),
+    check("salary", "Salary is required.").not().isEmpty(),
+    check("salary", "Salary must be numeric.").isNumeric(),
+    check("security", "Security is required.").not().isEmpty(),
+    check("security", "Security must be numeric.").isNumeric(),
+    check("total_security", "Total security is required.").not().isEmpty(),
+    check("total_security", "Total security must be numeric.").isNumeric(),
+    check("installments", "Installments are required.").not().isEmpty(),
+    check("installments", "Installments must be numeric.").isNumeric(),
+    check("position", "Position is required.").not().isEmpty(),
+    check("department", "Department is required.").not().isEmpty(),
+    check("status", "Status is required.").not().isEmpty(),
     check("password", "Please enter your password.").not().isEmpty(),
+    check("address", "Address is required.").not().isEmpty(),
+    check("role", "Role is required.").not().isEmpty(),
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -13,7 +48,8 @@ const createUserValidator = [
         }
         next();
     }
-]
+];
+
 
 const loginValidator = [
     check("email", "Email is required.").not().isEmpty(),
@@ -186,11 +222,11 @@ const disableRoleValidations = [
 const validateDeleteUserRole = [
     check('roleId', 'Please provide role Id.').not().isEmpty(),
     (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
-    next();
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
+        next();
     }
-  
+
 ]
 
 
