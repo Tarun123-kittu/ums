@@ -64,69 +64,51 @@ exports.create_user = async (req, res) => {
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
-  const getUserAndRolesQuery = `
+  const getEmployeeAndRolesQuery = `
     SELECT 
-        u.id AS user_id, 
-        u.username, 
-        u.password, 
-        r.role AS role_name, 
-        p.permission AS permission_name,
-        rp.can_view,
-        rp.can_update,
-        rp.can_create,
-        rp.can_delete
+        e.id AS employee_id, 
+        e.username, 
+        e.password, 
+        r.role AS role_name
     FROM 
-        Users u
+        Employees e
     LEFT JOIN 
-        user_roles ur ON u.id = ur.user_id
+        employee_roles er ON e.id = er.employee_id
     LEFT JOIN 
-        roles r ON ur.role_id = r.id
-    LEFT JOIN 
-        roles_permissions rp ON r.id = rp.role_id
-    LEFT JOIN 
-        permissions p ON rp.permission_id = p.id
+        roles r ON er.role_id = r.id
     WHERE 
-        u.email = :email;
+        e.email = :email;
   `;
 
   try {
-    const userRolesData = await sequelize.query(getUserAndRolesQuery, {
-    replacements: { email },
-    type: sequelize.QueryTypes.SELECT
+    const employeeRolesData = await sequelize.query(getEmployeeAndRolesQuery, {
+      replacements: { email },
+      type: sequelize.QueryTypes.SELECT
     });
 
-    if (!userRolesData || userRolesData.length === 0) {return res.status(400).json({ message: "User with this email does not exist.", type: 'error' });}
+    if (!employeeRolesData || employeeRolesData.length === 0) {
+      return res.status(400).json({ message: "Employee with this email does not exist.", type: 'error' });
+    }
 
-    const { user_id, username, password: hashedPassword } = userRolesData[0];
+    const { employee_id, username, password: hashedPassword } = employeeRolesData[0];
 
     const isPasswordTrue = await password_compare(hashedPassword, password);
 
-    if (!isPasswordTrue) { return res.status(401).json({ type: "error", message: "Invalid Password" });}
+    if (!isPasswordTrue) {
+      return res.status(401).json({ type: "error", message: "Invalid Password" });
+    }
 
+    // Get roles as an array, even if it's a single role
+    const roles = [...new Set(employeeRolesData.map(roleData => roleData.role_name))];
 
-    const roles = [...new Set(userRolesData.map(roleData => roleData.role_name))];
-
-    const permissions = userRolesData.reduce((acc, roleData) => {
-    const { permission_name, can_view, can_update, can_create, can_delete } = roleData;
-
-    acc.push({
-        name: permission_name,
-        can_view,
-        can_update,
-        can_create,
-        can_delete,
-      });
-
-    return acc;
-    }, []);
-
-    const token = await createToken(roles, user_id, username, email);
+    // Create JWT token with roles, employee_id, and other details
+    const token = await createToken(roles, employee_id, username, email);
 
     return res.status(200).json({
-    type: "success",
-    message: "Logged in successfully",
-    token,
-    roles,
+      type: "success",
+      message: "Logged in successfully",
+      token,
+      roles, // Return roles array
     });
 
   } catch (error) {

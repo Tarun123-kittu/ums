@@ -43,9 +43,10 @@ module.exports = (sequelize) => {
     },
   }, {
     sequelize,
-    modelName: 'EmployeeRoles', 
-    tableName: 'employee_roles', 
-    underscored: true, 
+    modelName: 'EmployeeRoles',
+    tableName: 'employee_roles',
+    underscored: true,
+    timestamps: true,
   });
 
   return EmployeeRoles;
