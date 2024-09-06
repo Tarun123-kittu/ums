@@ -31,7 +31,6 @@ const passwordResetToken = async () => {
 }
 
 
-
 const encrypt_password = async (password) => {
     const passwordValidationRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]).+$/;
     if (!passwordValidationRegex.test(password)) {

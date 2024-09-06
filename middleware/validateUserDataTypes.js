@@ -1,16 +1,43 @@
 const validateCreateUserDataTypes = (req, res, next) => {
     const body = req.body;
+
     const expectedTypes = {
-        email: 'string',
+        name: 'string',
         username: 'string',
+        email: 'string',
+        mobile: 'string',
+        emergency_contact_relationship: 'string',
+        emergency_contact_name: 'string',
+        emergency_contact: 'string',
+        bank_name: 'string',
+        account_number: 'string',
+        ifsc: 'string',
+        increment_date: 'string', // Dates should be validated separately for format, but this remains a string
+        gender: 'string',
+        dob: 'string',  // Should be ISO date format, validate separately
+        doj: 'string',  // Should be ISO date format, validate separately
+        skype_email: 'string',
+        ultivic_email: 'string',
+        salary: 'number', // Type float but handled as number
+        security: 'number', // Type float but handled as number
+        total_security: 'number', // Type float but handled as number
+        installments: 'string',
+        position: 'string',
+        department: 'string',
+        status: 'string',
         password: 'string',
-        confirm_password: 'string',
-        role_id: 'number'
+        address: 'string',
+        role: 'string'  // Role ID remains a number
     };
 
     for (const [field, expectedType] of Object.entries(expectedTypes)) {
         const actualType = typeof body[field];
+
         console.log(`Checking field: ${field}, Expected: ${expectedType}, Actual: ${actualType}`); // Log field check
+
+        if (expectedType === 'number' && actualType === 'string' && !isNaN(parseFloat(body[field]))) {
+            continue;  // Allow numeric strings to pass for float fields
+        }
 
         if (actualType !== expectedType) {
             return res.status(400).json({

@@ -28,14 +28,14 @@ exports.get_roles_and_users = async (req, res) => {
     try {
         const rolesWithUsers = await sequelize.query(`
             SELECT 
-                u.username, 
+                e.username, 
                 r.role
             FROM 
-                user_roles ur
+                employee_roles er
             JOIN 
-                users u ON ur.user_id = u.id
+                employees u ON er.employee_id = ueid
             JOIN 
-                roles r ON ur.role_id = r.id;
+                roles r ON er.role_id = r.id;
         `, {
             type: sequelize.QueryTypes.SELECT
         });
@@ -72,7 +72,7 @@ exports.assign_role = async (req, res) => {
     // hankish,4-9-2024
     const { user_id, role_id } = req.body
     try {
-        const assign_new_role_query = `INSERT INTO user_roles (user_id,role_id) VALUES (?,?)`;
+        const assign_new_role_query = `INSERT INTO employee_roles (user_id,role_id) VALUES (?,?)`;
 
         const is_role_assigned = await sequelize.query(assign_new_role_query, {
             replacements: [user_id, role_id],
@@ -88,7 +88,7 @@ exports.assign_role = async (req, res) => {
 }
 
 exports.assign_new_permissions_to_new_role = async (req, res) => {
- 
+    // hankish 4-9-2024
     const { permission_data, role, user_id } = req.body;
 
     const transaction = await sequelize.transaction();
@@ -110,7 +110,7 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
         if (user_id?.length > 0) {
             const userRolesValues = user_id.map(id => `(${id}, ${role_id})`).join(', ');
             const insert_user_roles_query = `
-                INSERT INTO user_roles (user_id, role_id) 
+                INSERT INTO employee_roles (user_id, role_id) 
                 VALUES ${userRolesValues}
             `;
             await sequelize.query(insert_user_roles_query, {
@@ -155,6 +155,7 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
 
 
 exports.update_permissions_assigned_to_role = async (req, res) => {
+    // hankish 3-9-2024
     const { permission_data } = req.body;
     try {
         const updatePromises = permission_data.map(obj => {
@@ -195,6 +196,7 @@ exports.update_permissions_assigned_to_role = async (req, res) => {
 
 
 exports.disabled_role = async (req, res) => {
+    // hankish 4-9-2024
     const { role_id } = req.body;
 
     try {
@@ -210,7 +212,7 @@ exports.disabled_role = async (req, res) => {
         }
 
         // Check if the role exists in 'user_roles'
-        const checkRoleInUserRoles = `SELECT * FROM user_roles WHERE role_id = ?`;
+        const checkRoleInUserRoles = `SELECT * FROM employee_roles WHERE role_id = ?`;
         const isRoleExistInUserRoles = await sequelize.query(checkRoleInUserRoles, {
             replacements: [role_id],
             type: sequelize.QueryTypes.SELECT
@@ -238,7 +240,7 @@ exports.disabled_role = async (req, res) => {
 
         // Disable the role in 'user_roles' if it exists
         if (isRoleExistInUserRoles > 0) {
-            const disableRoleInUserRoles = `UPDATE user_roles SET is_disabled = 1 WHERE role_id = ?`;
+            const disableRoleInUserRoles = `UPDATE employee_roles SET is_disabled = 1 WHERE role_id = ?`;
             const [isRoleDisabledInUserRoles] = await sequelize.query(disableRoleInUserRoles, {
                 replacements: [role_id],
                 type: sequelize.QueryTypes.UPDATE
@@ -271,29 +273,29 @@ exports.delete_user_role = async (req, res) => {
         const roleId = req.query.roleId;
 
 
-            const [existingRelationship] = await sequelize.query(
-                `SELECT * FROM user_roles WHERE user_id = :userId AND role_id = :roleId`,
-                {
-                    replacements: { userId, roleId },
-                    type: sequelize.QueryTypes.SELECT
-                }
-            );
-    
-            if (!existingRelationship) {
-                return res.status(404).json({
-                    message: "User-role assignment not found.",
-                    type: 'error'
-                });
+        const [existingRelationship] = await sequelize.query(
+            `SELECT * FROM employee_roles WHERE employee_id = :userId AND role_id = :roleId`,
+            {
+                replacements: { userId, roleId },
+                type: sequelize.QueryTypes.SELECT
             }
+        );
+
+        if (!existingRelationship) {
+            return res.status(404).json({
+                message: "User-role assignment not found.",
+                type: 'error'
+            });
+        }
 
         const result = await sequelize.query(
-            `DELETE FROM user_roles WHERE user_id = :userId AND role_id = :roleId`,
+            `DELETE FROM employee_roles WHERE employee_id = :userId AND role_id = :roleId`,
             {
                 replacements: { userId, roleId },
                 type: sequelize.QueryTypes.DELETE
             }
         );
-    
+
 
         return res.status(200).json({
             message: "User-role assignment removed successfully.",
