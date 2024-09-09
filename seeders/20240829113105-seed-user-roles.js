@@ -2,7 +2,7 @@ const { sequelize } = require('../models');
 
 const getLatestRoles = async (userId) => {
     try {
-       
+        // SQL query to fetch roles for a given userId
         const getUserRolesQuery = `
             SELECT 
                 u.id AS user_id, 
@@ -17,24 +17,24 @@ const getLatestRoles = async (userId) => {
                 u.id = :userId
         `;
 
-     
+        // Execute the query
         const userRolesData = await sequelize.query(getUserRolesQuery, {
             replacements: { userId },
             type: sequelize.QueryTypes.SELECT,
         });
 
-        
+        // If no data is found, return an empty array
         if (!userRolesData || userRolesData.length === 0) {
             return { success: false, message: "No roles found for this user.", roles: [] };
         }
 
-     
+        // Extract unique role names
         const roles = [...new Set(userRolesData.map(roleData => roleData.role_name))];
 
-        return roles 
+        return { success: true, roles };
     } catch (error) {
         console.error("ERROR::", error);
-        
+        // Return a structured error object
         return { success: false, message: "Internal Server Error", error: error.message };
     }
 };

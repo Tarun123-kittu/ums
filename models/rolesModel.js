@@ -23,7 +23,7 @@ module.exports = (sequelize) => {
     },
   }, {
     sequelize,
-    modelName: 'Roles',
+    modelName: 'Role',
     tableName: 'roles',
     timestamps: true,
   });

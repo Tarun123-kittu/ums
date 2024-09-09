@@ -1,23 +1,24 @@
 'use strict';
 
 const bcrypt = require('bcrypt');
-const { Employee } = require('../models');
+const { User } = require('../models');
 
 module.exports = {
     up: async (queryInterface, Sequelize) => {
         try {
+            // Check if the user with the given email already exists
+            const existingUser = await User.findOne({ where: { email: 'admin@gmail.com' } });
 
-            const existingEmployee = await Employee.findOne({ where: { email: 'admin@gmail.com' } });
-
-            if (existingEmployee) {
+            if (existingUser) {
                 console.log('This email is already used.');
                 return;
             }
 
+            // Hash the password
             const hashedPassword = await bcrypt.hash('admin1234', 10);
 
-
-            await Employee.create({
+            // Create the new user
+            await User.create({
                 username: 'admin',
                 name: 'Admin User',
                 email: 'admin@gmail.com',
@@ -47,13 +48,13 @@ module.exports = {
                 is_disabled: false,
             });
 
-            console.log('Employee created successfully.');
+            console.log('User created successfully.');
         } catch (error) {
             console.error('Error in seeding:', error);
         }
     },
 
     down: async (queryInterface, Sequelize) => {
-        await Employee.destroy({ where: { email: 'admin@gmail.com' } });
+        await User.destroy({ where: { email: 'admin@gmail.com' } });
     },
 };

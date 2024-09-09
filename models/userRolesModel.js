@@ -2,18 +2,18 @@
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  class EmployeeRoles extends Model { }
+  class UserRoles extends Model { }
 
-  EmployeeRoles.init({
+  UserRoles.init({
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    employee_id: {
+    user_id: {
       type: DataTypes.INTEGER,
       references: {
-        model: 'Employees',
+        model: 'Users', 
         key: 'id',
       },
       onUpdate: 'CASCADE',
@@ -43,10 +43,10 @@ module.exports = (sequelize) => {
     },
   }, {
     sequelize,
-    modelName: 'EmployeeRoles',
-    tableName: 'employee_roles',
+    modelName: 'UserRoles', 
+    tableName: 'user_roles',
     timestamps: true, 
   });
 
-  return EmployeeRoles;
+  return UserRoles;
 };

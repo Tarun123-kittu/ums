@@ -1,22 +1,14 @@
 'use strict';
 
+
 module.exports = {
-    up: async (queryInterface, Sequelize) => {
-        await queryInterface.createTable('employee_roles', {
+    async up(queryInterface, Sequelize) {
+        await queryInterface.createTable('Roles_Permissions', {
             id: {
                 allowNull: false,
                 primaryKey: true,
                 type: Sequelize.INTEGER,
                 autoIncrement: true,
-            },
-            employee_id: {
-                type: Sequelize.INTEGER,
-                references: {
-                    model: 'Employees',
-                    key: 'id',
-                },
-                onUpdate: 'CASCADE',
-                onDelete: 'CASCADE',
             },
             role_id: {
                 type: Sequelize.INTEGER,
@@ -27,11 +19,37 @@ module.exports = {
                 onUpdate: 'CASCADE',
                 onDelete: 'CASCADE',
             },
+            permission_id: {
+                type: Sequelize.INTEGER,
+                references: {
+                    model: 'Permissions',
+                    key: 'id',
+                },
+                onUpdate: 'CASCADE',
+                onDelete: 'CASCADE',
+            },
             is_disabled: {
                 type: Sequelize.BOOLEAN,
                 allowNull: false,
                 defaultValue: false,
             },
+            can_view: {
+                type: Sequelize.BOOLEAN,
+                defaultValue: false,
+            },
+            can_create: {
+                type: Sequelize.BOOLEAN,
+                defaultValue: false,
+            },
+            can_update: {
+                type: Sequelize.BOOLEAN,
+                defaultValue: false,
+            },
+            can_delete: {
+                type: Sequelize.BOOLEAN,
+                defaultValue: false,
+            },
+    
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE,
@@ -45,7 +63,7 @@ module.exports = {
         });
     },
 
-    down: async (queryInterface, Sequelize) => {
-        await queryInterface.dropTable('employee_roles');
-    }
+    async down(queryInterface, Sequelize) {
+        await queryInterface.dropTable('Roles_Permissions');
+    },
 };

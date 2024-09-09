@@ -198,7 +198,7 @@ const validateUpdateRolesPermission = [
 ];
 
 const assignRoleValidations = [
-    check("employee_id", "User ID is required and must be an integer").not().isEmpty().isInt(),
+    check("user_id", "User ID is required and must be an integer").not().isEmpty().isInt(),
     check("role_id", "Role ID is required and must be an integer").not().isEmpty().isInt(),
     (req, res, next) => {
         const errors = validationResult(req);
