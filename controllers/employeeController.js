@@ -116,6 +116,11 @@ exports.create_user = async (req, res) => {
   }
 };
 
+
+
+
+
+
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -191,6 +196,10 @@ exports.login = async (req, res) => {
   }
 };
 
+
+
+
+
 exports.forgot_password = async (req, res) => {
   const { email } = req.body;
   const getUser = `SELECT * FROM employees WHERE email = ? AND is_disabled = false`;
@@ -240,6 +249,11 @@ exports.forgot_password = async (req, res) => {
   }
 };
 
+
+
+
+
+
 exports.reset_password = async (req, res, next) => {
 
   try {
@@ -279,6 +293,10 @@ exports.reset_password = async (req, res, next) => {
   }
 };
 
+
+
+
+
 exports.change_password = async (req, res) => {
   try {
     const id = req.result.userId;
@@ -313,6 +331,11 @@ exports.change_password = async (req, res) => {
     return res.status(500).json(errorResponse(error.message));
   }
 }
+
+
+
+
+
 
 exports.get_employee_details = async (req, res) => {
   const { id } = req.params;
@@ -353,6 +376,9 @@ exports.get_employee_details = async (req, res) => {
     });
   }
 };
+
+
+
 
 exports.get_employees = async (req, res) => {
   const { name, status } = req.query;

@@ -13,7 +13,7 @@ module.exports = (sequelize) => {
     employee_id: {
       type: DataTypes.INTEGER,
       references: {
-        model: 'Employees', 
+        model: 'Employees',
         key: 'id',
       },
       onUpdate: 'CASCADE',
@@ -22,7 +22,7 @@ module.exports = (sequelize) => {
     role_id: {
       type: DataTypes.INTEGER,
       references: {
-        model: 'Roles', 
+        model: 'Roles',
         key: 'id',
       },
       onUpdate: 'CASCADE',
@@ -33,11 +33,11 @@ module.exports = (sequelize) => {
       allowNull: false,
       defaultValue: false,
     },
-    created_at: {
+    createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
-    updated_at: {
+    updatedAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
@@ -45,8 +45,7 @@ module.exports = (sequelize) => {
     sequelize,
     modelName: 'EmployeeRoles',
     tableName: 'employee_roles',
-    underscored: true,
-    timestamps: true,
+    timestamps: true, 
   });
 
   return EmployeeRoles;

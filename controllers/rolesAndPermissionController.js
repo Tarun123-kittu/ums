@@ -111,9 +111,6 @@ exports.assign_role = async (req, res) => {
         return res.status(500).json(errorResponse(error.message));
     }
 };
-
-
-
 // --- 
 
 
@@ -131,12 +128,13 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
             type: sequelize.QueryTypes.INSERT,
             transaction
         });
-        console.log("roles ------",insert_role_result)
-        const role_id = insert_role_result; 
+        console.log("roles ------", insert_role_result);
+        const role_id = insert_role_result ? insert_role_result : null;
 
         if (!role_id) throw new Error("Error while creating new role");
 
-        // Step 2: Assign the new role to employees
+
+        // Step 2: Insert into employee_roles if employee_id is provided
         if (employee_id?.length > 0) {
             const employeeRolesValues = employee_id.map(id => `(${id}, ${role_id})`).join(', ');
             const insert_employee_roles_query = `
@@ -149,9 +147,10 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
             });
         }
 
-        // Step 3: Batch insert role permissions
+
+        // Step 3: Insert permissions
         const permissionValues = permission_data.map(obj =>
-            `(${role_id}, ${obj.permission_id}, ${obj.can_view}, ${obj.can_create}, ${obj.can_update}, ${obj.can_delete})`
+            `(${role_id}, ${obj.permission_id}, ${obj.can_view ? 1 : 0}, ${obj.can_create ? 1 : 0}, ${obj.can_update ? 1 : 0}, ${obj.can_delete ? 1 : 0})`
         ).join(', ');
 
         const insert_permissions_query = `
@@ -163,16 +162,16 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
             transaction
         });
 
-        // Commit transaction
-        await transaction.commit();
 
+        // Commit the transaction
+        await transaction.commit();
         res.status(200).json({
             type: "success",
             message: "New role and permissions assigned successfully."
         });
 
     } catch (error) {
-        console.log("ERROR::",error)
+        console.log("ERROR::", error);
         await transaction.rollback();
         res.status(400).json({
             type: "error",
@@ -181,12 +180,12 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
     }
 };
 
-// ---- timestramps shows 000000
+//-----
 
 
 
 exports.update_permissions_assigned_to_role = async (req, res) => {
-    // hankish 3-9-2024
+    
     const { permission_data } = req.body;
     try {
         const updatePromises = permission_data.map(obj => {
@@ -225,9 +224,8 @@ exports.update_permissions_assigned_to_role = async (req, res) => {
 // -----
 
 
-
 exports.disabled_role = async (req, res) => {
-    // hankish 4-9-2024
+
     const { role_id } = req.body;
 
     const transaction = await sequelize.transaction();

@@ -21,7 +21,6 @@ let verifyToken = async (req, res, next) => {
                 roles: [...new Set([...(decoded.roles || []), ...roles])], 
             };
 
-            console.log("result -----",req.result)
         } else {
             return res.status(401).json({ message: "Token is required for authentication.", type: 'error' });
         }

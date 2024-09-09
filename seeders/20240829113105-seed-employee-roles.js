@@ -7,8 +7,8 @@ module.exports = {
 
 
         const employeeRolesMappings = [
-            { employeeId: '1', roleId: '1' },  // Static admin user and admin role
-            { employeeId: "1", roleId: "3" }   // Assigning another role (e.g., for additional permissions)
+            { employeeId: '1', roleId: '1' }, 
+            { employeeId: "1", roleId: "3" }   
         ];
 
         for (const mapping of employeeRolesMappings) {
