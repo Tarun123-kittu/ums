@@ -24,7 +24,7 @@ exports.create_user = async (req, res) => {
     } = req.body;
 
     // Check if email already exists
-    const checkEmailQuery = `SELECT * FROM employees WHERE email = ?`;
+    const checkEmailQuery = `SELECT * FROM users WHERE email = ?`;
     const [existingUser] = await sequelize.query(checkEmailQuery, {
       replacements: [email],
       type: sequelize.QueryTypes.SELECT,
@@ -44,7 +44,7 @@ exports.create_user = async (req, res) => {
     const hashedPassword = await encrypt_password(password);
 
     const createUserQuery = `
-        INSERT INTO employees (
+        INSERT INTO users (
           name, username, email, mobile, emergency_contact_relationship, emergency_contact_name,
           emergency_contact, bank_name, account_number, ifsc, increment_date, gender, dob, doj, skype_email,
           ultivic_email, salary, security, total_security, installments, position, department, status, 
@@ -122,8 +122,8 @@ exports.login = async (req, res) => {
   const getUserAndRolesQuery = `
   SELECT 
       e.id AS employee_id, 
-      e.username, 
-      e.password, 
+      u.username, 
+      u.password, 
       r.role AS role_name, 
       p.permission AS permission_name,
       rp.can_view,
@@ -131,9 +131,9 @@ exports.login = async (req, res) => {
       rp.can_create,
       rp.can_delete
   FROM 
-      employees e
+      users u
   LEFT JOIN 
-      employee_roles ur ON e.id = ur.employee_id
+      user_roles ur ON e.id = ur.employee_id
   LEFT JOIN 
       roles r ON ur.role_id = r.id
   LEFT JOIN 
@@ -193,7 +193,7 @@ exports.login = async (req, res) => {
 
 exports.forgot_password = async (req, res) => {
   const { email } = req.body;
-  const getUser = `SELECT * FROM employees WHERE email = ? AND is_disabled = false`;
+  const getUser = `SELECT * FROM users WHERE email = ? AND is_disabled = false`;
 
   try {
     const isUserExist = await sequelize.query(getUser, {
@@ -205,7 +205,7 @@ exports.forgot_password = async (req, res) => {
 
     const resetToken = await passwordResetToken();
 
-    const update_password_reset_token = 'UPDATE employees SET password_reset_token = ? WHERE email = ?';
+    const update_password_reset_token = 'UPDATE users SET password_reset_token = ? WHERE email = ?';
     const [isUserUpdated] = await sequelize.query(update_password_reset_token, {
       replacements: [resetToken, email],
       type: sequelize.QueryTypes.UPDATE
@@ -229,7 +229,7 @@ exports.forgot_password = async (req, res) => {
     const expirationTime = null;
 
     await sequelize.query(`
-  UPDATE employees 
+  UPDATE users 
   SET password_reset_token = ?
   WHERE email = ?
   `, {
@@ -249,7 +249,7 @@ exports.reset_password = async (req, res, next) => {
 
     if (confirm_password !== password) { return res.status(400).json({ type: "error", message: "Password doesn't match" }); }
 
-    const getTheUser = `SELECT id, password_reset_token, email FROM employees WHERE password_reset_token = ?;`;
+    const getTheUser = `SELECT id, password_reset_token, email FROM users WHERE password_reset_token = ?;`;
 
     const isUser = await sequelize.query(getTheUser, {
       replacements: [hashed_token],
@@ -261,7 +261,7 @@ exports.reset_password = async (req, res, next) => {
     const hashedPassword = await encrypt_password(password);
     const email = isUser[0].email;
 
-    const update_password_query = `UPDATE employees SET password = :hashedPassword WHERE email = :email`;
+    const update_password_query = `UPDATE users SET password = :hashedPassword WHERE email = :email`;
     const updatePassword = await sequelize.query(update_password_query, {
       replacements: { hashedPassword, email },
       type: sequelize.QueryTypes.UPDATE
@@ -270,7 +270,7 @@ exports.reset_password = async (req, res, next) => {
 
     res.status(200).json(successResponse("Password updated successfully."));
   } catch (error) {
-    const update_password_query = `UPDATE employees SET password_reset_token = NULL WHERE email = :email`;
+    const update_password_query = `UPDATE users SET password_reset_token = NULL WHERE email = :email`;
     const updatePassword = await sequelize.query(update_password_query, {
       replacements: { email },
       type: sequelize.QueryTypes.UPDATE
@@ -285,7 +285,7 @@ exports.change_password = async (req, res) => {
     const { password, newPassword } = req.body;
 
     const GetUserQuery = `
-  SELECT * FROM employees WHERE id = :id AND is_disabled = false;
+  SELECT * FROM users WHERE id = :id AND is_disabled = false;
   `;
     const [users] = await sequelize.query(GetUserQuery, {
       replacements: { id },
@@ -301,7 +301,7 @@ exports.change_password = async (req, res) => {
     const passhash = await bcrypt.hash(newPassword, salt);
 
     const updateQuery = `
-  UPDATE employees SET password = :passhash WHERE id = :id`;
+  UPDATE users SET password = :passhash WHERE id = :id`;
     await sequelize.query(updateQuery, {
       replacements: { passhash, id },
       type: sequelize.QueryTypes.UPDATE
@@ -325,7 +325,7 @@ exports.get_employee_details = async (req, res) => {
         ultivic_email, salary, security, total_security, installments, position, department, status, 
         address, role, is_disabled 
       FROM 
-        employees 
+        users 
       WHERE 
         id = ? AND is_disabled = false
     `;
@@ -354,7 +354,7 @@ exports.get_employee_details = async (req, res) => {
   }
 };
 
-exports.get_employees = async (req, res) => {
+exports.get_users = async (req, res) => {
   const { name, status } = req.query;
 
   try {
@@ -365,7 +365,7 @@ exports.get_employees = async (req, res) => {
         ultivic_email, salary, security, total_security, installments, position, department, status, 
         address, role, is_disabled 
       FROM 
-        employees 
+        users 
       WHERE is_disabled = false
     `;
 
@@ -389,7 +389,7 @@ exports.get_employees = async (req, res) => {
     if (!employee_details || employee_details.length === 0) {
       return res.status(400).json({
         type: "error",
-        message: "No employees found matching the criteria",
+        message: "No users found matching the criteria",
       });
     }
 
@@ -409,7 +409,7 @@ exports.delete_employee = async (req, res) => {
   const { id } = req.params;
   if (!id) return res.status(400).json({ type: "error", message: "Employee id is required to perform this action" });
   try {
-    const employee_delete_query = `UPDATE employees SET is_disabled = true WHERE id = ?`;
+    const employee_delete_query = `UPDATE users SET is_disabled = true WHERE id = ?`;
     const is_user_deleted = await sequelize.query(employee_delete_query, {
       replacements: [id],
       type: sequelize.QueryTypes.UPDATE
