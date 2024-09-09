@@ -15,8 +15,6 @@ exports.get_user_permissions = async (req, res) => {
         return res.status(200).json(successResponse("successfully fetched.", permissions))
 
     } catch (error) {
-
-        console.log("ERROR::", error)
         return res.status(500).json(errorResponse(error.message))
     }
 }
@@ -63,7 +61,6 @@ exports.get_roles_and_users = async (req, res) => {
         return res.status(200).json(successResponse('Successfully fetched.', rolesWithTheirUsers));
 
     } catch (error) {
-        console.log("ERROR::", error);
         return res.status(500).json(errorResponse(error.message));
     }
 };
@@ -74,7 +71,7 @@ exports.get_roles_and_users = async (req, res) => {
 exports.assign_role = async (req, res) => {
     const { user_id, role_id } = req.body;
     try {
-        
+
         const check_existing_role_query = `
             SELECT * FROM user_roles 
             WHERE user_id = ? AND role_id = ?`;
@@ -88,7 +85,7 @@ exports.assign_role = async (req, res) => {
             return res.status(400).json(errorResponse("This role is already assigned to the user."));
         }
 
-    
+
         const assign_new_role_query = `
             INSERT INTO user_roles (user_id, role_id, createdAt, updatedAt) 
             VALUES (?, ?, NOW(), NOW())`;
@@ -103,9 +100,8 @@ exports.assign_role = async (req, res) => {
         }
 
         return res.status(200).json(successResponse("Role assigned to the user successfully."));
-        
+
     } catch (error) {
-        console.error("Error during role assignment:", error);
         return res.status(500).json(errorResponse(error.message));
     }
 };
@@ -127,7 +123,6 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
             type: sequelize.QueryTypes.INSERT,
             transaction
         });
-        console.log("roles ------", insert_role_result);
         const role_id = insert_role_result ? insert_role_result : null;
 
         if (!role_id) throw new Error("Error while creating new role");
@@ -170,7 +165,6 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
         });
 
     } catch (error) {
-        console.log("ERROR::", error);
 
         if (error.message.includes('foreign key constraint fails')) {
             res.status(400).json({
@@ -178,7 +172,6 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
                 message: "One or more user IDs do not exist in the database. Please check the user IDs and try again."
             });
         } else {
-            
             res.status(400).json({
                 type: "error",
                 message: error.message
@@ -192,7 +185,7 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
 
 
 exports.update_permissions_assigned_to_role = async (req, res) => {
-    
+
     const { permission_data } = req.body;
     try {
         const updatePromises = permission_data.map(obj => {
@@ -250,8 +243,6 @@ exports.disabled_role = async (req, res) => {
             type: sequelize.QueryTypes.UPDATE,
             transaction
         });
-
-        console.log("role disabled ------", result);
 
         // Check the number of affected rows
         const affectedRows = result[1]; // Second element contains affected rows count
@@ -314,7 +305,6 @@ exports.disabled_role = async (req, res) => {
         });
 
     } catch (error) {
-        console.log("ERROR::", error);
         await transaction.rollback();
         res.status(500).json({
             type: "error",
@@ -327,10 +317,10 @@ exports.disabled_role = async (req, res) => {
 
 exports.delete_user_role = async (req, res) => {
     try {
-        const userId = req.result.userId;  
+        const userId = req.result.userId;
         const roleId = req.query.roleId;
 
-        
+
         const [existingRelationship] = await sequelize.query(
             `SELECT * FROM user_roles WHERE user_id = :userId AND role_id = :roleId`,
             {
@@ -346,7 +336,7 @@ exports.delete_user_role = async (req, res) => {
             });
         }
 
-  
+
         await sequelize.query(
             `DELETE FROM user_roles WHERE user_id = :userId AND role_id = :roleId`,
             {
@@ -359,7 +349,6 @@ exports.delete_user_role = async (req, res) => {
             type: 'success'
         });
     } catch (error) {
-        console.log("ERROR::", error);
         return res.status(500).json({
             message: error.message,
             type: 'error'
