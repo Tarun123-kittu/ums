@@ -377,7 +377,7 @@ exports.get_employee_details = async (req, res) => {
   }
 };
 
-exports.get_users = async (req, res) => {
+exports.get_employees = async (req, res) => {
   const { name, status } = req.query;
 
   try {
