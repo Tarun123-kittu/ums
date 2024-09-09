@@ -268,7 +268,7 @@ exports.disabled_role = async (req, res) => {
         });
 
         // Step 3: Check if the role exists in 'roles_permissions'
-        const checkRoleInRolesPermissions = `SELECT * FROM roles_permissions WHERE role_id = ?`;
+        const checkRoleInRolesPermissions = `SELECT * FROM user_permissions WHERE role_id = ?`;
         const isRoleExistInRolesPermissions = await sequelize.query(checkRoleInRolesPermissions, {
             replacements: [role_id],
             type: sequelize.QueryTypes.SELECT,
@@ -338,7 +338,7 @@ exports.delete_user_role = async (req, res) => {
                 type: sequelize.QueryTypes.SELECT
             }
         );
-    
+
         if (!existingRelationship) {
             return res.status(404).json({
                 message: "user-role assignment not found.",
