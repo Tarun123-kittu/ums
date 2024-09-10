@@ -244,22 +244,12 @@ const validateHolidaysAndEvents = [
     }
 ]
 
-const validateAttendance = [
-    check('date', 'Please provide Today date').not().isEmpty(),
-    check('user_id', 'Please provide User Id').not().isEmpty(),
-    check('in_time', 'Please provide Attenance Time').not().isEmpty(),
-    (req, res, next) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
-        next();
-    }
-]
 
 const validateUnmarkAttendance = [
     check('report')
-        .trim() 
-        .not().isEmpty().withMessage('Task is required!!') 
-        .bail(), 
+        .trim()
+        .not().isEmpty().withMessage('Task is required!!')
+        .bail(),
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -286,7 +276,7 @@ const validateGetAttendanceDetails = [
 
 
 const validateUpdateUserAttendance = [
-    check("attendanceId","Please provide attendance Id.").not().isEmpty(),
+    check("attendanceId", "Please provide attendance Id.").not().isEmpty(),
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
@@ -307,7 +297,6 @@ module.exports = {
     disableRoleValidations,
     validateDeleteUserRole,
     validateHolidaysAndEvents,
-    validateAttendance,
     validateUnmarkAttendance,
     validateGetAttendanceDetails,
     validateUpdateUserAttendance

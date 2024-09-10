@@ -8,7 +8,8 @@ const { errorResponse, successResponse } = require('../utils/responseHandler');
 
 
 exports.mark_attendance = async (req, res) => {
-    const { date, user_id, in_time, login_device, login_mobile } = req.body;
+    const user_id = req.result.user_id
+    const { date, in_time, login_device, login_mobile } = req.body;
     let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
 
     try {
@@ -45,7 +46,8 @@ exports.mark_attendance = async (req, res) => {
 
 
 exports.unmark_attendance = async (req, res) => {
-    const { date, user_id, out_time, report, logout_device, logout_mobile } = req.body;
+    const user_id = req.result.user_id
+    const { date, out_time, report, logout_device, logout_mobile } = req.body;
     let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
     try {
         const is_user_mark_attendance_today_query = `SELECT date,in_time,out_time FROM attendances WHERE date = CURDATE() AND user_id = ?`;
@@ -61,7 +63,7 @@ exports.unmark_attendance = async (req, res) => {
         }
 
         if (is_user_mark_attendance_today[0]?.out_time !== null) {
-            return res.status(400).json({ type: "error", message: "You alreadu unmark your attendance Thanks !!" });
+            return res.status(400).json({ type: "error", message: "You already unmark your attendance Thanks !!" });
         }
 
         let total_time = find_the_total_time(is_user_mark_attendance_today[0]?.in_time)
