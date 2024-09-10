@@ -77,4 +77,23 @@ exports.unmark_attendance = async (req, res) => {
     }
 };
 
+exports.get_attendances = async () => {
+    try {
+        const get_all_users = `SELECT id FROM users Where is_disabled = 0`;
+        const is_users_fetched = await sequelize.query(get_all_users, {
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        console.log(is_users_fetched)
+        if (!is_users_fetched) return res.status(400).json({ type: "error", message: "error while getting user details" })
+
+        return res.status(200).json({ type: "success", message: is_users_fetched })
+    } catch (error) {
+        res.status(400).json({
+            type: "error",
+            message: error.message
+        })
+    }
+}
+
 
