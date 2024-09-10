@@ -20,7 +20,8 @@ const {
     validateAttendance,
     validateUnmarkAttendance,
     validateGetAttendanceDetails,
-    validateUpdateUserAttendance
+    validateUpdateUserAttendance,
+    validateUnmarkAttendance
 } = require('../middleware/validationMiddleware')
 
 const {
@@ -52,19 +53,19 @@ router.patch("/delete_employee/:id", authenticateToken, validateGetAttendanceDet
 // roles and permissions
 router.get("/get_user_permissions", authenticateToken, rolesPermissionsController.get_user_permissions)
 router.get("/get_roles_and_users", authenticateToken, rolesPermissionsController.get_roles_and_users)
-router.post("/assign_role", authenticateToken, assignRoleValidations,rolesPermissionsController.assign_role)
+router.post("/assign_role", authenticateToken, assignRoleValidations, rolesPermissionsController.assign_role)
 router.post("/assign_new_permissions_to_roles", authenticateToken, validateAssignRolesPermission, rolesPermissionsController.assign_new_permissions_to_new_role)
 router.patch("/update_permissions_assigned_to_role", authenticateToken, validateUpdateRolesPermission, rolesPermissionsController.update_permissions_assigned_to_role)
 router.patch("/delete_role", authenticateToken, rolesPermissionsController.disabled_role)
-router.delete("/delete_user_role",authenticateToken,validateDeleteUserRole,rolesPermissionsController.delete_user_role)
+router.delete("/delete_user_role", authenticateToken, validateDeleteUserRole, rolesPermissionsController.delete_user_role)
 
 
 
 //holidays and events
-router.post("/add_holidayOrEvent",authenticateToken,validateHolidaysAndEvents,holidaysAndEventsController.add_holidayOrEvent)
-router.put("/update_holidayOrEvent",authenticateToken,holidaysAndEventsController.update_holidayOrEvent)
-router.get("/get_all_holidaysOrEvents",authenticateToken,holidaysAndEventsController.get_all_holidaysOrEvents)
-router.delete("/delete_holidayOrEvent",authenticateToken,holidaysAndEventsController.delete_holidayOrEvent)
+router.post("/add_holidayOrEvent", authenticateToken, validateHolidaysAndEvents, holidaysAndEventsController.add_holidayOrEvent)
+router.put("/update_holidayOrEvent", authenticateToken, holidaysAndEventsController.update_holidayOrEvent)
+router.get("/get_all_holidaysOrEvents", authenticateToken, holidaysAndEventsController.get_all_holidaysOrEvents)
+router.delete("/delete_holidayOrEvent", authenticateToken, holidaysAndEventsController.delete_holidayOrEvent)
 
 
 // attendance
@@ -72,5 +73,7 @@ router.post("/mark_attendance", authenticateToken, validateAttendance, attendanc
 router.post("/unmark_attendance", authenticateToken, validateUnmarkAttendance, attendanceController.unmark_attendance)
 router.get("/get_attendance_details",authenticateToken,validateGetAttendanceDetails,attendanceController.get_attendance_details)
 router.put("/update_attendance_details",authenticateToken,validateUpdateUserAttendance,attendanceController.update_attendance_details)
+router.get("/get_attendances", authenticateToken, attendanceController.get_attendances)
+router.get("/get_attendances_report", authenticateToken, attendanceController.get_attendance_report)
 
 module.exports = router
