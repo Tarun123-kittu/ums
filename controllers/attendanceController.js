@@ -12,9 +12,6 @@ exports.mark_attendance = async (req, res) => {
     let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
 
     try {
-<<<<<<< HEAD
-        const mark_attendance_query = `INSERT INTO attendances (date, user_id, in_time, login_device, login_mobile, created_by, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-=======
         const is_today_attendance_marked_query = `SELECT date FROM attendances WHERE date = CURDATE() AND employee_id = ?`;
         const [is_today_attendance_marked] = await sequelize.query(is_today_attendance_marked_query, {
             replacements: [employee_id],
@@ -23,7 +20,6 @@ exports.mark_attendance = async (req, res) => {
         if (is_today_attendance_marked) return res.status(400).json({ type: "error", message: "You already marked your attendance !!" })
 
         const mark_attendance_query = `INSERT INTO attendances (date, employee_id, in_time, login_device, login_mobile, created_by, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
->>>>>>> 45b9db0e5d2dcf10c2d36d7094cc9af64f3b7a19
 
         const [is_attendance_marked] = await sequelize.query(mark_attendance_query, {
             replacements: [current_time, user_id, current_time, login_device, login_mobile, user_id, current_time, current_time],
@@ -52,11 +48,7 @@ exports.unmark_attendance = async (req, res) => {
     const { date, user_id, out_time, report, logout_device, logout_mobile } = req.body;
     let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
     try {
-<<<<<<< HEAD
-        const is_user_mark_attendance_today_query = `SELECT date,in_time FROM attendances WHERE date = CURDATE() AND user_id = ?`;
-=======
         const is_user_mark_attendance_today_query = `SELECT date,in_time,out_time FROM attendances WHERE date = CURDATE() AND employee_id = ?`;
->>>>>>> 45b9db0e5d2dcf10c2d36d7094cc9af64f3b7a19
         const is_user_mark_attendance_today = await sequelize.query(is_user_mark_attendance_today_query, {
             replacements: [user_id],
             type: sequelize.QueryTypes.SELECT

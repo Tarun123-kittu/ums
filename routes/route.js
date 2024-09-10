@@ -21,7 +21,6 @@ const {
     validateUnmarkAttendance,
     validateGetAttendanceDetails,
     validateUpdateUserAttendance,
-    validateUnmarkAttendance
 } = require('../middleware/validationMiddleware')
 
 const {
