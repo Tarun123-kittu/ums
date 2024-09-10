@@ -321,7 +321,7 @@ exports.disabled_role = async (req, res) => {
 
 exports.delete_user_role = async (req, res) => {
     try {
-        const userId = req.result.userId;
+        const userId = req.result.user_id;
         const roleId = req.query.roleId;
 
 

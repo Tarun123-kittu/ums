@@ -20,7 +20,6 @@ const verifyAccess = (permissionName, action) => {
       if (!actionMap[action]) {
         return res.status(400).json(errorResponse("Invalid action: " + action));
       }
-
      
       let hasPermission = false;
 

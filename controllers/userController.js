@@ -299,7 +299,7 @@ exports.reset_password = async (req, res, next) => {
 
 exports.change_password = async (req, res) => {
   try {
-    const id = req.result.userId;
+    const id = req.result.user_id;
     const { password, newPassword } = req.body;
 
     const GetUserQuery = `

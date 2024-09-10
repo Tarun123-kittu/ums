@@ -2,7 +2,7 @@ const { sequelize } = require('../models');
 
 const getLatestRoles = async (userId) => {
     try {
-       
+      
         const getUserRolesQuery = `
             SELECT 
                 u.id AS user_id, 
