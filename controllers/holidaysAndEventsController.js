@@ -172,12 +172,12 @@ exports.delete_holidayOrEvent = async (req, res) => {
 
         const affectedRows = result.affectedRows || result[0]?.affectedRows || 0;
 
-        if (affectedRows === 0) { return res.status(404).json({ message: 'Holiday or Event not found.' }); }
+        if (affectedRows === 0) { return res.status(404).json({ message: 'Holiday or Event not found.' }) }
 
         return res.status(200).json(successResponse("Holiday event deleted successfully."));
 
     } catch (error) {
-        console.error("ERROR::", error);
+        console.error("ERROR::", error)
         return res.status(500).json(errorResponse(error.message))
     }
 };

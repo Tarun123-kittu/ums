@@ -246,7 +246,7 @@ const validateHolidaysAndEvents = [
 
 const validateAttendance = [
     check('date', 'Please provide Today date').not().isEmpty(),
-    check('employee_id', 'Please provide User Id').not().isEmpty(),
+    check('user_id', 'Please provide User Id').not().isEmpty(),
     check('in_time', 'Please provide Attenance Time').not().isEmpty(),
     (req, res, next) => {
         const errors = validationResult(req);
@@ -257,9 +257,9 @@ const validateAttendance = [
 
 const validateUnmarkAttendance = [
     check('report')
-        .trim() // Remove any leading/trailing whitespace
-        .not().isEmpty().withMessage('Task is required!!') // Check if not empty
-        .bail(), // Ensure that if the previous validation fails, it stops further validations for this field
+        .trim() 
+        .not().isEmpty().withMessage('Task is required!!') 
+        .bail(), 
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -274,8 +274,25 @@ const validateUnmarkAttendance = [
 
 
 
+const validateGetAttendanceDetails = [
+    check('attendanceId', 'Please provide attendance Id.').not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
+        next();
+    }
+]
 
 
+
+const validateUpdateUserAttendance = [
+    check("attendanceId","Please provide attendance Id.").not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
+        next();
+    }
+]
 
 module.exports = {
     createUserValidator,
@@ -291,6 +308,8 @@ module.exports = {
     validateDeleteUserRole,
     validateHolidaysAndEvents,
     validateAttendance,
-    validateUnmarkAttendance
+    validateUnmarkAttendance,
+    validateGetAttendanceDetails,
+    validateUpdateUserAttendance
 }
 

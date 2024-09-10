@@ -18,8 +18,9 @@ const {
     disableRoleValidations,
     assignRoleValidations,
     validateAttendance,
-    validateUnmarkAttendance
-    
+    validateUnmarkAttendance,
+    validateGetAttendanceDetails,
+    validateUpdateUserAttendance
 } = require('../middleware/validationMiddleware')
 
 const {
@@ -44,7 +45,7 @@ router.post("/reset_password/:token", validateResetPasswordDataTypes, userContro
 router.post("/change_password", validateChangePassword, validateChangePasswordDataTypes, userController.change_password)
 router.get("/get_employee_details/:id", authenticateToken, userController.get_employee_details)
 router.get("/get_employees", authenticateToken, userController.get_employees)
-router.patch("/delete_employee/:id", authenticateToken, userController.delete_employee)
+router.patch("/delete_employee/:id", authenticateToken, validateGetAttendanceDetails,userController.delete_employee)
 
 
 
@@ -69,5 +70,7 @@ router.delete("/delete_holidayOrEvent",authenticateToken,holidaysAndEventsContro
 // attendance
 router.post("/mark_attendance", authenticateToken, validateAttendance, attendanceController.mark_attendance)
 router.post("/unmark_attendance", authenticateToken, validateUnmarkAttendance, attendanceController.unmark_attendance)
+router.get("/get_attendance_details",authenticateToken,validateGetAttendanceDetails,attendanceController.get_attendance_details)
+router.put("/update_attendance_details",authenticateToken,validateUpdateUserAttendance,attendanceController.update_attendance_details)
 
 module.exports = router

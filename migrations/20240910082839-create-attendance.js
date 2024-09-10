@@ -13,9 +13,9 @@ module.exports = {
                 type: Sequelize.DATEONLY,
                 allowNull: true,
             },
-            employee_id: {
+            user_id: {
                 type: Sequelize.INTEGER,
-                allowNull: true,
+                allowNull: true
             },
             in_time: {
                 type: Sequelize.TIME,
@@ -90,4 +90,3 @@ module.exports = {
         await queryInterface.dropTable('Attendances');
     },
 };
-
