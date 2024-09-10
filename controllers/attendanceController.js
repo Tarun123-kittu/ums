@@ -198,7 +198,7 @@ exports.get_attendance_report = async (req, res) => {
         });
 
         if (!is_users_fetched || is_users_fetched.length === 0) {
-            return res.status(400).json({ type: "error", message: "No users found" });
+            return res.status(400).json(errorResponse("No users found."));
         }
 
         let all_user_attendances = [];
@@ -260,10 +260,8 @@ exports.get_attendance_report = async (req, res) => {
         });
 
     } catch (error) {
-        return res.status(400).json({
-            type: "error",
-            message: error.message
-        });
+        console.log("ERROR::", error.message)
+        return res.status(400).json(errorResponse(error.message));
     }
 }
 
@@ -347,15 +345,13 @@ exports.get_attendance_details = async (req, res) => {
         });
 
 
-        if (results.length === 0) {
-            return res.status(404).json({ message: 'Attendance not found' });
-        }
+        if (results.length === 0) { return res.status(404).json(errorResponse("Attendance not found.")) }
 
         res.json(results)
 
     } catch (error) {
         console.log("ERROR::", error);
-        return res.status(500).json({ message: error.message });
+        return res.status(500).json(errorResponse(error.message));
     }
 };
 
@@ -374,9 +370,7 @@ exports.update_attendance_details = async (req, res) => {
             type: sequelize.QueryTypes.SELECT
         });
 
-        if (results.length === 0) {
-            return res.status(404).json({ message: 'Attendance not found' });
-        }
+        if (results.length === 0) { return res.status(404).json(errorResponse("Attendance not found.")) }
 
         const existingAttendance = results;
 
@@ -408,11 +402,11 @@ exports.update_attendance_details = async (req, res) => {
             type: sequelize.QueryTypes.UPDATE
         });
 
-        res.json({ message: 'Attendance updated successfully' });
+        res.status(200).json(successResponse("Attendance updated successfully."));
 
     } catch (error) {
         console.log("ERROR::", error);
-        return res.status(500).json({ message: error.message });
+        return res.status(500).json(errorResponse(error.message));
     }
 };
 
