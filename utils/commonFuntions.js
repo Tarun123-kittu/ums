@@ -5,12 +5,13 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 const saltRounds = 10;
 const config = require("../config/config")
+const moment = require('moment-timezone');
 
 
 
-const createToken = async (roles, userId, username, email) => {
+const createToken = async (roles, user_id, username, email) => {
     return new Promise((resolve, reject) => {
-        jwt.sign({ roles, userId, username, email }, process.env.JWT_SECRET, (err, token) => {
+        jwt.sign({ roles, user_id, username, email }, process.env.JWT_SECRET, (err, token) => {
             if (err) {
                 reject(err);
             } else {
@@ -80,7 +81,29 @@ const send_email = async (options) => {
     }
 };
 
+function find_the_total_time(mark_time) {
+    let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
+    let current_date = current_time.split(' ')[0];
 
-module.exports = { createToken, passwordResetToken, encrypt_password, password_compare, send_email }
+    let mark_time_full = `${current_date} ${mark_time}`;
+
+    let current_moment = moment(current_time, 'YYYY-MM-DD HH:mm:ss');
+    let mark_moment = moment(mark_time_full, 'YYYY-MM-DD HH:mm:ss');
+
+    let duration = moment.duration(current_moment.diff(mark_moment));
+
+    let hours = Math.floor(duration.asHours());
+    let minutes = duration.minutes();
+    let seconds = duration.seconds();
+
+    let time_difference = `${hours}:${minutes}:${seconds}`
+
+    return time_difference;
+}
+
+
+
+
+module.exports = { createToken, passwordResetToken, encrypt_password, password_compare, send_email, find_the_total_time }
 
 

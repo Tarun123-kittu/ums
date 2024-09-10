@@ -8,19 +8,21 @@ let verifyToken = async (req, res, next) => {
 
         if (token) {
 
-            token = token.split(' ')[1]; 
+            token = token.split(' ')[1];
 
             let decoded = jwt.verify(token, config.development.secret_key);
-    
-            const { userId } = decoded;
+            const { user_id } = decoded;
+            let roles = await getLatestRoles(user_id)
 
-            let roles = await getLatestRoles(userId)
-            
+
             req.result = {
                 ...decoded,
-                roles: [...new Set([...(decoded.roles || []), ...roles])], 
+                roles: [...new Set([...(decoded.roles || []), ...roles])],
             };
+<<<<<<< HEAD
            
+=======
+>>>>>>> e3567d4ff5c768c31539231b88307e945caa8bbe
         } else {
             return res.status(401).json({ message: "Token is required for authentication.", type: 'error' });
         }

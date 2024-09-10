@@ -14,7 +14,11 @@ const {
     validateAssignRolesPermission,
     validateDeleteUserRole,
     assignRoleValidations,
-    validateHolidaysAndEvents
+    validateHolidaysAndEvents,
+    disableRoleValidations,
+    assignRoleValidations,
+    validateAttendance,
+    validateUnmarkAttendance
     
 } = require('../middleware/validationMiddleware')
 
@@ -33,14 +37,14 @@ const {
 
 
 // user auth routes 
-router.post("/create_user", authenticateToken, createUserValidator, validateCreateUserDataTypes, userController.create_user)
-router.post("/login", loginValidator, validateLoginDAtaTypes, userController.login)
-router.post("/forgot_password", forgetPasswordValidator, validateForgotPasswordDataTypes, userController.forgot_password)
-router.post("/reset_password/:token", validateResetPasswordDataTypes, userController.reset_password)
-router.post("/change_password", validateChangePassword, validateChangePasswordDataTypes, userController.change_password)
-router.get("/get_employee_details/:id", authenticateToken, userController.get_employee_details)
-router.get("/get_employees", authenticateToken, userController.get_employees)
-router.patch("/delete_employee/:id", authenticateToken, userController.delete_employee)
+router.post("/create_user", authenticateToken, createUserValidator, validateCreateUserDataTypes, user.create_user)
+router.post("/login", loginValidator, validateLoginDAtaTypes, user.login)
+router.post("/forgot_password", forgetPasswordValidator, validateForgotPasswordDataTypes, user.forgot_password)
+router.post("/reset_password/:token", validateResetPasswordDataTypes, user.reset_password)
+router.post("/change_password", validateChangePassword, validateChangePasswordDataTypes, user.change_password)
+router.get("/get_employee_details/:id", authenticateToken, user.get_employee_details)
+router.get("/get_employees", authenticateToken, user.get_employees)
+router.patch("/delete_employee/:id", authenticateToken, user.delete_employee)
 
 
 
@@ -61,5 +65,9 @@ router.put("/update_holidayOrEvent",authenticateToken,holidaysAndEventsControlle
 router.get("/get_all_holidaysOrEvents",authenticateToken,holidaysAndEventsController.get_all_holidaysOrEvents)
 router.delete("/delete_holidayOrEvent",authenticateToken,holidaysAndEventsController.delete_holidayOrEvent)
 
+
+// attendance
+router.post("/mark_attendance", authenticateToken, validateAttendance, attendance.mark_attendance)
+router.post("/unmark_attendance", authenticateToken, validateUnmarkAttendance, attendance.unmark_attendance)
 
 module.exports = router

@@ -18,8 +18,6 @@ exports.get_user_permissions = async (req, res) => {
         return res.status(200).json(successResponse("successfully fetched.", permissions))
 
     } catch (error) {
-
-        console.log("ERROR::", error)
         return res.status(500).json(errorResponse(error.message))
     }
 }
@@ -66,7 +64,6 @@ exports.get_roles_and_users = async (req, res) => {
         return res.status(200).json(successResponse('Successfully fetched.', rolesWithTheirUsers));
 
     } catch (error) {
-        console.log("ERROR::", error);
         return res.status(500).json(errorResponse(error.message));
     }
 };
@@ -78,6 +75,10 @@ exports.get_roles_and_users = async (req, res) => {
 exports.assign_role = async (req, res) => {
     const { user_id, role_id } = req.body;
     try {
+<<<<<<< HEAD
+=======
+
+>>>>>>> e3567d4ff5c768c31539231b88307e945caa8bbe
         const check_existing_role_query = `
             SELECT * FROM user_roles 
             WHERE user_id = ? AND role_id = ?`;
@@ -108,7 +109,6 @@ exports.assign_role = async (req, res) => {
         return res.status(200).json(successResponse("Role assigned to the user successfully."));
 
     } catch (error) {
-        console.error("Error during role assignment:", error);
         return res.status(500).json(errorResponse(error.message));
     }
 };
@@ -129,7 +129,6 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
             type: sequelize.QueryTypes.INSERT,
             transaction
         });
-        console.log("roles ------", insert_role_result);
         const role_id = insert_role_result ? insert_role_result : null;
 
         if (!role_id) throw new Error("Error while creating new role");
@@ -172,7 +171,6 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
         });
 
     } catch (error) {
-        console.log("ERROR::", error);
 
         if (error.message.includes('foreign key constraint fails')) {
             res.status(400).json({
@@ -253,8 +251,6 @@ exports.disabled_role = async (req, res) => {
             transaction
         });
 
-        console.log("role disabled ------", result);
-
         // Check the number of affected rows
         const affectedRows = result[1]; // Second element contains affected rows count
         if (affectedRows === 0) {
@@ -316,7 +312,6 @@ exports.disabled_role = async (req, res) => {
         });
 
     } catch (error) {
-        console.log("ERROR::", error);
         await transaction.rollback();
         res.status(500).json({
             type: "error",
@@ -362,7 +357,6 @@ exports.delete_user_role = async (req, res) => {
             type: 'success'
         });
     } catch (error) {
-        console.log("ERROR::", error);
         return res.status(500).json({
             message: error.message,
             type: 'error'
