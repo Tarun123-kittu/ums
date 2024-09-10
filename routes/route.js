@@ -71,5 +71,7 @@ router.post("/mark_attendance", authenticateToken, validateAttendance, attendanc
 router.post("/unmark_attendance", authenticateToken, validateUnmarkAttendance, attendanceController.unmark_attendance)
 router.get("/get_attendances", authenticateToken, attendanceController.get_attendances)
 router.get("/get_attendances_report", authenticateToken, attendanceController.get_attendance_report)
+router.put("/mark_break", authenticateToken, attendanceController.mark_break)
+router.put("/unmark_break", authenticateToken, attendanceController.unmark_break)
 
 module.exports = router

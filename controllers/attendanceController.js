@@ -14,7 +14,7 @@ exports.mark_attendance = async (req, res) => {
         });
         if (is_today_attendance_marked) return res.status(400).json({ type: "error", message: "You already marked your attendance !!" })
 
-        const mark_attendance_query = `INSERT INTO attendances (date, employee_id, in_time, login_device, login_mobile, created_by, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+        const mark_attendance_query = `INSERT INTO attendances (date, employee_id, in_time, status, login_device, login_mobile, created_by, createdAt, updatedAt) VALUES (?, ?, ?, "PRESENT", ?, ?, ?, ?, ?)`;
 
         const [is_attendance_marked] = await sequelize.query(mark_attendance_query, {
             replacements: [current_time, employee_id, current_time, login_device, login_mobile, employee_id, current_time, current_time],
@@ -93,7 +93,7 @@ exports.unmark_attendance = async (req, res) => {
 exports.get_attendances = async (req, res) => {
     try {
         // Query to get all users who are not disabled
-        const get_all_users = `SELECT id FROM users WHERE is_disabled = 0`;
+        const get_all_users = `SELECT id, username, name FROM users WHERE is_disabled = 0`;
         const is_users_fetched = await sequelize.query(get_all_users, {
             type: sequelize.QueryTypes.SELECT
         });
@@ -102,8 +102,11 @@ exports.get_attendances = async (req, res) => {
             return res.status(400).json({ type: "error", message: "No users found" });
         }
 
+        // Array to store all attendance records
+        let all_user_attendances = [];
+
         // Loop over the fetched users and get attendance records
-        const get_all_user_attendances = await Promise.all(is_users_fetched.map(async (user) => {
+        await Promise.all(is_users_fetched.map(async (user) => {
             const userId = user?.id;
 
             const get_attendance_report_query = `
@@ -116,7 +119,8 @@ exports.get_attendances = async (req, res) => {
                     a.out_time,
                     a.total_time,
                     a.login_mobile,
-                    a.logout_mobile
+                    a.logout_mobile,
+                    a.on_break
                 FROM 
                     users u
                 LEFT JOIN 
@@ -133,12 +137,29 @@ exports.get_attendances = async (req, res) => {
                 type: sequelize.QueryTypes.SELECT
             });
 
-            return attendance_records.length > 0 ? attendance_records : [{ username: user.username, name: user.name }];
+            // Concatenate the results into a single array
+            if (attendance_records.length > 0) {
+                all_user_attendances = all_user_attendances.concat(attendance_records);
+            } else {
+                // If no attendance records, push user details as a fallback
+                all_user_attendances.push({
+                    username: user.username,
+                    name: user.name,
+                    date: null,
+                    date_in_week_day: null,
+                    in_time: null,
+                    out_time: null,
+                    total_time: null,
+                    login_mobile: null,
+                    logout_mobile: null,
+                    on_break: null
+                });
+            }
         }));
 
         return res.status(200).json({
             type: "success",
-            data: get_all_user_attendances
+            data: all_user_attendances // Single array with all attendance records
         });
 
     } catch (error) {
@@ -148,6 +169,7 @@ exports.get_attendances = async (req, res) => {
         });
     }
 };
+
 
 
 exports.get_attendance_report = async (req, res) => {
@@ -189,7 +211,8 @@ exports.get_attendance_report = async (req, res) => {
                     a.logout_mobile,
                     a.report,
                     a.remark AS review,
-                    a.rating
+                    a.rating,
+                    a.on_break
                 FROM 
                     users u
                 LEFT JOIN 
@@ -233,6 +256,68 @@ exports.get_attendance_report = async (req, res) => {
             type: "error",
             message: error.message
         });
+    }
+}
+
+exports.mark_break = async (req, res) => {
+    const userId = req.result.user_id;
+    try {
+        const mark_break_query = `  UPDATE attendances
+                SET 
+                    on_break = true
+                WHERE 
+                    employee_id = ? AND 
+                    date = CURDATE()
+            `;
+        const is_break_marked = await sequelize.query(mark_break_query, {
+            replacements: [userId],
+            type: sequelize.QueryTypes.UPDATE
+        });
+
+        console.log(is_break_marked)
+
+        if (!is_break_marked) res.status(400).json({ type: "error", message: "Error while marking break" })
+
+        return res.status(200).json({
+            type: "success",
+            message: "Break marked successfully"
+        })
+    } catch (error) {
+        return res.status(400).json({
+            type: "error",
+            message: error.message
+        })
+    }
+}
+
+exports.unmark_break = async (req, res) => {
+    const userId = req.result.user_id;
+    try {
+        const mark_break_query = `  UPDATE attendances
+                SET 
+                    on_break = false
+                WHERE 
+                    employee_id = ? AND 
+                    date = CURDATE()
+            `;
+        const is_break_marked = await sequelize.query(mark_break_query, {
+            replacements: [userId],
+            type: sequelize.QueryTypes.UPDATE
+        });
+
+        console.log(is_break_marked)
+
+        if (!is_break_marked) res.status(400).json({ type: "error", message: "Error while marking break" })
+
+        return res.status(200).json({
+            type: "success",
+            message: "Break unmarked successfully"
+        })
+    } catch (error) {
+        return res.status(400).json({
+            type: "error",
+            message: error.message
+        })
     }
 }
 
