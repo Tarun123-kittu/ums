@@ -75,10 +75,6 @@ exports.get_roles_and_users = async (req, res) => {
 exports.assign_role = async (req, res) => {
     const { user_id, role_id } = req.body;
     try {
-<<<<<<< HEAD
-=======
-
->>>>>>> e3567d4ff5c768c31539231b88307e945caa8bbe
         const check_existing_role_query = `
             SELECT * FROM user_roles 
             WHERE user_id = ? AND role_id = ?`;

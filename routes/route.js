@@ -1,8 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const userController = require('../controllers/employeeController')
+const userController = require('../controllers/userController')
 const rolesPermissionsController = require("../controllers/rolesAndPermissionController")
 const holidaysAndEventsController = require("../controllers/holidaysAndEventsController")
+const attendanceController = require("../controllers/attendanceController")
 const verifyAccess = require("../middleware/verifyAccessMiddleware")
 const authenticateToken = require("../middleware/authenticaionMiddleware")
 const {
@@ -13,7 +14,6 @@ const {
     validateUpdateRolesPermission,
     validateAssignRolesPermission,
     validateDeleteUserRole,
-    assignRoleValidations,
     validateHolidaysAndEvents,
     disableRoleValidations,
     assignRoleValidations,
@@ -37,14 +37,14 @@ const {
 
 
 // user auth routes 
-router.post("/create_user", authenticateToken, createUserValidator, validateCreateUserDataTypes, user.create_user)
-router.post("/login", loginValidator, validateLoginDAtaTypes, user.login)
-router.post("/forgot_password", forgetPasswordValidator, validateForgotPasswordDataTypes, user.forgot_password)
-router.post("/reset_password/:token", validateResetPasswordDataTypes, user.reset_password)
-router.post("/change_password", validateChangePassword, validateChangePasswordDataTypes, user.change_password)
-router.get("/get_employee_details/:id", authenticateToken, user.get_employee_details)
-router.get("/get_employees", authenticateToken, user.get_employees)
-router.patch("/delete_employee/:id", authenticateToken, user.delete_employee)
+router.post("/create_user", authenticateToken, createUserValidator, validateCreateUserDataTypes, userController.create_user)
+router.post("/login", loginValidator, validateLoginDAtaTypes, userController.login)
+router.post("/forgot_password", forgetPasswordValidator, validateForgotPasswordDataTypes, userController.forgot_password)
+router.post("/reset_password/:token", validateResetPasswordDataTypes, userController.reset_password)
+router.post("/change_password", validateChangePassword, validateChangePasswordDataTypes, userController.change_password)
+router.get("/get_employee_details/:id", authenticateToken, userController.get_employee_details)
+router.get("/get_employees", authenticateToken, userController.get_employees)
+router.patch("/delete_employee/:id", authenticateToken, userController.delete_employee)
 
 
 
@@ -67,7 +67,7 @@ router.delete("/delete_holidayOrEvent",authenticateToken,holidaysAndEventsContro
 
 
 // attendance
-router.post("/mark_attendance", authenticateToken, validateAttendance, attendance.mark_attendance)
-router.post("/unmark_attendance", authenticateToken, validateUnmarkAttendance, attendance.unmark_attendance)
+router.post("/mark_attendance", authenticateToken, validateAttendance, attendanceController.mark_attendance)
+router.post("/unmark_attendance", authenticateToken, validateUnmarkAttendance, attendanceController.unmark_attendance)
 
 module.exports = router
