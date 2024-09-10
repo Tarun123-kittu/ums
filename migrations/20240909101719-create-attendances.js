@@ -18,11 +18,11 @@ module.exports = {
                 allowNull: true,
             },
             in_time: {
-                type: Sequelize.DATE,
+                type: Sequelize.TIME,
                 allowNull: true,
             },
             out_time: {
-                type: Sequelize.DATE,
+                type: Sequelize.TIME,
                 allowNull: true,
             },
             total_time: {

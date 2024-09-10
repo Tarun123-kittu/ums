@@ -1,7 +1,7 @@
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  class Attendance extends Model {}
+  class Attendance extends Model { }
 
   Attendance.init({
     id: {
@@ -18,11 +18,11 @@ module.exports = (sequelize) => {
       allowNull: true,
     },
     in_time: {
-      type: DataTypes.DATE,
+      type: DataTypes.TIME,
       allowNull: true,
     },
     out_time: {
-      type: DataTypes.DATE,
+      type: DataTypes.TIME,
       allowNull: true,
     },
     total_time: {

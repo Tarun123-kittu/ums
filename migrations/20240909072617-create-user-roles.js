@@ -1,93 +1,44 @@
 'use strict';
 
 module.exports = {
-    async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('Attendances', {
+    up: async (queryInterface, Sequelize) => {
+        await queryInterface.createTable('user_roles', {
             id: {
                 allowNull: false,
                 primaryKey: true,
-                type: Sequelize.INTEGER,
-                autoIncrement: true,
+                type: Sequelize.INTEGER, // Change to INTEGER for auto-incrementing
+                autoIncrement: true, // Add this line for auto-incrementing
             },
-            date: {
-                type: Sequelize.DATEONLY,
-                allowNull: true,
+            user_id: {
+                type: Sequelize.INTEGER, // Change to INTEGER to match the Users table
+                references: {
+                    model: 'Users', // Ensure this matches the name of the Users table
+                    key: 'id',
+                },
+                onUpdate: 'CASCADE', // Optional: Define behavior on update
+                onDelete: 'CASCADE', // Optional: Define behavior on delete
             },
-            employee_id: {
-                type: Sequelize.INTEGER,
-                allowNull: true,
+            role_id: {
+                type: Sequelize.INTEGER, // Change to INTEGER to match the Roles table
+                references: {
+                    model: 'Roles', // Ensure this matches the name of the Roles table
+                    key: 'id',
+                },
+                onUpdate: 'CASCADE', // Optional: Define behavior on update
+                onDelete: 'CASCADE', // Optional: Define behavior on delete
             },
-            in_time: {
+            created_at: {
                 type: Sequelize.DATE,
-                allowNull: true,
-            },
-            out_time: {
-                type: Sequelize.DATE,
-                allowNull: true,
-            },
-            total_time: {
-                type: Sequelize.TIME,
-                allowNull: true,
-            },
-            on_break: {
-                type: Sequelize.INTEGER,
-                allowNull: true,
-                defaultValue: 0,
-            },
-            status: {
-                type: Sequelize.ENUM('PRESENT', 'ABSENT', 'LEAVE', 'SUSPENDED'),
-                allowNull: true,
-                defaultValue: 'ABSENT',
-            },
-            report: {
-                type: Sequelize.STRING(2000),
-                allowNull: true,
-            },
-            remark: {
-                type: Sequelize.STRING(2000),
-                allowNull: true,
-            },
-            rating: {
-                type: Sequelize.FLOAT,
-                allowNull: true,
-                defaultValue: 5,
-            },
-            login_device: {
-                type: Sequelize.STRING(100),
-                allowNull: true,
-            },
-            login_mobile: {
-                type: Sequelize.STRING(100),
-                allowNull: true,
-            },
-            logout_device: {
-                type: Sequelize.STRING(100),
-                allowNull: true,
-            },
-            logout_mobile: {
-                type: Sequelize.STRING(100),
-                allowNull: true,
-            },
-            created_by: {
-                type: Sequelize.INTEGER,
-                allowNull: true,
-            },
-            createdAt: {
-                type: Sequelize.DATE,
-                allowNull: false,
                 defaultValue: Sequelize.NOW,
             },
-            updatedAt: {
+            updated_at: {
                 type: Sequelize.DATE,
-                allowNull: false,
                 defaultValue: Sequelize.NOW,
-                onUpdate: Sequelize.NOW,
             },
         });
     },
 
-    async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable('Attendances');
-    },
+    down: async (queryInterface, Sequelize) => {
+        await queryInterface.dropTable('user_roles');
+    }
 };
-
