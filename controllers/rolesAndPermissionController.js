@@ -45,7 +45,7 @@ exports.get_roles_and_users = async (req, res) => {
             return res.status(400).json(errorResponse("No data found."));
         }
 
-        // Group users by role
+      
         const groupedData = rolesWithUsers.reduce((acc, { role, username }) => {
             if (!acc[role]) {
                 acc[role] = [];
@@ -55,7 +55,7 @@ exports.get_roles_and_users = async (req, res) => {
             return acc;
         }, {});
 
-        // Format the data
+       
         const rolesWithTheirUsers = Object.keys(groupedData).map(role => ({
             role,
             users: groupedData[role]

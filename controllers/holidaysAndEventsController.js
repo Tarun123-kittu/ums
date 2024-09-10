@@ -27,7 +27,6 @@ exports.add_holidayOrEvent = async (req, res) => {
               )
             `;
 
-
         const values = [
             occasion_name,
             occasion_type,
@@ -79,10 +78,7 @@ exports.update_holidayOrEvent = async (req, res) => {
 
         if (!existingRecord) {
             await t.rollback();
-            return res.status(404).json({
-                message: 'Holiday/Event not found.',
-                type: 'error'
-            });
+            return res.status(400).json(errorResponse("Holiday/Event not found."));
         }
 
 
@@ -102,9 +98,7 @@ exports.update_holidayOrEvent = async (req, res) => {
         addField('occasion_description', occasion_description, existingRecord.occasion_description);
         addField('date', date, existingRecord.date);
 
-
         updateFields.push('updatedAt = NOW()');
-
 
         const updateQuery = `
             UPDATE holidays_and_events
@@ -136,13 +130,13 @@ exports.get_all_holidaysOrEvents = async (req, res) => {
     try {
         const year = parseInt(req.query.year, 10) || new Date().getFullYear();
 
-        if (isNaN(year) || year <= 0) { return res.status(400).json({ error: "Invalid year provided." }); }
+        if (isNaN(year) || year <= 0) { return res.status(400).json(errorResponse("Invalid year provided.")); }
 
         const query = `
-       SELECT *, COUNT(*) OVER() AS total_count
-       FROM holidays_and_events
-       WHERE YEAR(date) = :year
-   `;
+        SELECT *, COUNT(*) OVER() AS total_count
+        FROM holidays_and_events
+        WHERE YEAR(date) = :year
+        `;
 
         const results = await sequelize.query(query, {
             replacements: { year },
@@ -166,13 +160,13 @@ exports.delete_holidayOrEvent = async (req, res) => {
     try {
         const id = req.query.holidayEventId;
 
-        if (!id || isNaN(id)) { return res.status(400).json({ message: 'Invalid or missing ID parameter.' }) }
+        if (!id || isNaN(id)) { return res.status(400).json(errorResponse("Invalid or missing ID parameter.")) }
 
         const result = await sequelize.query(`DELETE FROM holidays_and_events WHERE id = ${id}`);
 
         const affectedRows = result.affectedRows || result[0]?.affectedRows || 0;
 
-        if (affectedRows === 0) { return res.status(404).json({ message: 'Holiday or Event not found.' }) }
+        if (affectedRows === 0) { return res.status(404).json(errorResponse("Holiday or Event not found."))}
 
         return res.status(200).json(successResponse("Holiday event deleted successfully."));
 
