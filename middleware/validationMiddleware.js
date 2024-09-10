@@ -229,8 +229,21 @@ const validateDeleteUserRole = [
         if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
         next();
     }
-
 ]
+
+
+
+const validateHolidaysAndEvents = [
+    check('occasion_name', 'Please provide occasion name.').not().isEmpty(),
+    check('occasion_type', 'Please provide occasion type.').not().isEmpty(),
+    check('date', 'Please provide date.').not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: "error" }) }
+        next()
+    }
+]
+
 
 
 
@@ -246,6 +259,7 @@ module.exports = {
     validateUpdateRolesPermission,
     assignRoleValidations,
     disableRoleValidations,
-    validateDeleteUserRole
+    validateDeleteUserRole,
+    validateHolidaysAndEvents,
 }
 
