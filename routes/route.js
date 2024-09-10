@@ -1,11 +1,12 @@
-let express = require('express')
-let router = express.Router()
-let user = require('../controllers/userController')
-let rolesPermissions = require("../controllers/rolesAndPermissionController")
-let attendance = require("../controllers/attendanceController")
-let verifyAccess = require("../middleware/verifyAccessMiddleware")
+const express = require('express')
+const router = express.Router()
+const userController = require('../controllers/userController')
+const rolesPermissionsController = require("../controllers/rolesAndPermissionController")
+const holidaysAndEventsController = require("../controllers/holidaysAndEventsController")
+const attendanceController = require("../controllers/attendanceController")
+const verifyAccess = require("../middleware/verifyAccessMiddleware")
 const authenticateToken = require("../middleware/authenticaionMiddleware")
-let {
+const {
     createUserValidator,
     loginValidator,
     forgetPasswordValidator,
@@ -13,10 +14,12 @@ let {
     validateUpdateRolesPermission,
     validateAssignRolesPermission,
     validateDeleteUserRole,
+    validateHolidaysAndEvents,
     disableRoleValidations,
     assignRoleValidations,
     validateAttendance,
     validateUnmarkAttendance
+    
 } = require('../middleware/validationMiddleware')
 
 const {
@@ -31,40 +34,40 @@ const {
 
 
 
+
+
 // user auth routes 
-router.post("/create_user", authenticateToken, createUserValidator, validateCreateUserDataTypes, user.create_user)
-router.post("/login", loginValidator, validateLoginDAtaTypes, user.login)
-router.post("/forgot_password", forgetPasswordValidator, validateForgotPasswordDataTypes, user.forgot_password)
-router.post("/reset_password/:token", validateResetPasswordDataTypes, user.reset_password)
-router.post("/change_password", validateChangePassword, validateChangePasswordDataTypes, user.change_password)
-router.get("/get_employee_details/:id", authenticateToken, user.get_employee_details)
-router.get("/get_employees", authenticateToken, user.get_employees)
-router.patch("/delete_employee/:id", authenticateToken, user.delete_employee)
+router.post("/create_user", authenticateToken, createUserValidator, validateCreateUserDataTypes, userController.create_user)
+router.post("/login", loginValidator, validateLoginDAtaTypes, userController.login)
+router.post("/forgot_password", forgetPasswordValidator, validateForgotPasswordDataTypes, userController.forgot_password)
+router.post("/reset_password/:token", validateResetPasswordDataTypes, userController.reset_password)
+router.post("/change_password", validateChangePassword, validateChangePasswordDataTypes, userController.change_password)
+router.get("/get_employee_details/:id", authenticateToken, userController.get_employee_details)
+router.get("/get_employees", authenticateToken, userController.get_employees)
+router.patch("/delete_employee/:id", authenticateToken, userController.delete_employee)
 
 
 
 // roles and permissions
-router.get("/get_user_permissions", authenticateToken, rolesPermissions.get_user_permissions)
-router.get("/get_roles_and_users", authenticateToken, rolesPermissions.get_roles_and_users)
-router.post("/assign_role", authenticateToken, assignRoleValidations, rolesPermissions.assign_role)
-router.post("/assign_new_permissions_to_roles", authenticateToken, validateAssignRolesPermission, rolesPermissions.assign_new_permissions_to_new_role)
-router.patch("/update_permissions_assigned_to_role", authenticateToken, validateUpdateRolesPermission, rolesPermissions.update_permissions_assigned_to_role)
-router.patch("/delete_role", authenticateToken, rolesPermissions.disabled_role)
-router.delete("/delete_user_role", authenticateToken, validateDeleteUserRole, rolesPermissions.delete_user_role)
-
-
-// attendnce routes
-router.post("/mark_attendance", authenticateToken, validateAttendance, attendance.mark_attendance)
-router.post("/unmark_attendance", authenticateToken, validateUnmarkAttendance, attendance.unmark_attendance)
+router.get("/get_user_permissions", authenticateToken, rolesPermissionsController.get_user_permissions)
+router.get("/get_roles_and_users", authenticateToken, rolesPermissionsController.get_roles_and_users)
+router.post("/assign_role", authenticateToken, assignRoleValidations,rolesPermissionsController.assign_role)
+router.post("/assign_new_permissions_to_roles", authenticateToken, validateAssignRolesPermission, rolesPermissionsController.assign_new_permissions_to_new_role)
+router.patch("/update_permissions_assigned_to_role", authenticateToken, validateUpdateRolesPermission, rolesPermissionsController.update_permissions_assigned_to_role)
+router.patch("/delete_role", authenticateToken, rolesPermissionsController.disabled_role)
+router.delete("/delete_user_role",authenticateToken,validateDeleteUserRole,rolesPermissionsController.delete_user_role)
 
 
 
+//holidays and events
+router.post("/add_holidayOrEvent",authenticateToken,validateHolidaysAndEvents,holidaysAndEventsController.add_holidayOrEvent)
+router.put("/update_holidayOrEvent",authenticateToken,holidaysAndEventsController.update_holidayOrEvent)
+router.get("/get_all_holidaysOrEvents",authenticateToken,holidaysAndEventsController.get_all_holidaysOrEvents)
+router.delete("/delete_holidayOrEvent",authenticateToken,holidaysAndEventsController.delete_holidayOrEvent)
 
 
-
-
-
-
-
+// attendance
+router.post("/mark_attendance", authenticateToken, validateAttendance, attendanceController.mark_attendance)
+router.post("/unmark_attendance", authenticateToken, validateUnmarkAttendance, attendanceController.unmark_attendance)
 
 module.exports = router

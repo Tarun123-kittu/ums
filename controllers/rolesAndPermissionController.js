@@ -4,6 +4,9 @@ let { sequelize } = require('../models')
 
 
 
+
+
+
 exports.get_user_permissions = async (req, res) => {
     try {
         let role = req.result.roles
@@ -19,7 +22,7 @@ exports.get_user_permissions = async (req, res) => {
     }
 }
 
-// ---
+
 
 
 exports.get_roles_and_users = async (req, res) => {
@@ -64,14 +67,14 @@ exports.get_roles_and_users = async (req, res) => {
         return res.status(500).json(errorResponse(error.message));
     }
 };
-// ---
+
+
 
 
 
 exports.assign_role = async (req, res) => {
     const { user_id, role_id } = req.body;
     try {
-
         const check_existing_role_query = `
             SELECT * FROM user_roles 
             WHERE user_id = ? AND role_id = ?`;
@@ -106,7 +109,6 @@ exports.assign_role = async (req, res) => {
     }
 };
 
-// --- 
 
 
 
@@ -151,11 +153,11 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
             INSERT INTO roles_permissions (role_id, permission_id, can_view, can_create, can_update, can_delete)
             VALUES ${permissionValues}
         `;
+
         await sequelize.query(insert_permissions_query, {
             type: sequelize.QueryTypes.INSERT,
             transaction
         });
-
 
         // Commit the transaction
         await transaction.commit();
@@ -180,7 +182,7 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
     }
 };
 
-//-----
+
 
 
 
@@ -220,7 +222,8 @@ exports.update_permissions_assigned_to_role = async (req, res) => {
         });
     }
 };
-// -----
+
+
 
 
 exports.disabled_role = async (req, res) => {
@@ -313,6 +316,7 @@ exports.disabled_role = async (req, res) => {
     }
 };
 // ------ this api need to recheck 
+
 
 
 exports.delete_user_role = async (req, res) => {
