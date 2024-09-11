@@ -43,8 +43,6 @@ exports.mark_attendance = async (req, res) => {
     }
 };
 
-
-
 exports.unmark_attendance = async (req, res) => {
     const user_id = req.result.user_id
     const { date, out_time, report, logout_device, logout_mobile } = req.body;
@@ -178,8 +176,6 @@ exports.get_attendances = async (req, res) => {
     }
 };
 
-
-
 exports.get_attendance_report = async (req, res) => {
     try {
         const { name, month, year } = req.query;
@@ -265,70 +261,162 @@ exports.get_attendance_report = async (req, res) => {
     }
 }
 
-
 exports.mark_break = async (req, res) => {
     const userId = req.result.user_id;
+    let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
+
+    const transaction = await sequelize.transaction();
+
     try {
-        const mark_break_query = `  UPDATE attendances
-                SET 
-                    on_break = true
-                WHERE 
-                    user_id = ? AND 
-                    date = CURDATE()
-            `;
-        const is_break_marked = await sequelize.query(mark_break_query, {
+        const get_attendance_id_query = `SELECT id, on_break FROM attendances WHERE user_id = ? AND date = CURDATE()`;
+        const get_attendance_id = await sequelize.query(get_attendance_id_query, {
             replacements: [userId],
-            type: sequelize.QueryTypes.UPDATE
+            type: sequelize.QueryTypes.SELECT,
+            transaction,
         });
 
-        console.log(is_break_marked)
+        if (get_attendance_id?.length === 0) {
+            await transaction.rollback();
+            return res.status(400).json(errorResponse("You have not marked your attendance yet. Please mark your attendance."));
+        }
 
-        if (!is_break_marked) res.status(400).json({ type: "error", message: "Error while marking break" })
+        if (get_attendance_id[0].on_break) {
+            await transaction.rollback();
+            return res.status(400).json(errorResponse("You are already on break."));
+        }
+
+        const attendanceId = get_attendance_id[0]?.id;
+
+        const mark_break_query = `UPDATE attendances SET on_break = true WHERE user_id = ? AND date = CURDATE()`;
+        const is_break_marked = await sequelize.query(mark_break_query, {
+            replacements: [userId],
+            type: sequelize.QueryTypes.UPDATE,
+            transaction,
+        });
+
+        if (!is_break_marked) {
+            await transaction.rollback(); // Rollback the transaction
+            return res.status(400).json({ type: "error", message: "Error while marking break." });
+        }
+
+        const create_break_time_query = `INSERT INTO breaks (attendance_id, break_start, created_at) VALUES (?, ?, CURDATE())`;
+        const [is_break_created] = await sequelize.query(create_break_time_query, {
+            replacements: [attendanceId, current_time],
+            type: sequelize.QueryTypes.INSERT,
+            transaction,
+        });
+
+        if (!is_break_created) {
+            await transaction.rollback();
+            return res.status(400).json(errorResponse("Error while creating break time."));
+        }
+
+
+        await transaction.commit();
 
         return res.status(200).json({
             type: "success",
-            message: "Break marked successfully"
-        })
+            message: "Break marked successfully",
+        });
     } catch (error) {
+        await transaction.rollback();
         return res.status(400).json({
             type: "error",
-            message: error.message
-        })
+            message: error.message,
+        });
     }
-}
+};
 
 exports.unmark_break = async (req, res) => {
     const userId = req.result.user_id;
+    let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
+
+    // Start a transaction
+    const transaction = await sequelize.transaction();
+
     try {
-        const mark_break_query = `  UPDATE attendances
-                SET 
-                    on_break = false
-                WHERE 
-                    user_id = ? AND 
-                    date = CURDATE()
-            `;
-        const is_break_marked = await sequelize.query(mark_break_query, {
+        const get_attendance_id_query = `SELECT id, on_break FROM attendances WHERE user_id = ? AND date = CURDATE()`;
+        const get_attendance_id = await sequelize.query(get_attendance_id_query, {
             replacements: [userId],
-            type: sequelize.QueryTypes.UPDATE
+            type: sequelize.QueryTypes.SELECT,
+            transaction // Include transaction
         });
 
-        console.log(is_break_marked)
+        if (get_attendance_id?.length === 0) {
+            await transaction.rollback(); // Rollback transaction
+            return res.status(400).json(errorResponse("You have not marked your attendance yet. Please mark your attendance."));
+        }
 
-        if (!is_break_marked) res.status(400).json({ type: "error", message: "Error while marking break" })
+        if (!get_attendance_id[0].on_break) {
+            await transaction.rollback(); // Rollback transaction
+            return res.status(400).json(errorResponse("Please mark break first to perform this action"));
+        }
+
+        const attendanceId = get_attendance_id[0]?.id;
+
+        const mark_break_query = `UPDATE attendances SET on_break = false WHERE user_id = ? AND date = CURDATE()`;
+        const is_break_marked = await sequelize.query(mark_break_query, {
+            replacements: [userId],
+            type: sequelize.QueryTypes.UPDATE,
+            transaction // Include transaction
+        });
+
+        if (!is_break_marked) {
+            await transaction.rollback(); // Rollback transaction
+            return res.status(400).json({ type: "error", message: "Error while unmarking break." });
+        }
+
+        const get_break_timings_query = `SELECT id, break_start, break_end, break_totaltime FROM breaks 
+                                         WHERE attendance_id = ? 
+                                         AND break_end IS NULL 
+                                         AND break_totaltime IS NULL 
+                                         AND created_at = CURDATE()`;
+        const [is_break_exist] = await sequelize.query(get_break_timings_query, {
+            replacements: [attendanceId],
+            type: sequelize.QueryTypes.SELECT,
+            transaction // Include transaction
+        });
+
+        if (!is_break_exist) {
+            await transaction.rollback(); // Rollback transaction
+            return res.status(400).json(errorResponse("You have not marked your break. Please mark your break first."));
+        }
+
+        let total_time = find_the_total_time(is_break_exist?.break_start);
+        let break_id = is_break_exist?.id;
+
+        const update_break_total_time_query = `UPDATE breaks 
+                                               SET break_end = ?, 
+                                                   break_totaltime = ?, 
+                                                   updated_at = CURDATE() 
+                                               WHERE id = ?`;
+        const is_break_updated = await sequelize.query(update_break_total_time_query, {
+            replacements: [current_time, total_time, break_id],
+            type: sequelize.QueryTypes.UPDATE,
+            transaction // Include transaction
+        });
+
+        if (!is_break_updated) {
+            await transaction.rollback(); // Rollback transaction
+            return res.status(400).json(errorResponse("Error while updating break."));
+        }
+
+        // Commit transaction if all queries succeed
+        await transaction.commit();
 
         return res.status(200).json({
             type: "success",
             message: "Break unmarked successfully"
-        })
+        });
     } catch (error) {
+        // Rollback transaction on error
+        await transaction.rollback();
         return res.status(400).json({
             type: "error",
             message: error.message
-        })
+        });
     }
-}
-
-
+};
 
 exports.get_attendance_details = async (req, res) => {
     try {
@@ -354,9 +442,6 @@ exports.get_attendance_details = async (req, res) => {
         return res.status(500).json(errorResponse(error.message));
     }
 };
-
-
-
 
 exports.update_attendance_details = async (req, res) => {
     try {
@@ -409,5 +494,3 @@ exports.update_attendance_details = async (req, res) => {
         return res.status(500).json(errorResponse(error.message));
     }
 };
-
-
