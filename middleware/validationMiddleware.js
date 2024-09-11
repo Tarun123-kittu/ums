@@ -284,6 +284,32 @@ const validateUpdateUserAttendance = [
     }
 ]
 
+
+const validateLeaveRequest = [
+    check('from_date')
+        .not().isEmpty().withMessage('From date is required')
+        .isString().withMessage('From date must be a string'),
+    check('to_date')
+        .not().isEmpty().withMessage('To date is required')
+        .isString().withMessage('To date must be a string'),
+    check('type')
+        .not().isEmpty().withMessage('Leave type is required')
+        .isString().withMessage('Leave type must be a string'),
+    check('count')
+        .not().isEmpty().withMessage('Leave count is required')
+        .isNumeric().withMessage('Leave count must be a numeric value (integer or float)'),
+    check('description')
+        .not().isEmpty().withMessage('Leave description is required')
+        .isString().withMessage('Leave description must be a string'),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ message: errors.array()[0].msg, type: 'error' });
+        }
+        next();
+    }
+];
+
 module.exports = {
     createUserValidator,
     loginValidator,
@@ -299,6 +325,7 @@ module.exports = {
     validateHolidaysAndEvents,
     validateUnmarkAttendance,
     validateGetAttendanceDetails,
-    validateUpdateUserAttendance
+    validateUpdateUserAttendance,
+    validateLeaveRequest
 }
 

@@ -3,10 +3,6 @@ const { find_the_total_time } = require("../utils/commonFuntions")
 const moment = require('moment-timezone');
 const { errorResponse, successResponse } = require('../utils/responseHandler');
 
-
-
-
-
 exports.mark_attendance = async (req, res) => {
     const user_id = req.result.user_id
     const { date, in_time, login_device, login_mobile } = req.body;

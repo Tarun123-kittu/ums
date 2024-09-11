@@ -4,6 +4,7 @@ const userController = require('../controllers/userController')
 const rolesPermissionsController = require("../controllers/rolesAndPermissionController")
 const holidaysAndEventsController = require("../controllers/holidaysAndEventsController")
 const attendanceController = require("../controllers/attendanceController")
+const leaveController = require("../controllers/leaveController")
 const verifyAccess = require("../middleware/verifyAccessMiddleware")
 const authenticateToken = require("../middleware/authenticaionMiddleware")
 const {
@@ -20,6 +21,7 @@ const {
     validateUnmarkAttendance,
     validateGetAttendanceDetails,
     validateUpdateUserAttendance,
+    validateLeaveRequest
 } = require('../middleware/validationMiddleware')
 
 const {
@@ -75,5 +77,9 @@ router.get("/get_attendances", authenticateToken, attendanceController.get_atten
 router.get("/get_attendances_report", authenticateToken, attendanceController.get_attendance_report)
 router.put("/mark_break", authenticateToken, attendanceController.mark_break)
 router.put("/unmark_break", authenticateToken, attendanceController.unmark_break)
+
+// leave routes
+router.post("/apply_leave", authenticateToken, validateLeaveRequest, leaveController.apply_leave)
+router.get("/get_applied_leaves", authenticateToken, leaveController.all_applied_leaves)
 
 module.exports = router
