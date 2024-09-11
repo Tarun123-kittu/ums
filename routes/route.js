@@ -4,6 +4,7 @@ const userController = require('../controllers/userController')
 const rolesPermissionsController = require("../controllers/rolesAndPermissionController")
 const holidaysAndEventsController = require("../controllers/holidaysAndEventsController")
 const attendanceController = require("../controllers/attendanceController")
+const interviewLeadsController = require('../controllers/interviewLeads')
 const verifyAccess = require("../middleware/verifyAccessMiddleware")
 const authenticateToken = require("../middleware/authenticaionMiddleware")
 const {
@@ -21,6 +22,8 @@ const {
     validateUnmarkAttendance,
     validateGetAttendanceDetails,
     validateUpdateUserAttendance,
+    validateCreateLeads,
+    validateUpdateLead
 } = require('../middleware/validationMiddleware')
 
 const {
@@ -74,5 +77,15 @@ router.get("/get_attendance_details",authenticateToken,validateGetAttendanceDeta
 router.put("/update_attendance_details",authenticateToken,validateUpdateUserAttendance,attendanceController.update_attendance_details)
 router.get("/get_attendances", authenticateToken, attendanceController.get_attendances)
 router.get("/get_attendances_report", authenticateToken, attendanceController.get_attendance_report)
+
+
+
+//interview leads
+router.post("/create_lead",authenticateToken,validateCreateLeads,interviewLeadsController.create_lead)
+router.get("/get_lead",authenticateToken,validateUpdateLead,interviewLeadsController.get_lead)
+router.put("/update_lead",authenticateToken,validateUpdateLead,interviewLeadsController.update_lead)
+router.get("/get_all_leads",authenticateToken,interviewLeadsController.get_all_leads)
+router.delete("/delete_lead",authenticateToken,validateUpdateLead,interviewLeadsController.delete_lead)
+
 
 module.exports = router
