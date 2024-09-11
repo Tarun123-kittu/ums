@@ -231,12 +231,10 @@ exports.update_lead = async (req, res) => {
 exports.get_all_leads = async (req, res) => {
     try {
 
-        const { profile, date, experience, result, page = 1, limit = 10 } = req.query;
-
+        const { profile, date, experience, page = 1, limit = 10 } = req.query;
 
         const pageNumber = parseInt(page, 10) || 1;
         const pageSize = parseInt(limit, 10) || 10;
-
 
         let baseQuery = `
             SELECT 
@@ -260,9 +258,7 @@ exports.get_all_leads = async (req, res) => {
         if (experience) {
             baseQuery += ` AND i.experience >= :experience`;
         }
-        if (result) {
-            baseQuery += ` AND (i.current_salary >= :result OR i.expected_salary <= :result)`;
-        }
+     
 
 
 
@@ -273,7 +269,7 @@ exports.get_all_leads = async (req, res) => {
 
 
         const [countResult] = await sequelize.query(countQuery, {
-            replacements: { profile, date, experience, result },
+            replacements: { profile, date, experience },
         });
 
 
@@ -291,7 +287,6 @@ exports.get_all_leads = async (req, res) => {
                 profile,
                 date,
                 experience,
-                result,
                 limit: pageSize,
                 offset
             },
