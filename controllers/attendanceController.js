@@ -78,8 +78,6 @@ exports.unmark_attendance = async (req, res) => {
             type: sequelize.QueryTypes.UPDATE
         });
 
-
-
         if (!result) return res.status(400).json({ type: "error", message: "Error while unmarking attendance!!" });
 
         res.status(200).json({ type: "success", message: "Thankyou." });
