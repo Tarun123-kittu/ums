@@ -18,7 +18,6 @@ const {
     validateHolidaysAndEvents,
     disableRoleValidations,
     assignRoleValidations,
-    validateAttendance,
     validateUnmarkAttendance,
     validateGetAttendanceDetails,
     validateUpdateUserAttendance,
@@ -48,7 +47,7 @@ router.post("/reset_password/:token", validateResetPasswordDataTypes, userContro
 router.post("/change_password", validateChangePassword, validateChangePasswordDataTypes, userController.change_password)
 router.get("/get_employee_details/:id", authenticateToken, userController.get_employee_details)
 router.get("/get_employees", authenticateToken, userController.get_employees)
-router.patch("/delete_employee/:id", authenticateToken, validateGetAttendanceDetails,userController.delete_employee)
+router.patch("/delete_employee/:id", authenticateToken, validateGetAttendanceDetails, userController.delete_employee)
 
 
 
@@ -71,12 +70,14 @@ router.delete("/delete_holidayOrEvent", authenticateToken, holidaysAndEventsCont
 
 
 // attendance
-router.post("/mark_attendance", authenticateToken, validateAttendance, attendanceController.mark_attendance)
+router.post("/mark_attendance", authenticateToken, attendanceController.mark_attendance)
 router.post("/unmark_attendance", authenticateToken, validateUnmarkAttendance, attendanceController.unmark_attendance)
-router.get("/get_attendance_details",authenticateToken,validateGetAttendanceDetails,attendanceController.get_attendance_details)
-router.put("/update_attendance_details",authenticateToken,validateUpdateUserAttendance,attendanceController.update_attendance_details)
+router.get("/get_attendance_details", authenticateToken, validateGetAttendanceDetails, attendanceController.get_attendance_details)
+router.put("/update_attendance_details", authenticateToken, validateUpdateUserAttendance, attendanceController.update_attendance_details)
 router.get("/get_attendances", authenticateToken, attendanceController.get_attendances)
 router.get("/get_attendances_report", authenticateToken, attendanceController.get_attendance_report)
+router.put("/mark_break", authenticateToken, attendanceController.mark_break)
+router.put("/unmark_break", authenticateToken, attendanceController.unmark_break)
 
 
 

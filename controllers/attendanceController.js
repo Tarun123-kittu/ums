@@ -8,18 +8,19 @@ const { errorResponse, successResponse } = require('../utils/responseHandler');
 
 
 exports.mark_attendance = async (req, res) => {
-    const { date, user_id, in_time, login_device, login_mobile } = req.body;
+    const user_id = req.result.user_id
+    const { date, in_time, login_device, login_mobile } = req.body;
     let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
 
     try {
-        const is_today_attendance_marked_query = `SELECT date FROM attendances WHERE date = CURDATE() AND employee_id = ?`;
+        const is_today_attendance_marked_query = `SELECT date FROM attendances WHERE date = CURDATE() AND user_id = ?`;
         const [is_today_attendance_marked] = await sequelize.query(is_today_attendance_marked_query, {
-            replacements: [employee_id],
+            replacements: [user_id],
             type: sequelize.QueryTypes.SELECT
         });
         if (is_today_attendance_marked) return res.status(400).json({ type: "error", message: "You already marked your attendance !!" })
 
-        const mark_attendance_query = `INSERT INTO attendances (date, employee_id, in_time, login_device, login_mobile, created_by, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+        const mark_attendance_query = `INSERT INTO attendances (date, user_id, in_time, status, login_device, login_mobile, created_by, createdAt, updatedAt) VALUES (?, ?, ?, "PRESENT", ?, ?, ?, ?, ?)`;
 
         const [is_attendance_marked] = await sequelize.query(mark_attendance_query, {
             replacements: [current_time, user_id, current_time, login_device, login_mobile, user_id, current_time, current_time],
@@ -45,10 +46,11 @@ exports.mark_attendance = async (req, res) => {
 
 
 exports.unmark_attendance = async (req, res) => {
-    const { date, user_id, out_time, report, logout_device, logout_mobile } = req.body;
+    const user_id = req.result.user_id
+    const { date, out_time, report, logout_device, logout_mobile } = req.body;
     let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
     try {
-        const is_user_mark_attendance_today_query = `SELECT date,in_time,out_time FROM attendances WHERE date = CURDATE() AND employee_id = ?`;
+        const is_user_mark_attendance_today_query = `SELECT date,in_time,out_time FROM attendances WHERE date = CURDATE() AND user_id = ?`;
         const is_user_mark_attendance_today = await sequelize.query(is_user_mark_attendance_today_query, {
             replacements: [user_id],
             type: sequelize.QueryTypes.SELECT
@@ -61,7 +63,7 @@ exports.unmark_attendance = async (req, res) => {
         }
 
         if (is_user_mark_attendance_today[0]?.out_time !== null) {
-            return res.status(400).json({ type: "error", message: "You alreadu unmark your attendance Thanks !!" });
+            return res.status(400).json({ type: "error", message: "You already unmark your attendance Thanks !!" });
         }
 
         let total_time = find_the_total_time(is_user_mark_attendance_today[0]?.in_time)
@@ -97,7 +99,7 @@ exports.unmark_attendance = async (req, res) => {
 exports.get_attendances = async (req, res) => {
     try {
         // Query to get all users who are not disabled
-        const get_all_users = `SELECT id FROM users WHERE is_disabled = 0`;
+        const get_all_users = `SELECT id, username, name FROM users WHERE is_disabled = 0`;
         const is_users_fetched = await sequelize.query(get_all_users, {
             type: sequelize.QueryTypes.SELECT
         });
@@ -106,8 +108,11 @@ exports.get_attendances = async (req, res) => {
             return res.status(400).json({ type: "error", message: "No users found" });
         }
 
+        // Array to store all attendance records
+        let all_user_attendances = [];
+
         // Loop over the fetched users and get attendance records
-        const get_all_user_attendances = await Promise.all(is_users_fetched.map(async (user) => {
+        await Promise.all(is_users_fetched.map(async (user) => {
             const userId = user?.id;
 
             const get_attendance_report_query = `
@@ -120,13 +125,14 @@ exports.get_attendances = async (req, res) => {
                     a.out_time,
                     a.total_time,
                     a.login_mobile,
-                    a.logout_mobile
+                    a.logout_mobile,
+                    a.on_break
                 FROM 
                     users u
                 LEFT JOIN 
                     attendances a 
                 ON 
-                    u.id = a.employee_id AND a.date = CURDATE() -- Moved date condition here
+                    u.id = a.user_id AND a.date = CURDATE() -- Moved date condition here
                 WHERE 
                     u.id = ?
             `;
@@ -137,12 +143,29 @@ exports.get_attendances = async (req, res) => {
                 type: sequelize.QueryTypes.SELECT
             });
 
-            return attendance_records.length > 0 ? attendance_records : [{ username: user.username, name: user.name }];
+            // Concatenate the results into a single array
+            if (attendance_records.length > 0) {
+                all_user_attendances = all_user_attendances.concat(attendance_records);
+            } else {
+                // If no attendance records, push user details as a fallback
+                all_user_attendances.push({
+                    username: user.username,
+                    name: user.name,
+                    date: null,
+                    date_in_week_day: null,
+                    in_time: null,
+                    out_time: null,
+                    total_time: null,
+                    login_mobile: null,
+                    logout_mobile: null,
+                    on_break: null
+                });
+            }
         }));
 
         return res.status(200).json({
             type: "success",
-            data: get_all_user_attendances
+            data: all_user_attendances // Single array with all attendance records
         });
 
     } catch (error) {
@@ -194,13 +217,14 @@ exports.get_attendance_report = async (req, res) => {
                     a.logout_mobile,
                     a.report,
                     a.remark AS review,
-                    a.rating
+                    a.rating,
+                    a.on_break
                 FROM 
                     users u
                 LEFT JOIN 
                     attendances a 
                 ON 
-                    u.id = a.employee_id
+                    u.id = a.user_id
                 WHERE 
                     u.id = ?
             `;
@@ -240,11 +264,74 @@ exports.get_attendance_report = async (req, res) => {
 }
 
 
+exports.mark_break = async (req, res) => {
+    const userId = req.result.user_id;
+    try {
+        const mark_break_query = `  UPDATE attendances
+                SET 
+                    on_break = true
+                WHERE 
+                    user_id = ? AND 
+                    date = CURDATE()
+            `;
+        const is_break_marked = await sequelize.query(mark_break_query, {
+            replacements: [userId],
+            type: sequelize.QueryTypes.UPDATE
+        });
+
+        console.log(is_break_marked)
+
+        if (!is_break_marked) res.status(400).json({ type: "error", message: "Error while marking break" })
+
+        return res.status(200).json({
+            type: "success",
+            message: "Break marked successfully"
+        })
+    } catch (error) {
+        return res.status(400).json({
+            type: "error",
+            message: error.message
+        })
+    }
+}
+
+exports.unmark_break = async (req, res) => {
+    const userId = req.result.user_id;
+    try {
+        const mark_break_query = `  UPDATE attendances
+                SET 
+                    on_break = false
+                WHERE 
+                    user_id = ? AND 
+                    date = CURDATE()
+            `;
+        const is_break_marked = await sequelize.query(mark_break_query, {
+            replacements: [userId],
+            type: sequelize.QueryTypes.UPDATE
+        });
+
+        console.log(is_break_marked)
+
+        if (!is_break_marked) res.status(400).json({ type: "error", message: "Error while marking break" })
+
+        return res.status(200).json({
+            type: "success",
+            message: "Break unmarked successfully"
+        })
+    } catch (error) {
+        return res.status(400).json({
+            type: "error",
+            message: error.message
+        })
+    }
+}
+
+
 
 exports.get_attendance_details = async (req, res) => {
     try {
         const id = req.query.attendanceId;
-      
+
         const [results, metadata] = await sequelize.query(`
             SELECT   u.username,u.mobile,a.date,a.total_time,a.rating,a.in_time,a.out_time,a.report,a.remark
             FROM attendances a
@@ -252,11 +339,11 @@ exports.get_attendance_details = async (req, res) => {
             WHERE a.id = :id
         `, {
             replacements: { id },
-            type: sequelize.QueryTypes.SELECT 
+            type: sequelize.QueryTypes.SELECT
         });
 
-        
-        if (results.length === 0) { return res.status(404).json(errorResponse("Attendance not found."))}
+
+        if (results.length === 0) { return res.status(404).json(errorResponse("Attendance not found.")) }
 
         res.json(results)
 
@@ -273,7 +360,7 @@ exports.update_attendance_details = async (req, res) => {
     try {
         const id = req.query.attendanceId;
         const { total_time, rating, in_time, out_time, report, remark } = req.body;
-        
+
         const [results] = await sequelize.query(`
             SELECT * FROM attendances WHERE id = :id
         `, {
@@ -282,10 +369,10 @@ exports.update_attendance_details = async (req, res) => {
         });
 
         if (results.length === 0) { return res.status(404).json(errorResponse("Attendance not found.")) }
-    
+
         const existingAttendance = results;
-   
-    
+
+
         const updatedValues = {
             total_time: total_time !== undefined ? total_time : existingAttendance.total_time,
             rating: rating !== undefined ? rating : existingAttendance.rating,
@@ -295,7 +382,7 @@ exports.update_attendance_details = async (req, res) => {
             remark: remark !== undefined ? remark : existingAttendance.remark
         };
 
-        
+
         await sequelize.query(`
             UPDATE attendances
             SET total_time = :total_time,
@@ -322,4 +409,3 @@ exports.update_attendance_details = async (req, res) => {
 };
 
 
-  
