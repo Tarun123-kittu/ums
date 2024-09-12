@@ -1,28 +1,137 @@
 const { sequelize } = require('../models');
+const moment = require('moment'); // Assuming you are using Sequelize
+const { send_email } = require("../utils/commonFuntions")
 
 exports.apply_leave = async (req, res) => {
     const user_id = req?.result?.user_id;
-    const { from_date, to_date, count, description, type } = req.body;
+    const username = req?.result?.username;
+    let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
+    const { type, from_date, to_date, description } = req.body;
+
+    const t = await sequelize.transaction();
+
     try {
-        const apply_leave_query = `INSERT INTO leaves (user_id,from_date,to_date,count,description,type) VALUES(?,?,?,?,?,?)`;
-        const [is_leave_applied] = await sequelize.query(apply_leave_query, {
-            replacements: [user_id, from_date, to_date, count, description, type],
-            type: sequelize.QueryTypes.INSERT
+        const parsedFromDate = moment(from_date);
+        const parsedToDate = moment(to_date);
+
+        let leaveDays = parsedToDate.diff(parsedFromDate, 'days') + 1;
+
+        if (type === "HALF DAY" && leaveDays !== 1) {
+            throw new Error("Half Day can't be on more than one day");
+        }
+        if (type === "SHORT DAY" && leaveDays !== 1) {
+            throw new Error("Short Day can't be on more than one day");
+        }
+
+        const conflictingLeaveQuery = `
+            SELECT COUNT(*) as conflict_count
+            FROM leaves
+            WHERE user_id = ?
+            AND (
+                (from_date BETWEEN ? AND ?) OR 
+                (to_date BETWEEN ? AND ?)
+            )
+        `;
+
+        const [conflictResult] = await sequelize.query(conflictingLeaveQuery, {
+            replacements: [user_id, from_date, to_date, from_date, to_date],
+            type: sequelize.QueryTypes.SELECT,
+            transaction: t
         });
 
-        if (!is_leave_applied) return res.status(400).json({ type: "error", message: "Error while applying leave please try again later" })
+        if (conflictResult.conflict_count > 0) {
+            throw new Error("A Leave Request for the same date is already in the list");
+        }
+
+        let sandwich = 0;
+
+        if (parsedFromDate.isoWeekday() === 1) {
+            const testTo = parsedFromDate.clone().subtract(3, 'days').format('YYYY-MM-DD');
+
+            const sandwichBeforeQuery = `
+                SELECT COUNT(*) as sandwich_before_count
+                FROM leaves
+                WHERE user_id = ?
+                AND to_date = ?
+                AND sandwich = 0
+            `;
+
+            const [sandwichBeforeResult] = await sequelize.query(sandwichBeforeQuery, {
+                replacements: [user_id, testTo],
+                type: sequelize.QueryTypes.SELECT,
+                transaction: t
+            });
+
+            if (sandwichBeforeResult.sandwich_before_count > 0) {
+                sandwich = 2;
+            }
+        }
+
+        if (parsedToDate.isoWeekday() === 5) {
+            const testFrom = parsedToDate.clone().add(3, 'days').format('YYYY-MM-DD');
+
+            const sandwichAfterQuery = `
+                SELECT COUNT(*) as sandwich_after_count
+                FROM leaves
+                WHERE user_id = ?
+                AND from_date = ?
+                AND sandwich = 0
+            `;
+
+            const [sandwichAfterResult] = await sequelize.query(sandwichAfterQuery, {
+                replacements: [user_id, testFrom],
+                type: sequelize.QueryTypes.SELECT,
+                transaction: t
+            });
+
+            if (sandwichAfterResult.sandwich_after_count > 0) {
+                sandwich = 2;
+            }
+        }
+
+        leaveDays = leaveDays + sandwich;
+
+        if (type === 'HALF DAY') {
+            leaveDays /= 2;
+        }
+        if (type === 'SHORT DAY') {
+            leaveDays /= 4;
+        }
+
+        const insertLeaveQuery = `
+            INSERT INTO leaves (user_id, from_date, to_date, count, description, type, sandwich,createdAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?,?)
+        `;
+
+        await sequelize.query(insertLeaveQuery, {
+            replacements: [user_id, from_date, to_date, leaveDays, description, type, sandwich, current_time],
+            type: sequelize.QueryTypes.INSERT,
+            transaction: t
+        });
+
+        await send_email({
+            email: 'hr@ultivic.com',
+            subject: `Leave Application`,
+            message: `Hey ${username} applied for ${leaveDays} days for ${description}`
+        });
+
+        await t.commit();
 
         return res.status(200).json({
             type: "success",
-            message: "leave applied successfully"
-        })
+            message: "Leave applied successfully"
+        });
+
     } catch (error) {
+        await t.rollback();
         return res.status(400).json({
-            type: "success",
+            type: "error",
             message: error.message
-        })
+        });
     }
-}
+};
+
+
 
 exports.all_applied_leaves = async (req, res) => {
     try {
@@ -154,6 +263,22 @@ exports.update_pending_leave = async (req, res) => {
             type: "error",
             message: error.message
         })
+    }
+}
+
+exports.get_all_users_pending_leaves = async (req, res) => {
+    const { status } = req.params
+    if (!status) return res.status(400).json({ type: "error", message: "Please provide leave status in params" })
+    try {
+        const get_all_user_applied_leaves = `SELECT l.from_date,l.to_date,l.count,l.description,l.createdAt,u.username FROM leaves l JOIN users u ON u.id = l.user_id WHERE l.status = ?;`;
+        const [is_leaves_exist] = await sequelize.query(get_all_user_applied_leaves, {
+            replacements: [status],
+            type: sequelize.QueryTypes.SELECt,
+        });
+        console.log(is_leaves_exist)
+        return res.status(200).json({ type: "error", data: is_leaves_exist })
+    } catch (error) {
+        return res.status(400).json({ type: "error", message: error.message })
     }
 }
 

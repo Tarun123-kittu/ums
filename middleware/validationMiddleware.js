@@ -295,9 +295,6 @@ const validateLeaveRequest = [
     check('type')
         .not().isEmpty().withMessage('Leave type is required')
         .isString().withMessage('Leave type must be a string'),
-    check('count')
-        .not().isEmpty().withMessage('Leave count is required')
-        .isNumeric().withMessage('Leave count must be a numeric value (integer or float)'),
     check('description')
         .not().isEmpty().withMessage('Leave description is required')
         .isString().withMessage('Leave description must be a string'),
