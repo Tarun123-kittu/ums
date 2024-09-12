@@ -84,6 +84,8 @@ router.put("/unmark_break", authenticateToken, attendanceController.unmark_break
 // leave routes
 router.post("/apply_leave", authenticateToken, validateLeaveRequest, leaveController.apply_leave)
 router.get("/get_applied_leaves", authenticateToken, leaveController.all_applied_leaves)
+router.get("/get_user_pending_leaves", authenticateToken, leaveController.calculate_pending_leaves)
+router.put("/update_pending_leaaves", authenticateToken, leaveController.update_pending_leave)
 
 
 
