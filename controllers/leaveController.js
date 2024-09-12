@@ -275,7 +275,8 @@ exports.get_all_users_pending_leaves = async (req, res) => {
             replacements: [status],
             type: sequelize.QueryTypes.SELECt,
         });
-        console.log(is_leaves_exist)
+
+        if (is_leaves_exist?.length === 0) return res.status(400).json({ type: "error", message: "No leaves found" })
         return res.status(200).json({ type: "error", data: is_leaves_exist })
     } catch (error) {
         return res.status(400).json({ type: "error", message: error.message })
