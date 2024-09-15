@@ -244,12 +244,22 @@ const validateHolidaysAndEvents = [
     }
 ]
 
+const validateAttendance = [
+    check('date', 'Please provide Today date').not().isEmpty(),
+    check('user_id', 'Please provide User Id').not().isEmpty(),
+    check('in_time', 'Please provide Attenance Time').not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
+        next();
+    }
+]
 
 const validateUnmarkAttendance = [
     check('report')
-        .trim()
-        .not().isEmpty().withMessage('Task is required!!')
-        .bail(),
+        .trim() 
+        .not().isEmpty().withMessage('Task is required!!') 
+        .bail(), 
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -276,7 +286,7 @@ const validateGetAttendanceDetails = [
 
 
 const validateUpdateUserAttendance = [
-    check("attendanceId", "Please provide attendance Id.").not().isEmpty(),
+    check("attendanceId","Please provide attendance Id.").not().isEmpty(),
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
@@ -312,6 +322,106 @@ const validateUpdateLead = [
     }
 ]
 
+
+
+const validateHrRound = [
+    check("lead_id","Please provide lead Id.").not().isEmpty(),
+    check("responses","Please provide question answers .").not().isEmpty(),
+    (req,res,next)=>{
+        const errors= validationResult(req);
+        if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
+        next();
+    }
+]
+
+
+
+const validateHrRoundResult = [
+    check("interview_id","Please provide interview Id.").not().isEmpty(),
+    check("hr_round_result","Please provide result of HR round.").not().isEmpty(),
+    (req,res,next)=>{
+        const errors= validationResult(req);
+        if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
+        next();
+    }
+]
+
+
+const validateUpdateLeadResonse = [
+    check("id","Please provide question Id.").not().isEmpty(),
+    (req,res,next)=>{
+        const errors= validationResult(req);
+        if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
+        next();
+    }
+]
+
+
+const validateCreateLanguage = [
+    check("language","Please provide language.").not().isEmpty(),
+    (req,res,next)=>{
+        const errors= validationResult(req);
+        if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
+        next();
+    }
+]
+
+
+const ValidateGetLanguage = [
+    check("languageId","Please provide language Id.").not().isEmpty(),
+    (req,res,next)=>{
+        const errors= validationResult(req);
+        if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
+        next();
+    } 
+]
+
+
+const ValidateUpdateLanguage = [
+    check("languageId","Please provide language Id.").not().isEmpty(),
+    (req,res,next)=>{
+        const errors= validationResult(req);
+        if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
+        next();
+    } 
+]
+
+
+const ValidateCreateSeries = [
+    check("language_id","Please provide language Id.").not().isEmpty(),
+    check("series_name","Please provide series name").not().isEmpty(),
+    (req,res,next)=>{
+        const errors= validationResult(req);
+        if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
+        next();
+    } 
+]
+
+
+const ValidateGetSeries = [
+    check("seriesId","Please provide Series Id in the query params.").not().isEmpty(),
+    (req,res,next)=>{
+        const errors= validationResult(req);
+        if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
+        next();
+    } 
+]
+
+
+
+const ValidateUpdateSeries = [
+    check("seriesId","Please provide Series Id").not().isEmpty(),
+    (req,res,next)=>{
+        const errors= validationResult(req);
+        if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
+        next();
+    } 
+]
+
+
+
+
+
 module.exports = {
     createUserValidator,
     loginValidator,
@@ -325,10 +435,20 @@ module.exports = {
     disableRoleValidations,
     validateDeleteUserRole,
     validateHolidaysAndEvents,
+    validateAttendance,
     validateUnmarkAttendance,
     validateGetAttendanceDetails,
     validateUpdateUserAttendance,
     validateCreateLeads,
-    validateUpdateLead
+    validateUpdateLead,
+    validateHrRound,
+    validateHrRoundResult,
+    validateUpdateLeadResonse,
+    validateCreateLanguage,
+    ValidateGetLanguage,
+    ValidateUpdateLanguage,
+    ValidateCreateSeries,
+    ValidateGetSeries,
+    ValidateUpdateSeries
 }
 

@@ -1,5 +1,4 @@
 const { sequelize } = require('../models');
-const { User } = require("../models")
 const bcrypt = require('bcrypt')
 const { successResponse, errorResponse } = require("../utils/responseHandler")
 const {
@@ -13,7 +12,7 @@ const {
 
 
 exports.create_user = async (req, res) => {
-  const t = await sequelize.transaction();  // Start a transaction
+  const t = await sequelize.transaction();  
 
   try {
     const {
