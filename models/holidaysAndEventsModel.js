@@ -29,21 +29,18 @@ HolidayAndEvent.init(
         },
         createdAt: {
             type: DataTypes.DATE,
-            allowNull: false,
             defaultValue: DataTypes.NOW,
-        },
-        updatedAt: {
+          },
+          updatedAt: {
             type: DataTypes.DATE,
-            allowNull: false,
             defaultValue: DataTypes.NOW,
-        },
-    },
-    {
-        sequelize,
-        modelName: 'HolidayAndEvent',
-        tableName: 'holidays_and_events',
-        timestamps: true,
-    });
+          },
+        }, {
+          sequelize,
+          modelName: 'InterviewLead',
+          tableName: 'Interview_Leads',
+          timestamps: true,
+        });
 
    return HolidayAndEvent;
 };
