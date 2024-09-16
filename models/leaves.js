@@ -1,7 +1,7 @@
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  class Leaves extends Model {}
+  class Leaves extends Model { }
 
   Leaves.init({
     id: {
@@ -14,7 +14,7 @@ module.exports = (sequelize) => {
       allowNull: true,
     },
     from_date: {
-      type: DataTypes.DATEONLY,  
+      type: DataTypes.DATEONLY,
       allowNull: true,
     },
     to_date: {
@@ -43,11 +43,11 @@ module.exports = (sequelize) => {
       allowNull: true,
     },
     type: {
-      type: DataTypes.STRING(50),  
+      type: DataTypes.STRING(50),
       allowNull: true,
     },
     status: {
-      type: DataTypes.ENUM('ACCEPTED', 'REJECTED', 'PENDING', 'CANCELLED'),  
+      type: DataTypes.ENUM('ACCEPTED', 'REJECTED', 'PENDING', 'CANCELLED'),
       allowNull: true,
       defaultValue: 'PENDING',
     },
@@ -56,7 +56,7 @@ module.exports = (sequelize) => {
       allowNull: true,
     },
     remark: {
-      type: DataTypes.STRING(200),  
+      type: DataTypes.STRING(200),
       allowNull: true,
     },
     createdAt: {
@@ -66,7 +66,7 @@ module.exports = (sequelize) => {
     updatedAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
-      onUpdate: DataTypes.NOW,  
+      onUpdate: DataTypes.NOW,
     },
   }, {
     sequelize,

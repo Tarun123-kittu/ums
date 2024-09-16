@@ -8,6 +8,7 @@ const hrRoundController = require("../controllers/hrRoundControllers")
 const languageController = require("../controllers/languagesControllers")
 const testSeriesController = require("../controllers/testSeriesController")
 const technicalQuestionsController = require("../controllers/technicalRoundQuestionsController")
+const leaveController = require("../controllers/leaveController")
 const interviewLeadsController = require('../controllers/interviewLeads')
 const verifyAccess = require("../middleware/verifyAccessMiddleware")
 const authenticateToken = require("../middleware/authenticaionMiddleware")
@@ -25,6 +26,7 @@ const {
     validateUnmarkAttendance,
     validateGetAttendanceDetails,
     validateUpdateUserAttendance,
+    validateLeaveRequest,
     validateCreateLeads,
     validateUpdateLead,
     validateHrRound,
@@ -95,15 +97,21 @@ router.get("/get_attendances_report", authenticateToken, attendanceController.ge
 router.put("/mark_break", authenticateToken, attendanceController.mark_break)
 router.put("/unmark_break", authenticateToken, attendanceController.unmark_break)
 
+// leave routes
+router.post("/apply_leave", authenticateToken, validateLeaveRequest, leaveController.apply_leave)
+router.get("/get_applied_leaves", authenticateToken, leaveController.all_applied_leaves)
+router.get("/get_user_pending_leaves", authenticateToken, leaveController.calculate_pending_leaves)
+router.put("/update_pending_leaaves", authenticateToken, leaveController.update_pending_leave)
+router.get("/all_user_applied_leaves/:status", authenticateToken, leaveController.get_all_users_pending_leaves)
+
 
 
 //interview leads
-router.post("/create_lead",authenticateToken,validateCreateLeads,interviewLeadsController.create_lead)
-router.get("/get_lead",authenticateToken,validateUpdateLead,interviewLeadsController.get_lead)
-router.put("/update_lead",authenticateToken,validateUpdateLead,interviewLeadsController.update_lead)
-router.get("/get_all_leads",authenticateToken,interviewLeadsController.get_all_leads)
-router.delete("/delete_lead",authenticateToken,validateUpdateLead,interviewLeadsController.delete_lead)
-
+router.post("/create_lead", authenticateToken, validateCreateLeads, interviewLeadsController.create_lead)
+router.get("/get_lead", authenticateToken, validateUpdateLead, interviewLeadsController.get_lead)
+router.put("/update_lead", authenticateToken, validateUpdateLead, interviewLeadsController.update_lead)
+router.get("/get_all_leads", authenticateToken, interviewLeadsController.get_all_leads)
+router.delete("/delete_lead", authenticateToken, validateUpdateLead, interviewLeadsController.delete_lead)
 
 
 //hr round 

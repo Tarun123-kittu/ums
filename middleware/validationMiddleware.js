@@ -295,18 +295,39 @@ const validateUpdateUserAttendance = [
 ]
 
 
+const validateLeaveRequest = [
+    check('from_date')
+        .not().isEmpty().withMessage('From date is required')
+        .isString().withMessage('From date must be a string'),
+    check('to_date')
+        .not().isEmpty().withMessage('To date is required')
+        .isString().withMessage('To date must be a string'),
+    check('type')
+        .not().isEmpty().withMessage('Leave type is required')
+        .isString().withMessage('Leave type must be a string'),
+    check('description')
+        .not().isEmpty().withMessage('Leave description is required')
+        .isString().withMessage('Leave description must be a string'),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ message: errors.array()[0].msg, type: 'error' });
+        }
+        next();
+    }
+];
 const validateCreateLeads = [
-    check("name","Please provide name of the lead.").not().isEmpty(),
-    check("phone_number","Please provide phone number of the lead.").not().isEmpty(),
-    check("email","Please provide email of the lead.").not().isEmpty(),
-    check("email","Please enter a correct format of the email.").isEmail(),
-    check("gender","Please provide gender of the lead.").not().isEmpty(),
-    check("dob","Please provide date of birth (DOB) of the lead.").not().isEmpty(),
-    check("profile","Please provide profile of the lead.").not().isEmpty(),
-    check("state","Please provide state of the user.").not().isEmpty(),
-    check("house_address","Please provide address of the lead.").not().isEmpty(),
-    (req,res,next)=>{
-        const errors= validationResult(req);
+    check("name", "Please provide name of the lead.").not().isEmpty(),
+    check("phone_number", "Please provide phone number of the lead.").not().isEmpty(),
+    check("email", "Please provide email of the lead.").not().isEmpty(),
+    check("email", "Please enter a correct format of the email.").isEmail(),
+    check("gender", "Please provide gender of the lead.").not().isEmpty(),
+    check("dob", "Please provide date of birth (DOB) of the lead.").not().isEmpty(),
+    check("profile", "Please provide profile of the lead.").not().isEmpty(),
+    check("state", "Please provide state of the user.").not().isEmpty(),
+    check("house_address", "Please provide address of the lead.").not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
         if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
         next();
     }
@@ -314,9 +335,9 @@ const validateCreateLeads = [
 
 
 const validateUpdateLead = [
-    check("leadId","Please provide lead Id in the query params.").not().isEmpty(),
-    (req,res,next)=>{
-        const errors= validationResult(req);
+    check("leadId", "Please provide lead Id in the query params.").not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
         if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
         next();
     }
@@ -439,6 +460,7 @@ module.exports = {
     validateUnmarkAttendance,
     validateGetAttendanceDetails,
     validateUpdateUserAttendance,
+    validateLeaveRequest,
     validateCreateLeads,
     validateUpdateLead,
     validateHrRound,

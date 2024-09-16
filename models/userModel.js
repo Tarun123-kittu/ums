@@ -55,6 +55,10 @@ module.exports = (sequelize) => {
       type: DataTypes.DATE,
       allowNull: true,
     },
+    pending_leave: {
+      type: DataTypes.INTEGER(11),
+      allowNull: true,
+    },
     gender: {
       type: DataTypes.STRING,
       allowNull: false,
