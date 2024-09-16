@@ -134,6 +134,7 @@ router.delete("/delete_series",authenticateToken,ValidateGetSeries,testSeriesCon
 router.post("/add_objective",authenticateToken,technicalQuestionsController.add_objective)
 router.post("/add_subjective",authenticateToken,technicalQuestionsController.add_subjective)
 router.post("/add_logical",authenticateToken,technicalQuestionsController.add_logical)
+router.get("/get_questions_answers",authenticateToken,technicalQuestionsController.get_questions_answers)
 
 
 module.exports = router

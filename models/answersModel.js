@@ -31,10 +31,6 @@ module.exports = (sequelize) => {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      answer: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-      },
       question_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -45,11 +41,12 @@ module.exports = (sequelize) => {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      correct_answer: {
-        type: DataTypes.STRING,
+      answer: {
+        type: DataTypes.TEXT,
         allowNull: true,
       },
-      correct_option: {
+     
+      correct_option_id: {
         type: DataTypes.STRING,
         allowNull: true,
       },
