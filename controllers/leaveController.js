@@ -1,18 +1,18 @@
-const { sequelize } = require('../models');
-const moment = require('moment'); // Assuming you are using Sequelize
-const { send_email } = require("../utils/commonFuntions")
+let { sequelize } = require('../models');
+let moment = require('moment'); // Assuming you are using Sequelize
+let { send_email } = require("../utils/commonFuntions")
 
 exports.apply_leave = async (req, res) => {
-    const user_id = req?.result?.user_id;
-    const username = req?.result?.username;
+    let user_id = req?.result?.user_id;
+    let username = req?.result?.username;
     let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
-    const { type, from_date, to_date, description } = req.body;
+    let { type, from_date, to_date, description } = req.body;
 
-    const t = await sequelize.transaction();
+    let t = await sequelize.transaction();
 
     try {
-        const parsedFromDate = moment(from_date);
-        const parsedToDate = moment(to_date);
+        let parsedFromDate = moment(from_date);
+        let parsedToDate = moment(to_date);
 
         let leaveDays = parsedToDate.diff(parsedFromDate, 'days') + 1;
 
@@ -23,7 +23,7 @@ exports.apply_leave = async (req, res) => {
             throw new Error("Short Day can't be on more than one day");
         }
 
-        const conflictingLeaveQuery = `
+        let conflictingLeaveQuery = `
             SELECT COUNT(*) as conflict_count
             FROM leaves
             WHERE user_id = ?
@@ -33,7 +33,7 @@ exports.apply_leave = async (req, res) => {
             )
         `;
 
-        const [conflictResult] = await sequelize.query(conflictingLeaveQuery, {
+        let [conflictResult] = await sequelize.query(conflictingLeaveQuery, {
             replacements: [user_id, from_date, to_date, from_date, to_date],
             type: sequelize.QueryTypes.SELECT,
             transaction: t
@@ -46,9 +46,9 @@ exports.apply_leave = async (req, res) => {
         let sandwich = 0;
 
         if (parsedFromDate.isoWeekday() === 1) {
-            const testTo = parsedFromDate.clone().subtract(3, 'days').format('YYYY-MM-DD');
+            let testTo = parsedFromDate.clone().subtract(3, 'days').format('YYYY-MM-DD');
 
-            const sandwichBeforeQuery = `
+            let sandwichBeforeQuery = `
                 SELECT COUNT(*) as sandwich_before_count
                 FROM leaves
                 WHERE user_id = ?
@@ -56,7 +56,7 @@ exports.apply_leave = async (req, res) => {
                 AND sandwich = 0
             `;
 
-            const [sandwichBeforeResult] = await sequelize.query(sandwichBeforeQuery, {
+            let [sandwichBeforeResult] = await sequelize.query(sandwichBeforeQuery, {
                 replacements: [user_id, testTo],
                 type: sequelize.QueryTypes.SELECT,
                 transaction: t
@@ -68,9 +68,9 @@ exports.apply_leave = async (req, res) => {
         }
 
         if (parsedToDate.isoWeekday() === 5) {
-            const testFrom = parsedToDate.clone().add(3, 'days').format('YYYY-MM-DD');
+            let testFrom = parsedToDate.clone().add(3, 'days').format('YYYY-MM-DD');
 
-            const sandwichAfterQuery = `
+            let sandwichAfterQuery = `
                 SELECT COUNT(*) as sandwich_after_count
                 FROM leaves
                 WHERE user_id = ?
@@ -78,7 +78,7 @@ exports.apply_leave = async (req, res) => {
                 AND sandwich = 0
             `;
 
-            const [sandwichAfterResult] = await sequelize.query(sandwichAfterQuery, {
+            let [sandwichAfterResult] = await sequelize.query(sandwichAfterQuery, {
                 replacements: [user_id, testFrom],
                 type: sequelize.QueryTypes.SELECT,
                 transaction: t
@@ -98,7 +98,7 @@ exports.apply_leave = async (req, res) => {
             leaveDays /= 4;
         }
 
-        const insertLeaveQuery = `
+        let insertLeaveQuery = `
             INSERT INTO leaves (user_id, from_date, to_date, count, description, type, sandwich,createdAt)
             VALUES (?, ?, ?, ?, ?, ?, ?,?)
         `;
@@ -135,7 +135,7 @@ exports.apply_leave = async (req, res) => {
 
 exports.all_applied_leaves = async (req, res) => {
     try {
-        const select_all_applied_leaves_query = `
+        let select_all_applied_leaves_query = `
             SELECT 
                 l.from_date AS date_from,
                 l.to_date AS to_date,
@@ -149,7 +149,7 @@ exports.all_applied_leaves = async (req, res) => {
             JOIN users u ON l.user_id = u.id 
             WHERE l.status = "PENDING"`;
 
-        const get_all_applied_leaves = await sequelize.query(select_all_applied_leaves_query, {
+        let get_all_applied_leaves = await sequelize.query(select_all_applied_leaves_query, {
             type: sequelize.QueryTypes.SELECT
         });
 
@@ -199,7 +199,8 @@ exports.calculate_pending_leaves = async (req, res) => {
         const dojDate = new Date(doj);
         const currentDate = new Date();
 
-        let monthsWorked = (currentDate.getFullYear() - dojDate.getFullYear()) + (currentDate.getMonth() - dojDate.getMonth());
+        // Calculate months worked
+        let monthsWorked = (currentDate.getFullYear() - dojDate.getFullYear()) * 12 + (currentDate.getMonth() - dojDate.getMonth());
 
         if (monthsWorked < 1) {
             monthsWorked = 1;
@@ -231,7 +232,7 @@ exports.calculate_pending_leaves = async (req, res) => {
                 doj,
                 total_allowed_leaves: totalAllowedLeaves,
                 used_leaves: usedLeaves,
-                remaining_leaves: remainingLeaves >= 0 ? remainingLeaves : 0
+                remaining_leaves: remainingLeaves // Allow negative values
             }
         });
 
@@ -243,11 +244,12 @@ exports.calculate_pending_leaves = async (req, res) => {
     }
 };
 
+
 exports.update_pending_leave = async (req, res) => {
-    const { leave_id, status } = req.body;
+    let { leave_id, status } = req.body;
     try {
-        const update_leave_query = `UPDATE leaves SET status = ? WHERE id = ?`
-        const is_leave_updated = await sequelize.query(update_leave_query, {
+        let update_leave_query = `UPDATE leaves SET status = ? WHERE id = ?`
+        let is_leave_updated = await sequelize.query(update_leave_query, {
             replacements: [status, leave_id],
             type: sequelize.QueryTypes.UPDATE,
         });
@@ -267,11 +269,11 @@ exports.update_pending_leave = async (req, res) => {
 }
 
 exports.get_all_users_pending_leaves = async (req, res) => {
-    const { status } = req.params
+    let { status } = req.params
     if (!status) return res.status(400).json({ type: "error", message: "Please provide leave status in params" })
     try {
-        const get_all_user_applied_leaves = `SELECT l.from_date,l.to_date,l.count,l.description,l.createdAt,u.username FROM leaves l JOIN users u ON u.id = l.user_id WHERE l.status = ?;`;
-        const [is_leaves_exist] = await sequelize.query(get_all_user_applied_leaves, {
+        let get_all_user_applied_leaves = `SELECT l.from_date,l.to_date,l.count,l.description,l.createdAt,u.username FROM leaves l JOIN users u ON u.id = l.user_id WHERE l.status = ?;`;
+        let [is_leaves_exist] = await sequelize.query(get_all_user_applied_leaves, {
             replacements: [status],
             type: sequelize.QueryTypes.SELECt,
         });
