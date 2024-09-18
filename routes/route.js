@@ -37,7 +37,9 @@ const {
     ValidateUpdateLanguage,
     ValidateCreateSeries,
     ValidateGetSeries,
-    ValidateUpdateSeries
+    ValidateUpdateSeries,
+    validateTechnicalRoundResult,
+    validateSubmitTechincalRound
 } = require('../middleware/validationMiddleware')
 
 const {
@@ -143,6 +145,10 @@ router.post("/add_objective",authenticateToken,technicalQuestionsController.add_
 router.post("/add_subjective",authenticateToken,technicalQuestionsController.add_subjective)
 router.post("/add_logical",authenticateToken,technicalQuestionsController.add_logical)
 router.get("/get_questions_answers",authenticateToken,technicalQuestionsController.get_questions_answers)
+router.post("/submit_technical_round",authenticateToken,validateSubmitTechincalRound,technicalQuestionsController.submit_technical_round)
+router.get("/get_lead_technical_response",authenticateToken,technicalQuestionsController.get_lead_technical_response)
+router.put("/technical_round_result",authenticateToken,validateTechnicalRoundResult,technicalQuestionsController.technical_round_result)
+router.put("/handle_link_click_count",authenticateToken,technicalQuestionsController.handle_link_click_count)
 
 
 module.exports = router

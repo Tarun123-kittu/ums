@@ -1,22 +1,30 @@
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  class Roles extends Model {}
+  class TechnicalRound extends Model {}
 
-  Roles.init({
+  TechnicalRound.init({
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    role: {
-      type: DataTypes.STRING,
+    interview_id: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
-    is_disabled: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
+    lead_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
+    question_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    answer: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
@@ -27,10 +35,10 @@ module.exports = (sequelize) => {
     },
   }, {
     sequelize,
-    modelName: 'Role',
-    tableName: 'roles',
+    modelName: 'TechnicalRound',
+    tableName: 'technical_round',
     timestamps: true,
   });
 
-  return Roles;
+  return TechnicalRound;
 };

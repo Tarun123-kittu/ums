@@ -24,18 +24,23 @@ exports.add_objective = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Correct option number is out of range.' });
         }
 
-      
-        const [seriesExists] = await sequelize.query('SELECT 1 FROM test_series WHERE id = :test_series_id', {
-            replacements: { test_series_id },
+        
+        const [seriesLanguageExists] = await sequelize.query(`
+            SELECT 1 
+            FROM test_series 
+            WHERE id = :test_series_id 
+            AND language_id = :language_id
+        `, {
+            replacements: { test_series_id, language_id },
             transaction: t
         });
 
-        if (seriesExists.length === 0) {
+        if (seriesLanguageExists.length === 0) {
             await t.rollback();
-            return res.status(404).json({ success: false, message: 'Test series not found.' });
+            return res.status(404).json({ success: false, message: 'Test series not found for the given language.' });
         }
 
-       
+        
         const [languageExists] = await sequelize.query('SELECT 1 FROM languages WHERE id = :language_id', {
             replacements: { language_id },
             transaction: t
@@ -46,7 +51,7 @@ exports.add_objective = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Language not found.' });
         }
 
-        
+       
         const createQuestionQuery = `
             INSERT INTO technical_round_questions (test_series_id, language_id, question_type, question, createdAt, updatedAt)
             VALUES (?, ?, 'objective', ?, NOW(), NOW());
@@ -56,14 +61,13 @@ exports.add_objective = async (req, res) => {
             transaction: t
         });
 
-        const newQuestionId = result.insertId; 
+        const newQuestionId = result; 
 
-        
+       
         const createOptionQuery = `
             INSERT INTO options (question_id, option, createdAt, updatedAt)
             VALUES (?, ?, NOW(), NOW());
         `;
-
         const optionPromises = options.map((option) => {
             return sequelize.query(createOptionQuery, {
                 replacements: [newQuestionId, option],
@@ -73,8 +77,8 @@ exports.add_objective = async (req, res) => {
 
         const optionResults = await Promise.all(optionPromises);
 
-       
-        const correctOptionId = optionResults[correct_option_number - 1][0].insertId;
+        
+        const correctOptionId = optionResults[correct_option_number - 1][0];
 
        
         await sequelize.query(`
@@ -99,6 +103,7 @@ exports.add_objective = async (req, res) => {
 
 
 
+
 exports.add_subjective = async (req, res) => {
     const t = await sequelize.transaction();
     try {
@@ -117,14 +122,14 @@ exports.add_subjective = async (req, res) => {
         }
 
       
-        const [seriesExists] = await sequelize.query('SELECT 1 FROM test_series WHERE id = :test_series_id', {
-            replacements: { test_series_id },
+        const [seriesExists] = await sequelize.query('SELECT 1 FROM test_series WHERE id = :test_series_id  AND language_id = :language_id', {
+            replacements: { test_series_id,language_id },
             transaction: t
         });
 
         if (seriesExists.length === 0) {
             await t.rollback();
-            return res.status(404).json({ success: false, message: 'Test series not found.' });
+            return res.status(404).json({ success: false, message: 'Test series not found for the given language.' });
         }
 
         
@@ -177,7 +182,6 @@ exports.add_subjective = async (req, res) => {
 
 
 
-
 exports.add_logical = async (req, res) => {
     const t = await sequelize.transaction();
     try {
@@ -196,18 +200,18 @@ exports.add_logical = async (req, res) => {
         }
 
         
-        const [seriesExists] = await sequelize.query('SELECT 1 FROM test_series WHERE id = :test_series_id', {
-            replacements: { test_series_id },
+        const [seriesExists] = await sequelize.query('SELECT 1 FROM test_series WHERE id = :test_series_id AND language_id = :language_id', {
+            replacements: { test_series_id,language_id },
             transaction: t
         });
 
         if (seriesExists.length === 0) {
             await t.rollback();
-            return res.status(404).json({ success: false, message: 'Test series not found.' });
+            return res.status(404).json({ success: false, message: 'Test series not found for the given language.' });
         }
 
         const [languageExists] = await sequelize.query('SELECT 1 FROM languages WHERE id = :language_id', {
-            replacements: { language_id },
+            replacements: { language_id, },
             transaction: t
         });
 
@@ -343,3 +347,195 @@ exports.get_questions_answers = async (req, res) => {
     }
 };
 
+
+
+exports.submit_technical_round = async(req,res)=>{
+    try{
+        const { lead_id, responses } = req.body;
+
+        const leadCheckQuery = `
+            SELECT * FROM interview_leads WHERE id = :lead_id LIMIT 1;
+        `;
+        const [lead] = await sequelize.query(leadCheckQuery, {
+            replacements: { lead_id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (!lead) {
+            return res.status(404).json({ message: 'Lead not found' });
+        }
+
+        const lastInterviewQuery = `
+            SELECT * FROM interviews
+            WHERE lead_id = :lead_id
+            ORDER BY createdAt DESC
+            LIMIT 1;
+        `;
+        const [lastInterview] = await sequelize.query(lastInterviewQuery, {
+            replacements: { lead_id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (!lastInterview) {
+            return res.status(404).json({ message: 'No interview found for this lead' });
+        }
+
+        const interview_id = lastInterview.id;
+
+      
+        const questionIds = responses.map(response => response.questionid);
+        const validQuestionsQuery = `
+            SELECT id FROM technical_round_questions
+            WHERE id IN (:question_ids);
+        `;
+        const validQuestions = await sequelize.query(validQuestionsQuery, {
+            replacements: { question_ids: questionIds },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        const validQuestionIds = validQuestions.map(question => question.id);
+        const invalidQuestions = questionIds.filter(id => !validQuestionIds.includes(id));
+
+        if (invalidQuestions.length > 0) {
+            return res.status(400).json({
+                message: 'Invalid question IDs',
+                invalidQuestions
+            });
+        }
+
+    
+        const insertTechnicalRoundQuery = `
+            INSERT INTO technical_round (lead_id, interview_id, question_id, answer,createdAt, updatedAt)
+            VALUES (:lead_id, :interview_id, :question_id, :answer,NOW(),NOW());
+        `;
+
+        await sequelize.transaction(async (t) => {
+            for (const response of responses) {
+                await sequelize.query(insertTechnicalRoundQuery, {
+                    replacements: {
+                        lead_id,
+                        interview_id,
+                        question_id: response.questionid,
+                        answer: response.answer
+                    },
+                    transaction: t
+                });
+            }
+        });
+
+        return res.status(200).json({ message: 'Responses saved successfully' });
+    }catch(error){
+        console.log("ERROR::",error)
+        return res.status(500).json(errorResponse.error)
+    }
+} 
+
+
+
+
+exports.get_lead_technical_response = async(req,res)=>{
+    try{
+        const  lead_id  = req.query.leadId; 
+
+        if(!lead_id){return res.status(400).json(errorResponse("Please provide lead id"))}
+
+        const responsesQuery = `
+            SELECT question_id, answer
+            FROM technical_round
+            WHERE lead_id = :lead_id;
+        `;
+        const responses = await sequelize.query(responsesQuery, {
+            replacements: { lead_id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (responses.length === 0) {
+            return res.status(404).json({ message: 'No responses found for this lead' });
+        }
+
+        
+        const questionIds = responses.map(response => response.question_id);
+
+        
+        const questionsQuery = `
+            SELECT id, question
+            FROM technical_round_questions
+            WHERE id IN (:question_ids);
+        `;
+        const questions = await sequelize.query(questionsQuery, {
+            replacements: { question_ids: questionIds },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        const questionsMap = new Map(questions.map(question => [question.id, question]));
+
+       
+        const result = responses.map(response => ({
+            question_id: response.question_id,
+            question: questionsMap.get(response.question_id)?.question || 'Unknown question',
+            answer: response.answer
+        }));
+
+        return res.status(200).json(result);
+    }catch(error){
+      console.log("ERROR::",error)
+      return res.status(500).json(errorResponse(error.message))
+    }
+}
+
+
+
+
+
+
+
+exports.technical_round_result = async(req,res)=>{
+    try{
+        const { interview_id, technical_round_result } = req.body;
+
+        const transaction = await sequelize.transaction();
+    
+            if (!interview_id || !['selected', 'rejected', 'pending', 'on hold'].includes(technical_round_result)) {
+                await transaction.rollback(); 
+                return res.status(400).json({ error: 'Invalid input data' });
+            }
+    
+            const [checkInterview] = await sequelize.query(`SELECT * FROM interviews WHERE id = ${interview_id}`); 
+            if(checkInterview.length<1){return res.status(400).json(errorResponse("Interview not exist with this interview id"))}
+           
+            const [affectedRows] = await sequelize.query(
+                'UPDATE Interviews SET technical_round_result = ? WHERE id = ?',
+                {
+                    replacements: [technical_round_result, interview_id],
+                    type: sequelize.QueryTypes.UPDATE,
+                    transaction, 
+                }
+            );
+    
+            
+            if (affectedRows === 0) {
+                await transaction.rollback(); 
+                return res.status(404).json({ error: 'Interview not found' });
+            }
+
+            
+            await transaction.commit();
+            return res.status(200).json({ message: 'Technical round result updated successfully' });
+    }catch(error){
+      console.log("ERROR::",error)
+      return res.status(500).json(errorResponse(error.message))
+    }
+}
+
+
+
+exports.handle_link_click_count = async(req,res)=>{
+    try{
+    let {interview_id,lead_id}= req.body
+
+
+    }catch(error){
+        console.log("ERROR::",error)
+        return res.status(500).json(errorResponse(error.message))
+    }
+}
