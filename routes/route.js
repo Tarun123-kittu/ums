@@ -49,7 +49,8 @@ router.post("/reset_password/:token", validateResetPasswordDataTypes, userContro
 router.post("/change_password", validateChangePassword, validateChangePasswordDataTypes, userController.change_password)
 router.get("/get_employee_details/:id", authenticateToken, userController.get_employee_details)
 router.get("/get_employees", authenticateToken, userController.get_employees)
-router.patch("/delete_employee/:id", authenticateToken, validateGetAttendanceDetails, userController.delete_employee)
+router.patch("/delete_employee/:id", authenticateToken, userController.delete_employee)
+router.put("/update_user", authenticateToken, userController.update_user)
 
 
 
@@ -61,6 +62,7 @@ router.post("/assign_new_permissions_to_roles", authenticateToken, validateAssig
 router.patch("/update_permissions_assigned_to_role", authenticateToken, validateUpdateRolesPermission, rolesPermissionsController.update_permissions_assigned_to_role)
 router.patch("/delete_role", authenticateToken, rolesPermissionsController.disabled_role)
 router.delete("/delete_user_role", authenticateToken, validateDeleteUserRole, rolesPermissionsController.delete_user_role)
+router.get("/get_roles_permissions", authenticateToken, rolesPermissionsController.get_roles_permissions)
 
 
 

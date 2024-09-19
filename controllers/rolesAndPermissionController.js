@@ -45,7 +45,7 @@ exports.get_roles_and_users = async (req, res) => {
             return res.status(400).json(errorResponse("No data found."));
         }
 
-      
+
         const groupedData = rolesWithUsers.reduce((acc, { role, username }) => {
             if (!acc[role]) {
                 acc[role] = [];
@@ -55,7 +55,7 @@ exports.get_roles_and_users = async (req, res) => {
             return acc;
         }, {});
 
-       
+
         const rolesWithTheirUsers = Object.keys(groupedData).map(role => ({
             role,
             users: groupedData[role]
@@ -359,5 +359,31 @@ exports.delete_user_role = async (req, res) => {
         });
     }
 };
+
+exports.get_roles_permissions = async (req, res) => {
+    const role = req.result.roles
+    try {
+        const get_role_id = `SELECT id FROM roles WHERE role = ?`
+        const [is_role_exist] = await sequelize.query(get_role_id, {
+            replacements: [role],
+            type: sequelize.QueryTypes.SELECT,
+        });
+
+        if (!is_role_exist) return res.status(400).json({ type: "error", message: "role not found" })
+        const role_id = is_role_exist?.id;
+
+        const roles_permissions_query = `SELECT rp.can_view,rp.can_create,rp.can_update,rp.can_delete,p.permission,r.role FROM roles_permissions rp JOIN permissions p ON rp.permission_id = p.id JOIN roles r ON rp.role_id = r.id WHERE rp.is_disabled = false AND rp.role_id = ?;`
+        const all_roles_permissions = await sequelize.query(roles_permissions_query, {
+            replacements: [role_id],
+            type: sequelize.QueryTypes.SELECT,
+        });
+
+        if (!all_roles_permissions) return res.status(400).json({ type: "error", message: "No permissions found" })
+
+        res.status(200).json({ type: "success", data: all_roles_permissions })
+    } catch (error) {
+        res.status(400).json({ type: "error", message: error.message })
+    }
+}
 
 
