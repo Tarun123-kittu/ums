@@ -21,10 +21,6 @@ exports.get_user_permissions = async (req, res) => {
         return res.status(500).json(errorResponse(error.message))
     }
 }
-
-
-
-
 exports.get_roles_and_users = async (req, res) => {
     try {
         const rolesWithUsers = await sequelize.query(`
@@ -36,7 +32,9 @@ exports.get_roles_and_users = async (req, res) => {
             JOIN 
                 Users u ON ur.user_id = u.id
             JOIN 
-                Roles r ON ur.role_id = r.id;
+                Roles r ON ur.role_id = r.id
+            WHERE 
+                u.is_disabled = false;
         `, {
             type: sequelize.QueryTypes.SELECT
         });
@@ -45,20 +43,19 @@ exports.get_roles_and_users = async (req, res) => {
             return res.status(400).json(errorResponse("No data found."));
         }
 
-
+        // Group users by their roles
         const groupedData = rolesWithUsers.reduce((acc, { role, username }) => {
             if (!acc[role]) {
-                acc[role] = [];
+                acc[role] = [];  // Initialize the array if it doesn't exist
             }
-
-            acc[role].push(username);
+            acc[role].push(username);  // Push username to the corresponding role
             return acc;
         }, {});
 
-
+        // Convert grouped data into the desired format
         const rolesWithTheirUsers = Object.keys(groupedData).map(role => ({
             role,
-            users: groupedData[role]
+            username: groupedData[role]  // Array of usernames
         }));
 
         return res.status(200).json(successResponse('Successfully fetched.', rolesWithTheirUsers));
@@ -67,10 +64,6 @@ exports.get_roles_and_users = async (req, res) => {
         return res.status(500).json(errorResponse(error.message));
     }
 };
-
-
-
-
 
 exports.assign_role = async (req, res) => {
     const { user_id, role_id } = req.body;

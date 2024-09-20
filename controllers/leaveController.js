@@ -143,6 +143,7 @@ exports.all_applied_leaves = async (req, res) => {
                 l.type AS type,
                 l.description,
                 l.status,
+                l.createdAt AS applied_on,
                 u.name,
                 u.username,
                 u.id AS user_id
