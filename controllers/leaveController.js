@@ -142,6 +142,7 @@ exports.all_applied_leaves = async (req, res) => {
                 l.count AS count,
                 l.type AS type,
                 l.description,
+                l.status,
                 u.name,
                 u.username,
                 u.id AS user_id
