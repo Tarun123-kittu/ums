@@ -55,6 +55,7 @@ router.get("/get_all_username", authenticateToken, userController.get_all_users_
 
 
 
+
 // roles and permissions
 router.get("/get_user_permissions", authenticateToken, rolesPermissionsController.get_user_permissions)
 router.get("/get_roles_and_users", authenticateToken, rolesPermissionsController.get_roles_and_users)
@@ -64,6 +65,7 @@ router.patch("/update_permissions_assigned_to_role", authenticateToken, validate
 router.patch("/delete_role", authenticateToken, rolesPermissionsController.disabled_role)
 router.delete("/delete_user_role", authenticateToken, validateDeleteUserRole, rolesPermissionsController.delete_user_role)
 router.get("/get_roles_permissions", authenticateToken, rolesPermissionsController.get_roles_permissions)
+router.get("/get_role_assigned_to_users", authenticateToken, rolesPermissionsController.get_role_assigned_to_users)
 
 
 

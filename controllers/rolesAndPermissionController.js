@@ -1,6 +1,7 @@
 let { errorResponse, successResponse } = require("../utils/responseHandler")
 let getPermissionsForRole = require("../utils/getPermissions")
 let { sequelize } = require('../models')
+const { all } = require("../routes/route")
 
 
 
@@ -83,7 +84,7 @@ exports.assign_role = async (req, res) => {
 
 
         const assign_new_role_query = `
-            INSERT INTO user_roles (user_id, role_id, createdAt, updatedAt) 
+            INSERT INTO user_roles (user_id, role_id, created_at, updated_at) 
             VALUES (?, ?, NOW(), NOW())`;
 
         const is_role_assigned = await sequelize.query(assign_new_role_query, {
@@ -347,7 +348,7 @@ exports.disabled_role = async (req, res) => {
 
 exports.delete_user_role = async (req, res) => {
     try {
-        const userId = req.result.user_id;
+        const userId = req.query.user_id;
         const roleId = req.query.roleId;
 
 
@@ -388,8 +389,7 @@ exports.delete_user_role = async (req, res) => {
 
 exports.get_roles_permissions = async (req, res) => {
     const user_id = req.result.user_id;
-    const id = req.query.id;  // Updated to match the route query parameter
-    console.log("Role ID:", id);  // To check if id is being retrieved correctly
+    const id = req.query.id;
 
     try {
         if (!id) {
@@ -415,12 +415,24 @@ exports.get_roles_permissions = async (req, res) => {
             res.status(200).json({ type: "success", data: all_roles_permissions });
         } else {
             const roles_permissions_query = `
-                SELECT rp.can_view, rp.can_create, rp.can_update, rp.can_delete, 
-                       p.permission, r.role, r.id AS role_id, p.id AS permission_id
-                FROM roles_permissions rp 
-                JOIN permissions p ON rp.permission_id = p.id 
-                JOIN roles r ON rp.role_id = r.id 
-                WHERE rp.is_disabled = false AND rp.role_id = ?;
+                SELECT 
+                    rp.can_view, 
+                    rp.can_create, 
+                    rp.can_update, 
+                    rp.can_delete, 
+                    p.permission, 
+                    r.role, 
+                    r.id AS role_id, 
+                    p.id AS permission_id
+                FROM 
+                    roles_permissions rp
+                JOIN 
+                    permissions p ON rp.permission_id = p.id  -- Joining roles_permissions with permissions
+                JOIN 
+                    roles r ON rp.role_id = r.id  -- Joining roles_permissions with roles
+                WHERE 
+                    rp.is_disabled = false 
+                    AND rp.role_id = ?;
             `;
 
             const all_roles_permissions = await sequelize.query(roles_permissions_query, {
@@ -439,6 +451,39 @@ exports.get_roles_permissions = async (req, res) => {
         res.status(400).json({ type: "error", message: error.message });
     }
 };
+
+exports.get_role_assigned_to_users = async (req, res) => {
+    const role_id = req.query.role_id;
+    if (!role_id) {
+        return res.status(400).json({ type: "error", message: "Role id required to perform this action" });
+    }
+
+    try {
+        const get_username_query = `
+            SELECT u.username, u.id, u.name 
+            FROM users u 
+            JOIN user_roles ur ON ur.user_id = u.id 
+            WHERE ur.role_id = ?;
+        `;
+
+        const all_user_names = await sequelize.query(get_username_query, {
+            replacements: [role_id],
+            type: sequelize.QueryTypes.SELECT,
+        });
+
+        if (!all_user_names.length) {
+            return res.status(200).json({ type: "success", message: "No user found" });
+        }
+
+        return res.status(200).json({ type: "success", data: all_user_names });
+    } catch (error) {
+        return res.status(400).json({
+            type: "error",
+            message: error.message
+        });
+    }
+};
+
 
 
 
