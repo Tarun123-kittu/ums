@@ -21,20 +21,21 @@ exports.get_user_permissions = async (req, res) => {
         return res.status(500).json(errorResponse(error.message))
     }
 }
+
 exports.get_roles_and_users = async (req, res) => {
     try {
         const rolesWithUsers = await sequelize.query(`
             SELECT 
+                r.role, 
+                r.id AS role_id, 
                 u.username, 
-                r.role
+                u.id AS user_id
             FROM 
-                user_roles ur
-            JOIN 
+                Roles r
+            LEFT JOIN 
+                user_roles ur ON r.id = ur.role_id AND ur.is_disabled = false
+            LEFT JOIN 
                 Users u ON ur.user_id = u.id
-            JOIN 
-                Roles r ON ur.role_id = r.id
-            WHERE 
-                u.is_disabled = false;
         `, {
             type: sequelize.QueryTypes.SELECT
         });
@@ -44,19 +45,18 @@ exports.get_roles_and_users = async (req, res) => {
         }
 
         // Group users by their roles
-        const groupedData = rolesWithUsers.reduce((acc, { role, username }) => {
+        const groupedData = rolesWithUsers.reduce((acc, { role, role_id, username, user_id }) => {
             if (!acc[role]) {
-                acc[role] = [];  // Initialize the array if it doesn't exist
+                acc[role] = { role, role_id, users: [] };  // Initialize the object for the role
             }
-            acc[role].push(username);  // Push username to the corresponding role
+            if (username) {  // Only add users if they exist
+                acc[role].users.push({ username, user_id });  // Push username and user_id to the corresponding role
+            }
             return acc;
         }, {});
 
         // Convert grouped data into the desired format
-        const rolesWithTheirUsers = Object.keys(groupedData).map(role => ({
-            role,
-            username: groupedData[role]  // Array of usernames
-        }));
+        const rolesWithTheirUsers = Object.values(groupedData); // Get array of role objects
 
         return res.status(200).json(successResponse('Successfully fetched.', rolesWithTheirUsers));
 
@@ -178,43 +178,75 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
 
 
 
-
 exports.update_permissions_assigned_to_role = async (req, res) => {
-
     const { permission_data } = req.body;
-    try {
-        const updatePromises = permission_data.map(obj => {
-            const query = `
-                UPDATE roles_permissions
-                SET 
-                    can_view = ${obj.can_view}, 
-                    can_create = ${obj.can_create}, 
-                    can_update = ${obj.can_update}, 
-                    can_delete = ${obj.can_delete}
-                WHERE 
-                    role_id = ${obj.role_id} AND 
-                    permission_id = ${obj.permission_id}
-            `;
 
-            return sequelize.query(query, {
-                type: sequelize.QueryTypes.UPDATE
+    // Maximum number of retries on deadlock
+    const MAX_RETRIES = 3;
+
+    let attempt = 0;
+    let success = false;
+
+    // Retry mechanism
+    while (attempt < MAX_RETRIES && !success) {
+        attempt++;
+        try {
+            // Wrap in a transaction
+            await sequelize.transaction(async (t) => {
+                const updatePromises = permission_data.map((obj) => {
+                    const query = `
+                        UPDATE roles_permissions
+                        SET 
+                            can_view = ${obj.can_view}, 
+                            can_create = ${obj.can_create}, 
+                            can_update = ${obj.can_update}, 
+                            can_delete = ${obj.can_delete}
+                        WHERE 
+                            role_id = ${obj.role_id} AND 
+                            permission_id = ${obj.permission_id}
+                    `;
+
+                    return sequelize.query(query, {
+                        type: sequelize.QueryTypes.UPDATE,
+                        transaction: t, // Pass the transaction object
+                    });
+                });
+
+                await Promise.all(updatePromises);
             });
-        });
 
-        await Promise.all(updatePromises);
+            success = true; // Mark success if transaction succeeds
 
-        res.status(200).json({
-            type: "success",
-            message: "Permissions updated successfully"
-        });
+            res.status(200).json({
+                type: "success",
+                message: "Permissions updated successfully"
+            });
 
-    } catch (error) {
-        res.status(400).json({
-            type: "error",
-            message: error.message
-        });
+        } catch (error) {
+            if (error.message.includes("Deadlock found")) {
+                // Log the retry attempt
+                console.error(`Deadlock detected. Retrying attempt ${attempt}/${MAX_RETRIES}`);
+
+                if (attempt >= MAX_RETRIES) {
+                    // If retries exhausted, send a failure response
+                    return res.status(500).json({
+                        type: "error",
+                        message: "Max retries reached. Deadlock could not be resolved. Please try again later."
+                    });
+                }
+                // Wait before retrying (backoff strategy)
+                await new Promise(res => setTimeout(res, 100 * attempt)); // Exponential backoff
+            } else {
+                // For any other errors, respond with the error message
+                return res.status(400).json({
+                    type: "error",
+                    message: error.message
+                });
+            }
+        }
     }
 };
+
 
 
 
@@ -240,8 +272,8 @@ exports.disabled_role = async (req, res) => {
             transaction
         });
 
-        // Check the number of affected rows
-        const affectedRows = result[1]; // Second element contains affected rows count
+        // Check the number of affected rows (this is result, not result[1])
+        const affectedRows = result;
         if (affectedRows === 0) {
             throw new Error("Error while disabling role in 'roles' table or no rows were affected.");
         }
@@ -255,7 +287,7 @@ exports.disabled_role = async (req, res) => {
         });
 
         // Step 3: Check if the role exists in 'roles_permissions'
-        const checkRoleInRolesPermissions = `SELECT * FROM user_permissions WHERE role_id = ?`;
+        const checkRoleInRolesPermissions = `SELECT * FROM roles_permissions WHERE role_id = ?`;
         const isRoleExistInRolesPermissions = await sequelize.query(checkRoleInRolesPermissions, {
             replacements: [role_id],
             type: sequelize.QueryTypes.SELECT,
@@ -271,7 +303,7 @@ exports.disabled_role = async (req, res) => {
                 transaction
             });
 
-            const affectedRowsInRolesPermissions = resultInRolesPermissions[1];
+            const affectedRowsInRolesPermissions = resultInRolesPermissions;
             if (affectedRowsInRolesPermissions === 0) {
                 throw new Error("Error while disabling role in 'roles_permissions' table");
             }
@@ -286,7 +318,7 @@ exports.disabled_role = async (req, res) => {
                 transaction
             });
 
-            const affectedRowsInUserRoles = resultInUserRoles[1];
+            const affectedRowsInUserRoles = resultInUserRoles;
             if (affectedRowsInUserRoles === 0) {
                 throw new Error("Error while disabling role in 'user_roles' table");
             }
@@ -308,6 +340,7 @@ exports.disabled_role = async (req, res) => {
         });
     }
 };
+
 // ------ this api need to recheck 
 
 
@@ -354,29 +387,59 @@ exports.delete_user_role = async (req, res) => {
 };
 
 exports.get_roles_permissions = async (req, res) => {
-    const role = req.result.roles
+    const user_id = req.result.user_id;
+    const id = req.query.id;  // Updated to match the route query parameter
+    console.log("Role ID:", id);  // To check if id is being retrieved correctly
+
     try {
-        const get_role_id = `SELECT id FROM roles WHERE role = ?`
-        const [is_role_exist] = await sequelize.query(get_role_id, {
-            replacements: [role],
-            type: sequelize.QueryTypes.SELECT,
-        });
+        if (!id) {
+            const roles_permissions_query = `
+             SELECT rp.can_view,rp.can_delete,rp.can_update,
+             rp.can_create,r.role,p.permission,p.id AS permission_id,
+             r.id AS role_id FROM user_roles
+              ur JOIN roles_permissions rp ON rp.role_id = ur.role_id 
+              JOIN permissions p ON p.id = rp.permission_id
+               JOIN roles r ON r.id = ur.role_id
+                WHERE ur.is_disabled = false AND user_id = ?;
+            `;
 
-        if (!is_role_exist) return res.status(400).json({ type: "error", message: "role not found" })
-        const role_id = is_role_exist?.id;
+            const all_roles_permissions = await sequelize.query(roles_permissions_query, {
+                replacements: [user_id],
+                type: sequelize.QueryTypes.SELECT,
+            });
 
-        const roles_permissions_query = `SELECT rp.can_view,rp.can_create,rp.can_update,rp.can_delete,p.permission,r.role FROM roles_permissions rp JOIN permissions p ON rp.permission_id = p.id JOIN roles r ON rp.role_id = r.id WHERE rp.is_disabled = false AND rp.role_id = ?;`
-        const all_roles_permissions = await sequelize.query(roles_permissions_query, {
-            replacements: [role_id],
-            type: sequelize.QueryTypes.SELECT,
-        });
+            if (!all_roles_permissions.length) {
+                return res.status(400).json({ type: "error", message: "No permissions found" });
+            }
 
-        if (!all_roles_permissions) return res.status(400).json({ type: "error", message: "No permissions found" })
+            res.status(200).json({ type: "success", data: all_roles_permissions });
+        } else {
+            const roles_permissions_query = `
+                SELECT rp.can_view, rp.can_create, rp.can_update, rp.can_delete, 
+                       p.permission, r.role, r.id AS role_id, p.id AS permission_id
+                FROM roles_permissions rp 
+                JOIN permissions p ON rp.permission_id = p.id 
+                JOIN roles r ON rp.role_id = r.id 
+                WHERE rp.is_disabled = false AND rp.role_id = ?;
+            `;
 
-        res.status(200).json({ type: "success", data: all_roles_permissions })
+            const all_roles_permissions = await sequelize.query(roles_permissions_query, {
+                replacements: [id],
+                type: sequelize.QueryTypes.SELECT,
+            });
+
+            if (!all_roles_permissions.length) {
+                return res.status(400).json({ type: "error", message: "No permissions found" });
+            }
+
+            res.status(200).json({ type: "success", data: all_roles_permissions });
+        }
     } catch (error) {
-        res.status(400).json({ type: "error", message: error.message })
+        console.error("SQL Error:", error);
+        res.status(400).json({ type: "error", message: error.message });
     }
-}
+};
+
+
 
 

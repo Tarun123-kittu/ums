@@ -527,6 +527,20 @@ exports.update_user = async (req, res) => {
   }
 };
 
+exports.get_all_users_name = async (req, res) => {
+  try {
+    const get_users_query = `SELECT username,name,id FROM users WHERE is_disabled = false`;
+    const all_users = await sequelize.query(get_users_query, {
+      type: sequelize.QueryTypes.SELECT,
+    });
+    if (!all_users) return res.status(404).json({ type: "error", message: "No Users Found" })
+
+    return res.status(200).json({ type: "success", data: all_users })
+  } catch (error) {
+    return res.status(400).json({ type: "error", message: error.message })
+  }
+}
+
 
 
 
