@@ -91,7 +91,9 @@ router.post("/apply_leave", authenticateToken, validateLeaveRequest, leaveContro
 router.get("/get_applied_leaves", authenticateToken, leaveController.all_applied_leaves)
 router.get("/get_user_pending_leaves", authenticateToken, leaveController.calculate_pending_leaves)
 router.put("/update_pending_leaaves", authenticateToken, leaveController.update_pending_leave)
-router.get("/all_user_applied_leaves/:status", authenticateToken, leaveController.get_all_users_pending_leaves)
+router.get("/all_user_applied_leaves", authenticateToken, leaveController.get_all_users_pending_leaves)
+router.get("/get_applied_leave_detail", authenticateToken, leaveController.get_applied_leave_details)
+router.get("/all_users_pending_leaves", authenticateToken, leaveController.calculate_pending_leaves_for_all_users)
 
 
 
