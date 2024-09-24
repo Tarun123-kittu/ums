@@ -460,10 +460,12 @@ exports.get_role_assigned_to_users = async (req, res) => {
 
     try {
         const get_username_query = `
-            SELECT u.username, u.id, u.name 
+           SELECT u.username, u.id, u.name 
             FROM users u 
             JOIN user_roles ur ON ur.user_id = u.id 
-            WHERE ur.role_id = ?;
+            WHERE u.is_disabled = false 
+            AND ur.role_id = ?;
+
         `;
 
         const all_user_names = await sequelize.query(get_username_query, {
