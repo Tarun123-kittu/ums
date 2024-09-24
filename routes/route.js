@@ -64,7 +64,10 @@ router.post("/reset_password/:token", validateResetPasswordDataTypes, userContro
 router.post("/change_password", validateChangePassword, validateChangePasswordDataTypes, userController.change_password)
 router.get("/get_employee_details/:id", authenticateToken, userController.get_employee_details)
 router.get("/get_employees", authenticateToken, userController.get_employees)
-router.patch("/delete_employee/:id", authenticateToken, validateGetAttendanceDetails, userController.delete_employee)
+router.patch("/delete_employee/:id", authenticateToken, userController.delete_employee)
+router.put("/update_user", authenticateToken, userController.update_user)
+router.get("/get_all_username", authenticateToken, userController.get_all_users_name)
+
 
 
 
@@ -76,6 +79,8 @@ router.post("/assign_new_permissions_to_roles", authenticateToken, validateAssig
 router.patch("/update_permissions_assigned_to_role", authenticateToken, validateUpdateRolesPermission, rolesPermissionsController.update_permissions_assigned_to_role)
 router.patch("/delete_role", authenticateToken, rolesPermissionsController.disabled_role)
 router.delete("/delete_user_role", authenticateToken, validateDeleteUserRole, rolesPermissionsController.delete_user_role)
+router.get("/get_roles_permissions", authenticateToken, rolesPermissionsController.get_roles_permissions)
+router.get("/get_role_assigned_to_users", authenticateToken, rolesPermissionsController.get_role_assigned_to_users)
 
 
 
@@ -102,7 +107,9 @@ router.post("/apply_leave", authenticateToken, validateLeaveRequest, leaveContro
 router.get("/get_applied_leaves", authenticateToken, leaveController.all_applied_leaves)
 router.get("/get_user_pending_leaves", authenticateToken, leaveController.calculate_pending_leaves)
 router.put("/update_pending_leaaves", authenticateToken, leaveController.update_pending_leave)
-router.get("/all_user_applied_leaves/:status", authenticateToken, leaveController.get_all_users_pending_leaves)
+router.get("/all_user_applied_leaves", authenticateToken, leaveController.get_all_users_pending_leaves)
+router.get("/get_applied_leave_detail", authenticateToken, leaveController.get_applied_leave_details)
+router.get("/all_users_pending_leaves", authenticateToken, leaveController.calculate_pending_leaves_for_all_users)
 
 
 

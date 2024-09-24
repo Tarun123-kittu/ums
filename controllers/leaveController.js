@@ -137,25 +137,30 @@ exports.all_applied_leaves = async (req, res) => {
     try {
         let select_all_applied_leaves_query = `
             SELECT 
+            l.id ,
                 l.from_date AS date_from,
                 l.to_date AS to_date,
                 l.count AS count,
                 l.type AS type,
                 l.description,
+                l.status,
+                l.remark,
+                l.createdAt AS applied_on,
                 u.name,
                 u.username,
                 u.id AS user_id
             FROM leaves l 
             JOIN users u ON l.user_id = u.id 
-            WHERE l.status = "PENDING"`;
+            WHERE u.is_disabled = false
+            AND l.status = "PENDING"`;
 
         let get_all_applied_leaves = await sequelize.query(select_all_applied_leaves_query, {
             type: sequelize.QueryTypes.SELECT
         });
 
         if (get_all_applied_leaves?.length === 0) {
-            return res.status(404).json({
-                type: "error",
+            return res.status(200).json({
+                type: "Success",
                 message: "No pending leaves found"
             });
         }
@@ -222,7 +227,6 @@ exports.calculate_pending_leaves = async (req, res) => {
 
         const usedLeaves = leaveData.total_used_leaves;
 
-        // Calculate remaining leaves
         const remainingLeaves = totalAllowedLeaves - usedLeaves;
 
         return res.status(200).json({
@@ -246,11 +250,11 @@ exports.calculate_pending_leaves = async (req, res) => {
 
 
 exports.update_pending_leave = async (req, res) => {
-    let { leave_id, status } = req.body;
+    let { leave_id, status, remark } = req.body;
     try {
-        let update_leave_query = `UPDATE leaves SET status = ? WHERE id = ?`
+        let update_leave_query = `UPDATE leaves SET status = ?, remark = ? WHERE id = ?`
         let is_leave_updated = await sequelize.query(update_leave_query, {
-            replacements: [status, leave_id],
+            replacements: [status, remark, leave_id],
             type: sequelize.QueryTypes.UPDATE,
         });
 
@@ -269,19 +273,142 @@ exports.update_pending_leave = async (req, res) => {
 }
 
 exports.get_all_users_pending_leaves = async (req, res) => {
-    let { status } = req.params
-    if (!status) return res.status(400).json({ type: "error", message: "Please provide leave status in params" })
     try {
-        let get_all_user_applied_leaves = `SELECT l.from_date,l.to_date,l.count,l.description,l.createdAt,u.username FROM leaves l JOIN users u ON u.id = l.user_id WHERE l.status = ?;`;
-        let [is_leaves_exist] = await sequelize.query(get_all_user_applied_leaves, {
-            replacements: [status],
-            type: sequelize.QueryTypes.SELECt,
+        const { name, month, year } = req.query;
+
+        let query = `SELECT l.id, l.from_date, l.to_date, l.count, l.description, l.createdAt, l.type, l.createdAt, l.status, l.remark, u.name 
+                     FROM leaves l 
+                     JOIN users u ON u.id = l.user_id 
+                     WHERE u.is_disabled = false`;
+
+        if (name) {
+            query += ` AND u.id = '${name}'`;
+        }
+        if (month) {
+            query += ` AND MONTH(l.createdAt) = ${month}`;
+        }
+        if (year) {
+            query += ` AND YEAR(l.createdAt) = ${year}`;
+        }
+
+        query += ';';
+
+        let is_leaves_exist = await sequelize.query(query, {
+            type: sequelize.QueryTypes.SELECT,
         });
 
-        if (is_leaves_exist?.length === 0) return res.status(400).json({ type: "error", message: "No leaves found" })
-        return res.status(200).json({ type: "error", data: is_leaves_exist })
+        console.log(is_leaves_exist, "is_leaves_exist")
+
+        if (!is_leaves_exist) {
+            return res.status(200).json({ type: "success", message: "No leaves found" });
+        }
+
+        return res.status(200).json({ type: "success", data: is_leaves_exist });
     } catch (error) {
-        return res.status(400).json({ type: "error", message: error.message })
+        return res.status(400).json({ type: "error", message: error.message });
+    }
+};
+
+
+exports.get_applied_leave_details = async (req, res) => {
+    const leave_id = req.query.leave_id;
+    if (!leave_id) return res.status(400).json({
+        type: "error",
+        message: "Leave is is required to perform this action"
+    })
+    try {
+        const get_applied_leave_detail = `SELECT u.name,u.mobile,l.from_date,l.to_date,l.createdAt,l.count,l.sandwich,l.description,l.type,l.status,l.remark FROM leaves l JOIN users u ON l.user_id = u.id WHERE l.id = ?`;
+        const [leave_detail] = await sequelize.query(get_applied_leave_detail, {
+            replacements: [leave_id],
+            type: sequelize.QueryTypes.SELECt,
+        });
+        return res.status(200).json({ type: "success", data: leave_detail })
+    } catch (error) {
+        return res.status(400).json({
+            type: "error",
+            message: error.message
+        })
     }
 }
+
+exports.calculate_pending_leaves_for_all_users = async (req, res) => {
+    try {
+        const select_all_users_query = `
+            SELECT 
+                u.id AS userId,
+                u.name AS name,
+                u.username AS username,
+                u.doj AS doj
+            FROM users u
+            WHERE u.is_disabled = false
+        `;
+
+        const users = await sequelize.query(select_all_users_query, {
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (!users.length) {
+            return res.status(404).json({
+                type: "error",
+                message: "No active users found"
+            });
+        }
+
+        const usersLeaveData = [];
+
+        for (const user of users) {
+            const { userId, name, username, doj } = user;
+            const dojDate = new Date(doj);
+            const currentDate = new Date();
+
+            let monthsWorked = (currentDate.getFullYear() - dojDate.getFullYear()) * 12 + (currentDate.getMonth() - dojDate.getMonth());
+
+            if (monthsWorked < 1) {
+                monthsWorked = 1;
+            }
+
+            const totalAllowedLeaves = monthsWorked;
+
+            const select_used_leaves_query = `
+                SELECT 
+                    COALESCE(SUM(l.count), 0) AS total_used_leaves
+                FROM leaves l
+                WHERE l.user_id = :userId 
+                AND l.status NOT IN ('PENDING', 'REJECTED')
+            `;
+
+            const [leaveData] = await sequelize.query(select_used_leaves_query, {
+                type: sequelize.QueryTypes.SELECT,
+                replacements: { userId }
+            });
+
+            const usedLeaves = leaveData.total_used_leaves;
+            const remainingLeaves = totalAllowedLeaves - usedLeaves;
+
+            // Push each user's leave data to the array, including name and username
+            usersLeaveData.push({
+                userId,
+                name,
+                username,
+                doj,
+                total_allowed_leaves: totalAllowedLeaves,
+                used_leaves: usedLeaves,
+                remaining_leaves: remainingLeaves
+            });
+        }
+
+        return res.status(200).json({
+            type: "success",
+            data: usersLeaveData
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            type: "error",
+            message: error.message
+        });
+    }
+};
+
+
 
