@@ -74,6 +74,7 @@ router.post("/add_holidayOrEvent", authenticateToken, validateHolidaysAndEvents,
 router.put("/update_holidayOrEvent", authenticateToken, holidaysAndEventsController.update_holidayOrEvent)
 router.get("/get_all_holidaysOrEvents", authenticateToken, holidaysAndEventsController.get_all_holidaysOrEvents)
 router.delete("/delete_holidayOrEvent", authenticateToken, holidaysAndEventsController.delete_holidayOrEvent)
+router.get("/get_holiday_and_event", authenticateToken, holidaysAndEventsController.get_holidayOrEvent)
 
 
 // attendance
@@ -94,6 +95,7 @@ router.put("/update_pending_leaaves", authenticateToken, leaveController.update_
 router.get("/all_user_applied_leaves", authenticateToken, leaveController.get_all_users_pending_leaves)
 router.get("/get_applied_leave_detail", authenticateToken, leaveController.get_applied_leave_details)
 router.get("/all_users_pending_leaves", authenticateToken, leaveController.calculate_pending_leaves_for_all_users)
+router.get("/leave_bank_report", authenticateToken, leaveController.leave_bank_report)
 
 
 

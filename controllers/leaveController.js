@@ -1,6 +1,7 @@
 let { sequelize } = require('../models');
 let moment = require('moment'); // Assuming you are using Sequelize
 let { send_email } = require("../utils/commonFuntions")
+const { CronJob } = require('cron');
 
 exports.apply_leave = async (req, res) => {
     let user_id = req?.result?.user_id;
@@ -355,45 +356,49 @@ exports.calculate_pending_leaves_for_all_users = async (req, res) => {
         }
 
         const usersLeaveData = [];
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1; // JavaScript months are 0-indexed
 
         for (const user of users) {
             const { userId, name, username, doj } = user;
             const dojDate = new Date(doj);
-            const currentDate = new Date();
+            const monthsWorked = (currentYear - dojDate.getFullYear()) * 12 + (currentMonth - (dojDate.getMonth() + 1));
 
-            let monthsWorked = (currentDate.getFullYear() - dojDate.getFullYear()) * 12 + (currentDate.getMonth() - dojDate.getMonth());
+            // Minimum allowed leaves for every user is 1
+            const totalAllowedLeaves = Math.max(monthsWorked, 1);
 
-            if (monthsWorked < 1) {
-                monthsWorked = 1;
-            }
-
-            const totalAllowedLeaves = monthsWorked;
-
-            const select_used_leaves_query = `
+            // Query to calculate total accepted leaves for the user
+            const select_accepted_leaves_query = `
                 SELECT 
-                    COALESCE(SUM(l.count), 0) AS total_used_leaves
+                    COALESCE(SUM(l.count), 0) AS total_accepted_leaves,
+                    SUM(CASE WHEN MONTH(l.createdAt) = :currentMonth AND YEAR(l.createdAt) = :currentYear THEN l.count ELSE 0 END) AS current_month_accepted_leaves
                 FROM leaves l
                 WHERE l.user_id = :userId 
-                AND l.status NOT IN ('PENDING', 'REJECTED')
+                AND l.status = 'ACCEPTED'
             `;
 
-            const [leaveData] = await sequelize.query(select_used_leaves_query, {
+            const [leaveData] = await sequelize.query(select_accepted_leaves_query, {
                 type: sequelize.QueryTypes.SELECT,
-                replacements: { userId }
+                replacements: { userId, currentMonth, currentYear }
             });
 
-            const usedLeaves = leaveData.total_used_leaves;
-            const remainingLeaves = totalAllowedLeaves - usedLeaves;
+            const totalAcceptedLeaves = leaveData.total_accepted_leaves || 0;
+            const currentMonthAcceptedLeaves = leaveData.current_month_accepted_leaves || 0;
 
-            // Push each user's leave data to the array, including name and username
+            // Calculate remaining leaves
+            const remainingLeaves = totalAllowedLeaves - totalAcceptedLeaves;
+
+            // Push each user's leave data to the array
             usersLeaveData.push({
                 userId,
                 name,
                 username,
                 doj,
                 total_allowed_leaves: totalAllowedLeaves,
-                used_leaves: usedLeaves,
-                remaining_leaves: remainingLeaves
+                total_accepted_leaves: totalAcceptedLeaves,
+                current_month_accepted_leaves: currentMonthAcceptedLeaves,
+                remaining_leaves: remainingLeaves > 0 ? remainingLeaves : 0 // Ensuring no negative remaining leaves
             });
         }
 
@@ -409,6 +414,189 @@ exports.calculate_pending_leaves_for_all_users = async (req, res) => {
         });
     }
 };
+
+
+exports.leave_bank_report = async (req, res) => {
+    try {
+        const { session, month, year, page = 1, limit = 10 } = req.query;
+        const offset = (page - 1) * limit;
+
+        // Main query to fetch bank leave records
+        let bank_report_query = `
+            SELECT 
+                u.id, 
+                u.username, 
+                u.name, 
+                COALESCE(bl.taken_leave, 0) AS taken_leave, 
+                COALESCE(bl.paid_leave, 0) AS paid_leave
+            FROM 
+                users u
+            LEFT JOIN 
+                bank_leaves bl ON u.id = bl.user_id
+            WHERE 
+                u.is_disabled = false`; // Ensure we only include non-disabled users
+
+        if (month) {
+            bank_report_query += ` AND MONTH(bl.created_at) = :month`;
+        } else {
+            bank_report_query += ` AND MONTH(bl.created_at) = MONTH(CURDATE())`;
+        }
+
+        if (year) {
+            bank_report_query += ` AND YEAR(bl.created_at) = :year`;
+        }
+
+        if (session) {
+            bank_report_query += ` AND bl.session = :session`;
+        }
+
+        bank_report_query += ` LIMIT :limit OFFSET :offset`;
+
+        const replacements = {
+            month: month ? parseInt(month) : undefined,
+            year: year ? parseInt(year) : undefined,
+            session: session ? session : undefined,
+            limit: parseInt(limit),
+            offset: offset,
+        };
+
+        const all_bank_records = await sequelize.query(bank_report_query, {
+            type: sequelize.QueryTypes.SELECT,
+            replacements,
+        });
+
+        console.log("Query Result:", all_bank_records);
+
+        // If no records found, return users with taken_leave = 0 and paid_leave = 0
+        if (!all_bank_records || all_bank_records.length === 0) {
+            const defaultUsersQuery = `
+                SELECT 
+                    u.id, 
+                    u.username, 
+                    u.name, 
+                    0 AS taken_leave, 
+                    0 AS paid_leave 
+                FROM 
+                    users u 
+                WHERE 
+                    u.is_disabled = false`;
+
+            const defaultUsers = await sequelize.query(defaultUsersQuery, {
+                type: sequelize.QueryTypes.SELECT,
+            });
+
+            return res.status(200).json({
+                type: "success",
+                data: defaultUsers
+            });
+        }
+
+        // Count query remains the same
+        let count_query = `
+            SELECT COUNT(*) as totalCount
+            FROM bank_leaves bl
+            JOIN users u ON u.id = bl.user_id
+            WHERE u.is_disabled = false`; // Ensure we only count non-disabled users
+
+        if (month) {
+            count_query += ` AND MONTH(bl.created_at) = :month`;
+        } else {
+            count_query += ` AND MONTH(bl.created_at) = MONTH(CURDATE())`;
+        }
+
+        if (year) {
+            count_query += ` AND YEAR(bl.created_at) = :year`;
+        }
+
+        if (session) {
+            count_query += ` AND bl.session = :session`;
+        }
+
+        const totalRecordsResult = await sequelize.query(count_query, {
+            type: sequelize.QueryTypes.SELECT,
+            replacements: {
+                month: month ? parseInt(month) : undefined,
+                year: year ? parseInt(year) : undefined,
+                session: session ? session : undefined,
+            },
+        });
+
+        const totalCount = totalRecordsResult[0].totalCount;
+        const totalPages = Math.ceil(totalCount / limit);
+
+        return res.status(200).json({
+            type: "success",
+            data: all_bank_records,
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages: totalPages,
+                totalRecords: totalCount,
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching leave bank report:", error);
+        return res.status(400).json({ type: "error", message: error.message });
+    }
+};
+
+async function process_cron_job() {
+    try {
+        const get_all_users_query = `SELECT id,doj FROM users WHERE is_disabled = false`;
+        const [all_queries] = await sequelize.query(get_all_users_query, {
+            type: sequelize.QueryTypes.SELECt,
+        });
+
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+        const session = `${currentYear}-${currentYear + 1}`
+
+        for (const user of all_queries) {
+            const { id, doj } = user
+            const dojDate = new Date(doj);
+            const monthsWorked = (currentYear - dojDate.getFullYear()) * 12 + (currentMonth - (dojDate.getMonth() + 1));
+
+            const total_allowed_leaves_query = `SELECT COUNT(*) AS Taken_leaves FROM leaves WHERE user_id = ? AND status = 'ACCEPTED'`
+            const [total_allowed_leaves] = await sequelize.query(total_allowed_leaves_query, {
+                replacements: [id],
+                type: sequelize.QueryTypes.SELECt,
+            });
+
+            const pending_leaves = monthsWorked - total_allowed_leaves[0]?.Taken_leaves
+
+            const insert_pending_leaves_query = `INSERT INTO bank_leaves (user_id,paid_leave,taken_leave,month_year,session,created_at,updated_at) VALUES (?,?,?,CURDATE(),?,CURDATE(),CURDATE())`;
+            const insert_pending_leave = await sequelize.query(insert_pending_leaves_query, {
+                replacements: [id, pending_leaves, 0, session],
+                type: sequelize.QueryTypes.INSERT,
+            });
+
+            console.log(insert_pending_leave, "insert_pending_leave insert_pending_leave insert_pending_leave")
+
+        }
+    } catch (error) {
+
+    }
+}
+
+
+
+
+
+const job = new CronJob('0 0 1 * *', () => {
+    console.log('This job runs at midnight on the first day of every month');
+    process_cron_job()
+    // Add your code to be executed here
+}, null, true, 'Asia/Kolkata'); // Set your desired time zone
+
+// Start the job
+job.start();
+
+console.log('Cron job has been scheduled.');
+
+
+
+
+
 
 
 
