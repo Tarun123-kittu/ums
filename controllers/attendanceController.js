@@ -115,6 +115,7 @@ exports.get_attendances = async (req, res) => {
                     u.name,
                     a.date,
                     DATE_FORMAT(a.date, '%W') AS date_in_week_day,
+                    a.id,
                     a.in_time,
                     a.out_time,
                     a.total_time,
@@ -202,6 +203,7 @@ exports.get_attendance_report = async (req, res) => {
                     u.name,
                     a.date,
                     DATE_FORMAT(a.date, '%W') AS date_in_week_day,
+                    a.id,
                     a.in_time,
                     a.out_time,
                     a.total_time,
@@ -417,7 +419,7 @@ exports.get_attendance_details = async (req, res) => {
         const id = req.query.attendanceId;
 
         const [results, metadata] = await sequelize.query(`
-            SELECT   u.username,u.mobile,a.date,a.total_time,a.rating,a.in_time,a.out_time,a.report,a.remark
+            SELECT   u.name,u.mobile,a.date,a.total_time,a.rating,a.in_time,a.out_time,a.report,a.remark,a.id
             FROM attendances a
             JOIN users u ON a.user_id = u.id
             WHERE a.id = :id
@@ -453,14 +455,15 @@ exports.update_attendance_details = async (req, res) => {
 
         const existingAttendance = results;
 
-
+        const totalTime = (in_time && out_time) && find_the_total_time(in_time)
         const updatedValues = {
             total_time: total_time !== undefined ? total_time : existingAttendance.total_time,
             rating: rating !== undefined ? rating : existingAttendance.rating,
             in_time: in_time !== undefined ? in_time : existingAttendance.in_time,
             out_time: out_time !== undefined ? out_time : existingAttendance.out_time,
             report: report !== undefined ? report : existingAttendance.report,
-            remark: remark !== undefined ? remark : existingAttendance.remark
+            remark: remark !== undefined ? remark : existingAttendance.remark,
+            total_time: totalTime
         };
 
 
@@ -471,7 +474,8 @@ exports.update_attendance_details = async (req, res) => {
                 in_time = :in_time,
                 out_time = :out_time,
                 report = :report,
-                remark = :remark
+                remark = :remark,
+                total_time = :total_time
             WHERE id = :id
         `, {
             replacements: {

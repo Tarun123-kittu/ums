@@ -149,6 +149,7 @@ exports.all_applied_leaves = async (req, res) => {
                 l.createdAt AS applied_on,
                 u.name,
                 u.username,
+                u.email,
                 u.id AS user_id
             FROM leaves l 
             JOIN users u ON l.user_id = u.id 
@@ -251,27 +252,83 @@ exports.calculate_pending_leaves = async (req, res) => {
 
 
 exports.update_pending_leave = async (req, res) => {
-    let { leave_id, status, remark } = req.body;
+    const { leave_id, status, remark, user_id, leave_count, email, name, from_date, to_date } = req.body;
+    const transaction = await sequelize.transaction(); // Start a new transaction
+
     try {
-        let update_leave_query = `UPDATE leaves SET status = ?, remark = ? WHERE id = ?`
-        let is_leave_updated = await sequelize.query(update_leave_query, {
+        const update_leave_query = `UPDATE leaves SET status = ?, remark = ? WHERE id = ?`;
+        const is_leave_updated = await sequelize.query(update_leave_query, {
             replacements: [status, remark, leave_id],
             type: sequelize.QueryTypes.UPDATE,
+            transaction
         });
 
-        if (!is_leave_updated) return res.status(400).json({ type: "error", message: "Error while updating the leave please try again later" })
+        if (!is_leave_updated) {
+            await transaction.rollback(); // Rollback transaction if update fails
+            return res.status(400).json({ type: "error", message: "Error while updating the leave. Please try again later." });
+        }
+
+        if (status === "ACCEPTED") {
+            const select_current_month_leaves = `
+                SELECT * FROM bank_leaves 
+                WHERE user_id = ? 
+                AND MONTH(created_at) = MONTH(NOW()) 
+                AND YEAR(created_at) = YEAR(NOW())`;
+
+            const [selected_leave_details] = await sequelize.query(select_current_month_leaves, {
+                replacements: [user_id],
+                type: sequelize.QueryTypes.SELECT,
+                transaction
+            });
+
+            if (selected_leave_details) {
+                const bank_leave_id = selected_leave_details.id;
+                const bank_pending_leaves = Number(selected_leave_details.paid_leave);
+                const bank_taken_leaves = Number(selected_leave_details.taken_leave);
+                const total_pending_leaves = bank_pending_leaves - leave_count;
+                const total_taken_leaves = bank_taken_leaves + leave_count;
+
+                const update_bank_leaves_query = `
+                    UPDATE bank_leaves 
+                    SET taken_leave = ?, paid_leave = ?, updated_at = CURDATE() 
+                    WHERE id = ?`;
+
+                const is_bank_leave_updated = await sequelize.query(update_bank_leaves_query, {
+                    replacements: [total_taken_leaves, total_pending_leaves, bank_leave_id],
+                    type: sequelize.QueryTypes.UPDATE,
+                    transaction
+                });
+
+                if (!is_bank_leave_updated) {
+                    await transaction.rollback();
+                    return res.status(400).json({ type: "error", message: "Error while updating bank leaves. Please try again later." });
+                }
+            } else {
+                await transaction.rollback();
+                return res.status(404).json({ type: "error", message: "No leave details found for the current month." });
+            }
+        }
+        await send_email({
+            email: email,
+            subject: `Leave Status`,
+            message: `Hey ${name}, your leave application from ${from_date} to ${to_date} has been ${status}`
+        });
+
+        await transaction.commit();
 
         return res.status(200).json({
             type: "success",
-            message: "Leave Updated successfully"
-        })
+            message: "Leave updated successfully"
+        });
     } catch (error) {
-        return res.status(200).json({
+        await transaction.rollback();
+        return res.status(500).json({
             type: "error",
             message: error.message
-        })
+        });
     }
-}
+};
+
 
 exports.get_all_users_pending_leaves = async (req, res) => {
     try {
@@ -577,10 +634,6 @@ async function process_cron_job() {
 
     }
 }
-
-
-
-
 
 const job = new CronJob('0 0 1 * *', () => {
     console.log('This job runs at midnight on the first day of every month');
