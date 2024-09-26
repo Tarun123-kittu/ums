@@ -27,6 +27,11 @@ module.exports = {
                 onUpdate: 'CASCADE', // Optional: Define behavior on update
                 onDelete: 'CASCADE', // Optional: Define behavior on delete
             },
+            is_disabled: {
+                type: Sequelize.BOOLEAN,
+                allowNull: false,
+                defaultValue: false,
+            },
             created_at: {
                 type: Sequelize.DATE,
                 defaultValue: Sequelize.NOW,

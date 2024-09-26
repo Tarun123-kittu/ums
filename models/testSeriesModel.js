@@ -1,7 +1,7 @@
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  class TestSeries extends Model {}
+  class TestSeries extends Model { }
 
   TestSeries.init({
     id: {
@@ -26,12 +26,26 @@ module.exports = (sequelize) => {
       allowNull: false,
       defaultValue: 'pending',
     },
+    time_taken: {
+      type: DataTypes.TIME,
+      allowNull: false, // This field does not allow null values
+    },
+    description: {
+      type: DataTypes.STRING(500),
+      allowNull: false, // This field does not allow null values
+    },
+    createdBy: {
+      type: DataTypes.INTEGER,
+      allowNull: false, // This field does not allow null values
+    },
     createdAt: {
       type: DataTypes.DATE,
+      allowNull: false,
       defaultValue: DataTypes.NOW,
     },
     updatedAt: {
       type: DataTypes.DATE,
+      allowNull: false,
       defaultValue: DataTypes.NOW,
     },
   }, {

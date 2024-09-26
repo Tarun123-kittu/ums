@@ -28,6 +28,18 @@ module.exports = {
                 allowNull: false,
                 defaultValue: 'pending',
             },
+            time_taken: {
+                type: Sequelize.TIME,
+                allowNull: false, // Set to NOT NULL
+            },
+            description: {
+                type: Sequelize.STRING(500), // VARCHAR(500)
+                allowNull: false, // Set to NOT NULL
+            },
+            createdBy: {
+                type: Sequelize.INTEGER,
+                allowNull: false, // Set to NOT NULL
+            },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE,

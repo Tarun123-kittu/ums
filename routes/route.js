@@ -124,34 +124,34 @@ router.delete("/delete_lead", authenticateToken, validateUpdateLead, interviewLe
 
 
 //hr round 
-router.get("/get_hr_round_questions",authenticateToken,hrRoundController.get_hr_round_questions)
-router.post("/hr_round",authenticateToken,validateHrRound,hrRoundController.hr_round)
-router.put("/hr_round_result",authenticateToken,validateHrRoundResult,hrRoundController.hr_round_result)
-router.put("/update_lead_response",authenticateToken,validateUpdateLeadResonse,hrRoundController.update_lead_response)
+router.get("/get_hr_round_questions", authenticateToken, hrRoundController.get_hr_round_questions)
+router.post("/hr_round", authenticateToken, validateHrRound, hrRoundController.hr_round)
+router.put("/hr_round_result", authenticateToken, validateHrRoundResult, hrRoundController.hr_round_result)
+router.put("/update_lead_response", authenticateToken, validateUpdateLeadResonse, hrRoundController.update_lead_response)
 
 
 
 //languages
-router.post("/create_language",authenticateToken,validateCreateLanguage,languageController.create_language)
-router.get("/get_all_languages",authenticateToken,languageController.get_all_languages)
-router.get("/get_language",authenticateToken,ValidateGetLanguage,languageController.get_language)
-router.put("/update_language",authenticateToken,ValidateUpdateLanguage,languageController.update_language)
-router.delete("/delete_language",authenticateToken,ValidateGetLanguage,languageController.delete_language)
+router.post("/create_language", authenticateToken, validateCreateLanguage, languageController.create_language)
+router.get("/get_all_languages", authenticateToken, languageController.get_all_languages)
+router.get("/get_language", authenticateToken, ValidateGetLanguage, languageController.get_language)
+router.put("/update_language", authenticateToken, ValidateUpdateLanguage, languageController.update_language)
+router.delete("/delete_language", authenticateToken, ValidateGetLanguage, languageController.delete_language)
 
 
 //test series 
-router.post("/create_series",authenticateToken,ValidateCreateSeries,testSeriesController.create_series)
-router.get("/get_all_series",authenticateToken,ValidateGetLanguage,testSeriesController.get_all_series)
-router.get("/get_series",authenticateToken,ValidateGetSeries,testSeriesController.get_series)
-router.put("/update_series",authenticateToken,ValidateUpdateSeries,testSeriesController.update_series)
-router.delete("/delete_series",authenticateToken,ValidateGetSeries,testSeriesController.delete_series)
+router.post("/create_series", authenticateToken, ValidateCreateSeries, testSeriesController.create_series)
+router.get("/get_all_series", authenticateToken, testSeriesController.get_all_series)
+router.get("/get_series", authenticateToken, ValidateGetSeries, testSeriesController.get_series)
+router.put("/update_series", authenticateToken, ValidateUpdateSeries, testSeriesController.update_series)
+router.delete("/delete_series", authenticateToken, ValidateGetSeries, testSeriesController.delete_series)
 
 
 //technical round questions
-router.post("/add_objective",authenticateToken,technicalQuestionsController.add_objective)
-router.post("/add_subjective",authenticateToken,technicalQuestionsController.add_subjective)
-router.post("/add_logical",authenticateToken,technicalQuestionsController.add_logical)
-router.get("/get_questions_answers",authenticateToken,technicalQuestionsController.get_questions_answers)
+router.post("/add_objective", authenticateToken, technicalQuestionsController.add_objective)
+router.post("/add_subjective", authenticateToken, technicalQuestionsController.add_subjective)
+router.post("/add_logical", authenticateToken, technicalQuestionsController.add_logical)
+router.get("/get_questions_answers", authenticateToken, technicalQuestionsController.get_questions_answers)
 
 
 module.exports = router
