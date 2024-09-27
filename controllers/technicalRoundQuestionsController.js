@@ -8,7 +8,9 @@ exports.add_objective = async (req, res) => {
     try {
         const { test_series_id, language_id, question, options, correct_option_number } = req.body;
 
-     
+        console.log(test_series_id, language_id, question, options, correct_option_number)
+
+
         if (!test_series_id || !language_id || !question || !options || options.length !== 4 || !correct_option_number) {
             await t.rollback();
             return res.status(400).json({ success: false, message: 'Test series ID, language ID, question, options (exactly 4), and correct option number are required.' });
@@ -24,18 +26,19 @@ exports.add_objective = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Correct option number is out of range.' });
         }
 
-      
+
         const [seriesExists] = await sequelize.query('SELECT 1 FROM test_series WHERE id = :test_series_id', {
             replacements: { test_series_id },
             transaction: t
         });
+
 
         if (seriesExists.length === 0) {
             await t.rollback();
             return res.status(404).json({ success: false, message: 'Test series not found.' });
         }
 
-       
+
         const [languageExists] = await sequelize.query('SELECT 1 FROM languages WHERE id = :language_id', {
             replacements: { language_id },
             transaction: t
@@ -46,7 +49,7 @@ exports.add_objective = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Language not found.' });
         }
 
-        
+
         const createQuestionQuery = `
             INSERT INTO technical_round_questions (test_series_id, language_id, question_type, question, createdAt, updatedAt)
             VALUES (?, ?, 'objective', ?, NOW(), NOW());
@@ -56,9 +59,6 @@ exports.add_objective = async (req, res) => {
             transaction: t
         });
 
-        const newQuestionId = result.insertId; 
-
-        
         const createOptionQuery = `
             INSERT INTO options (question_id, option, createdAt, updatedAt)
             VALUES (?, ?, NOW(), NOW());
@@ -66,22 +66,20 @@ exports.add_objective = async (req, res) => {
 
         const optionPromises = options.map((option) => {
             return sequelize.query(createOptionQuery, {
-                replacements: [newQuestionId, option],
+                replacements: [result, option],
                 transaction: t
             });
         });
 
         const optionResults = await Promise.all(optionPromises);
 
-       
-        const correctOptionId = optionResults[correct_option_number - 1][0].insertId;
+        const correctOptionId = optionResults[correct_option_number - 1][0];
 
-       
         await sequelize.query(`
-            INSERT INTO answers (language_id, series_id, answer, question_id, correct_option_id, createdAt, updatedAt)
-            VALUES (?, ?, NULL, ?, ?, NOW(), NOW());
-        `, {
-            replacements: [language_id, test_series_id, newQuestionId, correctOptionId],
+            INSERT INTO answers (language_id, series_id, question_id, correct_option, createdAt, updatedAt)
+            VALUES (?, ?, ?, ?, NOW(), NOW());
+`, {
+            replacements: [language_id, test_series_id, result, correctOptionId],
             transaction: t
         });
 
@@ -89,9 +87,9 @@ exports.add_objective = async (req, res) => {
         res.status(201).json({ success: true, message: 'Objective question and related data created successfully' });
 
     } catch (error) {
-        await t.rollback(); 
+        await t.rollback();
         console.error("ERROR::", error);
-        res.status(500).json({ success: false, message: 'An error occurred while creating the objective question.' });
+        res.status(500).json({ success: false, message: error?.message });
     }
 };
 
@@ -104,19 +102,19 @@ exports.add_subjective = async (req, res) => {
     try {
         const { test_series_id, language_id, question, answer } = req.body;
 
-     
+
         if (!test_series_id || !language_id || !question || answer === undefined) {
             await t.rollback();
             return res.status(400).json({ success: false, message: 'Test series ID, language ID, question, and answer are required.' });
         }
 
-    
+
         if (isNaN(parseInt(test_series_id)) || isNaN(parseInt(language_id))) {
             await t.rollback();
             return res.status(400).json({ success: false, message: 'Invalid Test Series ID or Language ID.' });
         }
 
-      
+
         const [seriesExists] = await sequelize.query('SELECT 1 FROM test_series WHERE id = :test_series_id', {
             replacements: { test_series_id },
             transaction: t
@@ -127,7 +125,7 @@ exports.add_subjective = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Test series not found.' });
         }
 
-        
+
         const [languageExists] = await sequelize.query('SELECT 1 FROM languages WHERE id = :language_id', {
             replacements: { language_id },
             transaction: t
@@ -138,7 +136,7 @@ exports.add_subjective = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Language not found.' });
         }
 
-       
+
         const createQuestionQuery = `
             INSERT INTO technical_round_questions (test_series_id, language_id, question_type, question, createdAt, updatedAt)
             VALUES (?, ?, 'subjective', ?, NOW(), NOW());
@@ -148,12 +146,12 @@ exports.add_subjective = async (req, res) => {
             transaction: t
         });
 
-   
+
         if (result && result) {
             const newQuestionId = result;
 
             await sequelize.query(`
-                INSERT INTO answers (language_id, series_id, answer, question_id, correct_option_id, createdAt, updatedAt)
+                INSERT INTO answers (language_id, series_id, answer, question_id, correct_option, createdAt, updatedAt)
                 VALUES (?, ?, ?, ?, NULL, NOW(), NOW());
             `, {
                 replacements: [language_id, test_series_id, answer, newQuestionId],
@@ -168,9 +166,9 @@ exports.add_subjective = async (req, res) => {
         }
 
     } catch (error) {
-        await t.rollback(); 
+        await t.rollback();
         console.error("ERROR::", error);
-        res.status(500).json({ success: false, message: 'An error occurred while creating the subjective question.' });
+        res.status(500).json({ success: false, message: error?.message });
     }
 };
 
@@ -183,19 +181,19 @@ exports.add_logical = async (req, res) => {
     try {
         const { test_series_id, language_id, question, answer } = req.body;
 
-     
+
         if (!test_series_id || !language_id || !question || !answer) {
             await t.rollback();
             return res.status(400).json({ success: false, message: 'Test series ID, language ID, question, and answer are required.' });
         }
 
-      
+
         if (isNaN(parseInt(test_series_id)) || isNaN(parseInt(language_id))) {
             await t.rollback();
             return res.status(400).json({ success: false, message: 'Invalid Test Series ID or Language ID.' });
         }
 
-        
+
         const [seriesExists] = await sequelize.query('SELECT 1 FROM test_series WHERE id = :test_series_id', {
             replacements: { test_series_id },
             transaction: t
@@ -216,7 +214,7 @@ exports.add_logical = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Language not found.' });
         }
 
-        
+
         const createQuestionQuery = `
             INSERT INTO technical_round_questions (test_series_id, language_id, question_type, question, createdAt, updatedAt)
             VALUES (?, ?, 'logical', ?, NOW(), NOW());
@@ -226,11 +224,11 @@ exports.add_logical = async (req, res) => {
             transaction: t
         });
 
-        const newQuestionId = result; 
+        const newQuestionId = result;
 
-        
+
         await sequelize.query(`
-            INSERT INTO Answers (language_id, series_id, answer, question_id, correct_option_id, createdAt, updatedAt)
+            INSERT INTO Answers (language_id, series_id, answer, question_id, correct_option, createdAt, updatedAt)
             VALUES (?, ?, ?, ?, NULL, NOW(), NOW());
         `, {
             replacements: [language_id, test_series_id, answer, newQuestionId],
@@ -241,7 +239,7 @@ exports.add_logical = async (req, res) => {
         res.status(200).json(successResponse("Logical question and related data created successfully"));
 
     } catch (error) {
-        await t.rollback(); 
+        await t.rollback();
         console.log("ERROR::", error);
         return res.status(500).json({ success: false, message: 'An error occurred while creating the logical question.' });
     }
@@ -253,17 +251,17 @@ exports.get_questions_answers = async (req, res) => {
     try {
         const { language_id, series_id } = req.query;
 
-        
+
         if (!language_id || !series_id) {
             return res.status(400).json({ success: false, message: 'Language ID and Series ID are required.' });
         }
 
-        
+
         if (isNaN(parseInt(language_id)) || isNaN(parseInt(series_id))) {
             return res.status(400).json({ success: false, message: 'Invalid Language ID or Series ID.' });
         }
 
-     
+
         const [languageExists] = await sequelize.query('SELECT 1 FROM languages WHERE id = :language_id', {
             replacements: { language_id },
         });
@@ -272,7 +270,7 @@ exports.get_questions_answers = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Language not found.' });
         }
 
-      
+
         const [seriesExists] = await sequelize.query('SELECT 1 FROM test_series WHERE id = :series_id', {
             replacements: { series_id },
         });
@@ -281,17 +279,17 @@ exports.get_questions_answers = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Test series not found.' });
         }
 
-       
+
         const query = `
-        SELECT 
+        SELECT
             trq.id AS question_id,
             trq.question,
             trq.question_type,
             opt.id AS option_id,
             opt.option,
-            ans.correct_option_id AS correct_option_id,
+            ans.correct_option AS correct_option,
             CASE 
-                WHEN opt.id = ans.correct_option_id THEN opt.option 
+                WHEN opt.id = ans.correct_option THEN opt.option 
                 ELSE NULL 
             END AS correct_answer,
             ans.answer
