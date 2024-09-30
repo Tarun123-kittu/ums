@@ -152,6 +152,10 @@ router.post("/add_objective", authenticateToken, technicalQuestionsController.ad
 router.post("/add_subjective", authenticateToken, technicalQuestionsController.add_subjective)
 router.post("/add_logical", authenticateToken, technicalQuestionsController.add_logical)
 router.get("/get_questions_answers", authenticateToken, technicalQuestionsController.get_questions_answers)
+router.get("/get_logical_subjective_questions", authenticateToken, technicalQuestionsController.get_logical_subjective_questions)
+router.get("/get_objective_questions", authenticateToken, technicalQuestionsController.get_objective_questions)
+router.put("/update_logical_and_subjective_question", authenticateToken, technicalQuestionsController.update_subjective_and_logical_question)
+router.put("/update_objective_question", authenticateToken, technicalQuestionsController.update_objective)
 
 
 module.exports = router
