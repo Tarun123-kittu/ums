@@ -241,16 +241,13 @@ exports.get_questions_answers = async (req, res) => {
     try {
         const { language_id, series_id } = req.query;
 
-
         if (!language_id || !series_id) {
             return res.status(400).json({ success: false, message: 'Language ID and Series ID are required.' });
         }
 
-
         if (isNaN(parseInt(language_id)) || isNaN(parseInt(series_id))) {
             return res.status(400).json({ success: false, message: 'Invalid Language ID or Series ID.' });
         }
-
 
         const [languageExists] = await sequelize.query('SELECT 1 FROM languages WHERE id = :language_id', {
             replacements: { language_id },
@@ -260,7 +257,6 @@ exports.get_questions_answers = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Language not found.' });
         }
 
-
         const [seriesExists] = await sequelize.query('SELECT 1 FROM test_series WHERE id = :series_id', {
             replacements: { series_id },
         });
@@ -269,25 +265,12 @@ exports.get_questions_answers = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Test series not found.' });
         }
 
-
         const query = `
-        SELECT
-            trq.id AS question_id,
-            trq.question,
-            trq.question_type,
-            opt.id AS option_id,
-            opt.option,
-            ans.correct_option AS correct_option,
-            CASE 
-                WHEN opt.id = ans.correct_option THEN opt.option 
-                ELSE NULL 
-            END AS correct_answer,
-            ans.answer
-        FROM technical_round_questions trq
-        LEFT JOIN options opt ON trq.id = opt.question_id
-        LEFT JOIN answers ans ON trq.id = ans.question_id
-        WHERE trq.language_id = :language_id 
-        AND trq.test_series_id = :series_id;
+           SELECT q.id AS question_id, q.question, q.question_type, o.id AS option_id, o.option, a.correct_option, a.answer 
+           FROM technical_round_questions q 
+           JOIN answers a ON a.question_id = q.id 
+           JOIN options o ON o.question_id = q.id 
+           WHERE q.test_series_id = :series_id AND q.language_id = :language_id;
         `;
 
         const [results] = await sequelize.query(query, {
@@ -306,7 +289,7 @@ exports.get_questions_answers = async (req, res) => {
                     question_type: row.question_type,
                     options: [],
                     answer: row.answer,
-                    correct_answer: row.correct_answer || null
+                    correct_answer: row.correct_option || null
                 };
             }
 
@@ -316,8 +299,8 @@ exports.get_questions_answers = async (req, res) => {
                     option: row.option,
                 });
 
-                if (row.correct_option_id && row.correct_answer) {
-                    questionsMap[questionId].correct_answer = row.correct_answer;
+                if (row.correct_option && row.answer) {
+                    questionsMap[questionId].correct_answer = row.answer;
                 }
             }
         });
@@ -326,10 +309,11 @@ exports.get_questions_answers = async (req, res) => {
         res.send({ success: true, data: questionsArray });
 
     } catch (error) {
-        console.log("ERROR::", error);
+        console.error("ERROR::", error.message, error.stack);
         return res.status(500).json({ success: false, message: 'An error occurred while fetching data.' });
     }
 };
+
 
 exports.get_logical_subjective_questions = async (req, res) => {
     try {
@@ -461,17 +445,12 @@ exports.update_objective = async (req, res) => {
 
         console.log(question_id, language_id, question, options, correct_option_number);
 
-        if (!question_id || !language_id || !question || !options || options.length !== 4 || !correct_option_number) {
+        if (!question_id || !question || !options || options.length !== 4 || !correct_option_number) {
             await t.rollback();
             return res.status(400).json({
                 success: false,
-                message: 'All fields are required, including question ID, language ID, question, options (exactly 4), and correct option number.'
+                message: 'All fields are required, including question ID, question, options (exactly 4), and correct option number.'
             });
-        }
-
-        if (isNaN(parseInt(language_id)) || isNaN(parseInt(correct_option_number))) {
-            await t.rollback();
-            return res.status(400).json({ success: false, message: 'Invalid Language ID or Correct Option Number.' });
         }
 
         if (correct_option_number < 1 || correct_option_number > options.length) {
@@ -479,18 +458,7 @@ exports.update_objective = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Correct option number is out of range.' });
         }
 
-        // Check if the language exists
-        const [languageExists] = await sequelize.query('SELECT 1 FROM languages WHERE id = :language_id', {
-            replacements: { language_id },
-            transaction: t
-        });
-
-        if (languageExists.length === 0) {
-            await t.rollback();
-            return res.status(404).json({ success: false, message: 'Language not found.' });
-        }
-
-        // Update question (optional: if you want to update the question text itself)
+        // Update the question
         await sequelize.query(`
             UPDATE technical_round_questions
             SET question = ?, updatedAt = NOW()
@@ -500,7 +468,6 @@ exports.update_objective = async (req, res) => {
             transaction: t
         });
 
-        // Update options
         const updateOptionQuery = `
             UPDATE options
             SET option = ?, updatedAt = NOW()
@@ -508,7 +475,7 @@ exports.update_objective = async (req, res) => {
         `;
 
         const optionUpdatePromises = options.map((option) => {
-            const { option_id, option: optionText } = option;  // Destructure option object
+            const { option_id, option: optionText } = option;
             if (!option_id || !optionText) {
                 throw new Error('Each option must have an option_id and option text');
             }
@@ -520,17 +487,24 @@ exports.update_objective = async (req, res) => {
 
         await Promise.all(optionUpdatePromises);
 
-        // Update the correct answer
+        const get_all_answer = `SELECT id FROM options WHERE question_id = ?`;
+        const is_options_exist = await sequelize.query(get_all_answer, {
+            replacements: [question_id],
+            type: sequelize.QueryTypes.SELECT,
+            transaction: t
+        });
+
+        const correct_ans = is_options_exist[correct_option_number - 1].id;
+
         await sequelize.query(`
             UPDATE answers
             SET correct_option = ?, updatedAt = NOW()
             WHERE question_id = ?;
         `, {
-            replacements: [correct_option_number, question_id],
+            replacements: [correct_ans, question_id],
             transaction: t
         });
 
-        // Commit transaction
         await t.commit();
         res.status(200).json({ success: true, message: 'Objective question and related data updated successfully.' });
 
@@ -540,6 +514,7 @@ exports.update_objective = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
 
 
 
