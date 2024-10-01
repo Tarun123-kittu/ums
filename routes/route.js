@@ -156,6 +156,8 @@ router.get("/get_logical_subjective_questions", authenticateToken, technicalQues
 router.get("/get_objective_questions", authenticateToken, technicalQuestionsController.get_objective_questions)
 router.put("/update_logical_and_subjective_question", authenticateToken, technicalQuestionsController.update_subjective_and_logical_question)
 router.put("/update_objective_question", authenticateToken, technicalQuestionsController.update_objective)
+router.delete("/delete_subjective", authenticateToken, technicalQuestionsController.delete_subjective)
+router.delete("/delete_objective", authenticateToken, technicalQuestionsController.delete_objective)
 
 
 module.exports = router

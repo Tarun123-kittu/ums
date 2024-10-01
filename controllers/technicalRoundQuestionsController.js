@@ -266,11 +266,15 @@ exports.get_questions_answers = async (req, res) => {
         }
 
         const query = `
-           SELECT q.id AS question_id, q.question, q.question_type, o.id AS option_id, o.option, a.correct_option, a.answer 
-           FROM technical_round_questions q 
-           JOIN answers a ON a.question_id = q.id 
-           JOIN options o ON o.question_id = q.id 
-           WHERE q.test_series_id = :series_id AND q.language_id = :language_id;
+                    SELECT q.id AS question_id, q.question, q.question_type, 
+                o.id AS option_id, o.option, a.correct_option, a.answer 
+            FROM technical_round_questions q 
+            LEFT JOIN answers a ON q.id = a.question_id 
+            LEFT JOIN options o ON q.id = o.question_id AND q.question_type = 'objective' -- Join only for objective questions
+            WHERE q.test_series_id = :series_id 
+            AND q.language_id = :language_id
+            ORDER BY q.id; -- Optionally, order by question ID to keep the data structured
+
         `;
 
         const [results] = await sequelize.query(query, {
@@ -313,7 +317,6 @@ exports.get_questions_answers = async (req, res) => {
         return res.status(500).json({ success: false, message: 'An error occurred while fetching data.' });
     }
 };
-
 
 exports.get_logical_subjective_questions = async (req, res) => {
     try {
@@ -515,6 +518,102 @@ exports.update_objective = async (req, res) => {
     }
 };
 
+exports.delete_subjective = async (req, res) => {
+    const { question_id } = req.query;
+    if (!question_id) {
+        return res.status(400).json({ type: "error", message: "Question id is required to perform this action" });
+    }
 
+    const transaction = await sequelize.transaction();
 
+    try {
+        const deleteQuestionResult = await sequelize.query(
+            `DELETE FROM technical_round_questions WHERE id = ?`,
+            {
+                replacements: [question_id],
+                type: sequelize.QueryTypes.DELETE,
+                transaction
+            }
+        );
+        const deleteAnswersResult = await sequelize.query(
+            `DELETE FROM answers WHERE question_id = ?`,
+            {
+                replacements: [question_id],
+                type: sequelize.QueryTypes.DELETE,
+                transaction
+            }
+        );
 
+        await transaction.commit();
+
+        console.log({ deleteQuestionResult, deleteAnswersResult });
+
+        if (deleteQuestionResult === 0) {
+            return res.status(400).json({ type: "error", message: "Question not found or problem while deleting question" });
+        }
+
+        res.status(200).json({ type: "success", message: "Question and related answers deleted successfully" });
+    } catch (error) {
+        await transaction.rollback();
+        return res.status(400).json({ type: "error", message: error.message });
+    }
+};
+
+exports.delete_objective = async (req, res) => {
+    const { question_id } = req.query;
+    if (!question_id) {
+        return res.status(400).json({ type: "error", message: "Question id is required to perform this action" });
+    }
+
+    const transaction = await sequelize.transaction();
+
+    try {
+        await sequelize.query(
+            `DELETE FROM technical_round_questions WHERE id = ?`,
+            {
+                replacements: [question_id],
+                type: sequelize.QueryTypes.DELETE,
+                transaction
+            }
+        );
+
+        const get_all_options = `SELECT id FROM options WHERE question_id = ?`;
+        const all_ids = await sequelize.query(get_all_options,
+            {
+                replacements: [question_id],
+                type: sequelize.QueryTypes.SELECT,
+                transaction
+            }
+        );
+
+        for (const { id } of all_ids) {
+            await sequelize.query(
+                `DELETE FROM options WHERE id = ?`,
+                {
+                    replacements: [id],
+                    type: sequelize.QueryTypes.DELETE,
+                    transaction
+                }
+            );
+        }
+
+        await sequelize.query(
+            `DELETE FROM answers WHERE question_id = ?`,
+            {
+                replacements: [question_id],
+                type: sequelize.QueryTypes.DELETE,
+                transaction
+            }
+        );
+
+        await transaction.commit();
+
+        return res.status(200).json({ type: "success", message: "Question and its options were successfully deleted" });
+
+    } catch (error) {
+        // Rollback the transaction in case of an error
+        await transaction.rollback();
+        console.error("Error deleting question and options:", error);
+        return res.status(500).json({ type: "error", message: "An error occurred while deleting the question and its options" });
+    }
+};
