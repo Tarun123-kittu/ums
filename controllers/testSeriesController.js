@@ -41,9 +41,6 @@ exports.create_series = async (req, res) => {
     }
 }
 
-
-
-
 exports.get_all_series = async (req, res) => {
     try {
         let id = req.query.languageId;
@@ -102,10 +99,6 @@ FROM
     }
 }
 
-
-
-
-
 exports.get_series = async (req, res) => {
     try {
         let id = req.query.seriesId
@@ -127,7 +120,6 @@ exports.get_series = async (req, res) => {
         return res.status(500).json(errorResponse(error.message))
     }
 }
-
 
 exports.update_series = async (req, res) => {
     try {
@@ -178,8 +170,6 @@ exports.update_series = async (req, res) => {
     }
 }
 
-
-
 exports.delete_series = async (req, res) => {
     try {
         const id = req.query.seriesId;
@@ -207,4 +197,65 @@ exports.delete_series = async (req, res) => {
         console.log("ERROR::", error)
         return res.status(500).json(errorResponse(error.message))
     }
-} 
+}
+
+exports.get_specific_language_series = async (req, res) => {
+    const transaction = await sequelize.transaction();
+    try {
+        const { language } = req.query;
+        if (!language) {
+            await transaction.rollback();
+            return res.status(400).json({
+                type: "error",
+                message: "Language is required"
+            });
+        }
+
+        const get_language_id = `SELECT id FROM languages WHERE language = ?`;
+        const language_id_result = await sequelize.query(get_language_id, {
+            replacements: [language],
+            type: sequelize.QueryTypes.SELECT,
+            transaction
+        });
+
+        if (language_id_result.length === 0) {
+            await transaction.rollback();
+            return res.status(404).json({
+                type: "error",
+                message: "Language not found"
+            });
+        }
+
+        const language_id = language_id_result[0].id;
+        console.log(language_id, "this is the language_id");
+
+        const get_series = `SELECT id, language_id, series_name FROM test_series WHERE language_id = ?`;
+        const all_selected_series = await sequelize.query(get_series, {
+            replacements: [language_id],
+            type: sequelize.QueryTypes.SELECT,
+            transaction
+        });
+
+        if (all_selected_series.length === 0) {
+            await transaction.rollback();
+            return res.status(404).json({
+                type: "error",
+                message: "No series found for the given language"
+            });
+        }
+        await transaction.commit();
+
+        return res.status(200).json({
+            type: "success",
+            data: all_selected_series
+        });
+    } catch (error) {
+        if (transaction) await transaction.rollback();
+        console.error(error);
+        return res.status(500).json({
+            type: "error",
+            message: "An error occurred: " + error.message
+        });
+    }
+};
+

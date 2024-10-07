@@ -617,3 +617,162 @@ exports.delete_objective = async (req, res) => {
         return res.status(500).json({ type: "error", message: "An error occurred while deleting the question and its options" });
     }
 };
+
+exports.get_all_technical_round_leads = async (req, res) => {
+    try {
+        const all_technical_round_leads = `SELECT il.id,il.name,il.experience,il.profile,i.technical_round_result,i.id AS interview_id FROM interview_leads il JOIN interviews i on i.lead_id = il.id WHERE in_round = 2`;
+        const results = await sequelize.query(all_technical_round_leads, {
+            type: sequelize.QueryTypes.SELECT,
+        });
+
+        console.log(results)
+        if (!results) return res.status(400).json({ type: "error", message: "No Lead Found" })
+        return res.status(200).json({
+            type: "success",
+            data: results
+        })
+    } catch (error) {
+        return res.status(400).json({ type: "error", message: error.message });
+    }
+}
+
+exports.update_technical_lead_status = async (req, res) => {
+    const t = await sequelize.transaction();
+
+    try {
+        const { interview_id, status } = req.query;
+
+        if (!interview_id) {
+            return res.status(400).json({ type: "error", message: "Interview ID is required to perform this action." });
+        }
+
+        const isInterviewExist = `SELECT 1 FROM interviews WHERE id = ?`;
+        const [results] = await sequelize.query(isInterviewExist, {
+            replacements: [interview_id],
+            type: sequelize.QueryTypes.SELECT,
+            transaction: t
+        });
+
+        if (!results) {
+            await t.rollback();
+            return res.status(404).json({ type: "error", message: "No interview found." });
+        }
+
+        const AllowedStatus = ["pending", "selected", "rejected", "on hold", "opened"];
+        const isValidStatus = AllowedStatus.includes(status);
+        if (!isValidStatus) {
+            await t.rollback();
+            return res.status(400).json({ type: "error", message: `${status} is not a valid status.` });
+        }
+
+        const updateStatus = `UPDATE interviews SET technical_round_result = ? WHERE id = ?`;
+        const [isStatusUpdated] = await sequelize.query(updateStatus, {
+            replacements: [status, interview_id],
+            type: sequelize.QueryTypes.UPDATE,
+            transaction: t
+        });
+        if (isStatusUpdated === 0) {
+            await t.rollback();
+            return res.status(400).json({ type: "error", message: "Error while updating the status." });
+        }
+
+        await t.commit();
+        return res.status(200).json({ type: "success", message: "Status updated successfully." });
+    } catch (error) {
+        await t.rollback();
+        console.error("Error updating technical lead status:", error);
+        return res.status(500).json({ type: "error", message: error.message });
+    }
+};
+
+exports.get_lead_questions = async (req, res) => {
+    try {
+        const { lead_id } = req.query
+        if (!lead_id) return res.status(400).json({ type: "error", message: "Lead is required to perform this action" })
+
+        const getSeriesIdAndLanguageId = `SELECT il.assigned_test_series AS series_id,il.profile,l.id AS language_id FROM interview_leads il JOIN languages l ON l.language = il.profile WHERE il.id = ?`;
+        const [data] = await sequelize.query(getSeriesIdAndLanguageId, {
+            replacements: [lead_id],
+            type: sequelize.QueryTypes.SELECT,
+        });
+        if (!data) return res.status(400).json({ type: "error", message: "No lead found" })
+        const language_id = data?.language_id
+        const series_id = data?.series_id
+        const query = `
+                    SELECT q.id AS question_id, q.question, q.question_type, 
+                o.id AS option_id, o.option
+            FROM technical_round_questions q 
+            LEFT JOIN answers a ON q.id = a.question_id 
+            LEFT JOIN options o ON q.id = o.question_id AND q.question_type = 'objective' -- Join only for objective questions
+            WHERE q.test_series_id = :series_id 
+            AND q.language_id = :language_id
+            ORDER BY q.id; -- Optionally, order by question ID to keep the data structured
+
+        `;
+
+        const [results] = await sequelize.query(query, {
+            replacements: { language_id, series_id },
+        });
+
+        const questionsMap = {};
+
+        results.forEach(row => {
+            const questionId = row.question_id;
+
+            if (!questionsMap[questionId]) {
+                questionsMap[questionId] = {
+                    question_id: questionId,
+                    question: row.question,
+                    question_type: row.question_type,
+                    options: [],
+                };
+            }
+
+            if (row.question_type === 'objective' && row.option_id) {
+                questionsMap[questionId].options.push({
+                    option_id: row.option_id,
+                    option: row.option,
+                });
+
+                if (row.correct_option && row.answer) {
+                    questionsMap[questionId].correct_answer = row.answer;
+                }
+            }
+        });
+
+        const questionsArray = Object.values(questionsMap);
+        res.send({ success: true, data: questionsArray });
+
+    } catch (error) {
+        console.error("ERROR::", error.message, error.stack);
+        return res.status(500).json({ success: false, message: 'An error occurred while fetching data.' });
+    }
+};
+
+exports.check_lead_and_token = async (req, res) => {
+    try {
+        const { lead_id, token } = req.query;
+
+        if (!lead_id) return res.status(400).json({ type: "error", message: "lead_id is missing" });
+        if (!token) return res.status(400).json({ type: "error", message: "token is missing" });
+
+        const check_token_and_lead = `
+            SELECT name, id, email,test_auth_token 
+            FROM interview_leads 
+            WHERE id = ? AND is_open = 0
+        `;
+        const [data] = await sequelize.query(check_token_and_lead, {
+            replacements: [lead_id],
+            type: sequelize.QueryTypes.SELECT,
+        });
+
+        if (!data) return res.status(400).json({ type: "error", message: "No lead found" })
+
+        res.status(200).json({ success: true, data });
+    } catch (error) {
+        console.error("ERROR::", error.message, error.stack);
+        return res.status(500).json({ success: false, message: 'An error occurred while fetching data.' });
+    }
+};
+
+
