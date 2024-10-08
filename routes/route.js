@@ -158,7 +158,8 @@ router.post("/add_objective", authenticateToken, technicalQuestionsController.ad
 router.post("/add_subjective", authenticateToken, technicalQuestionsController.add_subjective)
 router.post("/add_logical", authenticateToken, technicalQuestionsController.add_logical)
 router.get("/get_questions_answers", authenticateToken, technicalQuestionsController.get_questions_answers)
-router.get("/get_lead_questions", authenticateToken, technicalQuestionsController.get_lead_questions)
+router.get("/get_lead_questions", technicalQuestionsController.get_lead_questions)
+router.post("/submit_technical_round", technicalQuestionsController.submit_technical_round)
 router.get("/get_logical_subjective_questions", authenticateToken, technicalQuestionsController.get_logical_subjective_questions)
 router.get("/get_objective_questions", authenticateToken, technicalQuestionsController.get_objective_questions)
 router.put("/update_logical_and_subjective_question", authenticateToken, technicalQuestionsController.update_subjective_and_logical_question)
@@ -168,6 +169,7 @@ router.delete("/delete_objective", authenticateToken, technicalQuestionsControll
 router.get("/all_technical_round_leads", authenticateToken, technicalQuestionsController.get_all_technical_round_leads)
 router.put("/update_status", authenticateToken, technicalQuestionsController.update_technical_lead_status)
 router.get("/verify_lead", technicalQuestionsController.check_lead_and_token)
+router.put("/start_test", technicalQuestionsController.start_test)
 
 
 

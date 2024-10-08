@@ -690,11 +690,26 @@ exports.get_lead_questions = async (req, res) => {
         const { lead_id } = req.query
         if (!lead_id) return res.status(400).json({ type: "error", message: "Lead is required to perform this action" })
 
-        const getSeriesIdAndLanguageId = `SELECT il.assigned_test_series AS series_id,il.profile,l.id AS language_id FROM interview_leads il JOIN languages l ON l.language = il.profile WHERE il.id = ?`;
+        const getSeriesIdAndLanguageId = `SELECT 
+                                        il.assigned_test_series AS series_id,
+                                        il.profile,
+                                        il.is_open,
+                                        l.id AS language_id,
+                                        ts.time_taken
+                                    FROM 
+                                        interview_leads il
+                                    JOIN 
+                                        languages l ON l.language = il.profile
+                                    JOIN 
+                                        test_series ts ON il.assigned_test_series = ts.id
+                                    WHERE 
+                                        il.id = ?;
+`;
         const [data] = await sequelize.query(getSeriesIdAndLanguageId, {
             replacements: [lead_id],
             type: sequelize.QueryTypes.SELECT,
         });
+        console.log(data, "this is the daa")
         if (!data) return res.status(400).json({ type: "error", message: "No lead found" })
         const language_id = data?.language_id
         const series_id = data?.series_id
@@ -741,7 +756,7 @@ exports.get_lead_questions = async (req, res) => {
         });
 
         const questionsArray = Object.values(questionsMap);
-        res.send({ success: true, data: questionsArray });
+        res.send({ success: true, data: questionsArray, time_taken: data?.time_taken });
 
     } catch (error) {
         console.error("ERROR::", error.message, error.stack);
@@ -751,15 +766,14 @@ exports.get_lead_questions = async (req, res) => {
 
 exports.check_lead_and_token = async (req, res) => {
     try {
-        const { lead_id, token } = req.query;
+        const { lead_id } = req.query;
 
         if (!lead_id) return res.status(400).json({ type: "error", message: "lead_id is missing" });
-        if (!token) return res.status(400).json({ type: "error", message: "token is missing" });
 
         const check_token_and_lead = `
-            SELECT name, id, email,test_auth_token 
+            SELECT name, id, email,test_auth_token ,is_open
             FROM interview_leads 
-            WHERE id = ? AND is_open = 0
+            WHERE id = ?
         `;
         const [data] = await sequelize.query(check_token_and_lead, {
             replacements: [lead_id],
@@ -774,5 +788,116 @@ exports.check_lead_and_token = async (req, res) => {
         return res.status(500).json({ success: false, message: 'An error occurred while fetching data.' });
     }
 };
+
+exports.start_test = async (req, res) => {
+    try {
+        const { lead_id } = req.query
+        if (!lead_id) return res.status(400).json({ type: "error", message: "Lead required to perform this action" })
+        const check_lead = `
+        SELECT name, id, email 
+        FROM interview_leads 
+        WHERE id = ? AND is_open = 0
+    `;
+        const [data] = await sequelize.query(check_lead, {
+            replacements: [lead_id],
+            type: sequelize.QueryTypes.SELECT,
+        });
+
+        if (!data) return res.status(400).json({ type: "error", message: "No lead found" })
+        const update_is_open = `UPDATE interview_leads SET is_open = 1 WHERE id = ?`;
+        const is_open_updated = await sequelize.query(update_is_open, {
+            replacements: [lead_id],
+            type: sequelize.QueryTypes.UPDATE
+        })
+
+        if (!is_open_updated) return res.status(400).json({ type: "error", message: "error while updating the test" })
+
+        return res.status(200).json({ type: "success", message: "Test has been started best of luck" })
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+exports.submit_technical_round = async (req, res) => {
+    try {
+        const { lead_id, responses } = req.body;
+
+        const leadCheckQuery = `
+            SELECT * FROM interview_leads WHERE id = :lead_id LIMIT 1;
+        `;
+        const [lead] = await sequelize.query(leadCheckQuery, {
+            replacements: { lead_id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+
+        if (!lead) {
+            return res.status(404).json({ message: 'Lead not found' });
+        }
+
+        const lastInterviewQuery = `
+            SELECT * FROM interviews
+            WHERE lead_id = :lead_id
+            ORDER BY createdAt DESC
+            LIMIT 1;
+        `;
+        const [lastInterview] = await sequelize.query(lastInterviewQuery, {
+            replacements: { lead_id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (!lastInterview) {
+            return res.status(404).json({ message: 'No interview found for this lead' });
+        }
+
+        const interview_id = lastInterview.id;
+
+
+        const questionIds = responses.map(response => response.questionid);
+        const validQuestionsQuery = `
+            SELECT id FROM technical_round_questions
+            WHERE id IN (:question_ids);
+        `;
+        const validQuestions = await sequelize.query(validQuestionsQuery, {
+            replacements: { question_ids: questionIds },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        const validQuestionIds = validQuestions.map(question => question.id);
+        const invalidQuestions = questionIds.filter(id => !validQuestionIds.includes(id));
+
+        if (invalidQuestions.length > 0) {
+            return res.status(400).json({
+                message: 'Invalid question IDs',
+                invalidQuestions
+            });
+        }
+
+
+        const insertTechnicalRoundQuery = `
+            INSERT INTO technical_rounds (lead_id, interview_id, question_id, answer,createdAt, updatedAt)
+            VALUES (:lead_id, :interview_id, :question_id, :answer,NOW(),NOW());
+        `;
+
+        await sequelize.transaction(async (t) => {
+            for (const response of responses) {
+                await sequelize.query(insertTechnicalRoundQuery, {
+                    replacements: {
+                        lead_id,
+                        interview_id,
+                        question_id: response.questionid,
+                        answer: response.answer || ""
+                    },
+                    transaction: t
+                });
+            }
+        });
+
+        return res.status(200).json({ message: 'Responses saved successfully' });
+    } catch (error) {
+        console.log("ERROR::", error)
+        return res.status(500).json(errorResponse.error)
+    }
+}
 
 
