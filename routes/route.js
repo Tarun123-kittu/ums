@@ -156,16 +156,6 @@ router.get("/get_language_test_series", authenticateToken, testSeriesController.
 
 
 //technical round questions
-<<<<<<< HEAD
-router.post("/add_objective",authenticateToken,technicalQuestionsController.add_objective)
-router.post("/add_subjective",authenticateToken,technicalQuestionsController.add_subjective)
-router.post("/add_logical",authenticateToken,technicalQuestionsController.add_logical)
-router.get("/get_questions_answers",authenticateToken,technicalQuestionsController.get_questions_answers)
-router.post("/submit_technical_round",authenticateToken,validateSubmitTechincalRound,technicalQuestionsController.submit_technical_round)
-router.get("/get_lead_technical_response",authenticateToken,technicalQuestionsController.get_lead_technical_response)
-router.put("/technical_round_result",authenticateToken,validateTechnicalRoundResult,technicalQuestionsController.technical_round_result)
-router.put("/handle_link_click_count",authenticateToken,technicalQuestionsController.handle_link_click_count)
-=======
 router.post("/add_objective", authenticateToken, technicalQuestionsController.add_objective)
 router.post("/add_subjective", authenticateToken, technicalQuestionsController.add_subjective)
 router.post("/add_logical", authenticateToken, technicalQuestionsController.add_logical)
@@ -185,7 +175,6 @@ router.put("/start_test", technicalQuestionsController.start_test)
 router.put("/technical_round_result", technicalQuestionsController.technical_round_result)
 router.get("/get_lead_technical_response", technicalQuestionsController.get_lead_technical_response)
 
->>>>>>> testing
 
 
 module.exports = router
