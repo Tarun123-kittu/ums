@@ -1,44 +1,58 @@
+
 'use strict';
 
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('test_series', {
+        await queryInterface.createTable('HR_Rounds', {
             id: {
                 allowNull: false,
                 primaryKey: true,
                 type: Sequelize.INTEGER,
                 autoIncrement: true,
             },
-            language_id: {
+            interview_id: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
-                    model: 'Languages',
+                    model: 'Interviews',
                     key: 'id',
                 },
-                onUpdate: 'CASCADE',
                 onDelete: 'CASCADE',
             },
-            series_name: {
-                type: Sequelize.STRING,
+            lead_id: {
+                type: Sequelize.INTEGER,
                 allowNull: false,
+                references: {
+                    model: 'Interview_Leads',
+                    key: 'id',
+                },
+                onDelete: 'CASCADE',
             },
-            status: {
-                type: Sequelize.ENUM('pending', 'completed'),
+            questionid: {
+                type: Sequelize.INTEGER,
                 allowNull: false,
-                defaultValue: 'pending',
+                references: {
+                    model: 'HR_Round_Questions',
+                    key: 'id',
+                },
+                onDelete: 'CASCADE',
             },
-            time_taken: {
-                type: Sequelize.TIME,
-                allowNull: false,
+            answer: {
+                type: Sequelize.TEXT,
+                allowNull: true,
             },
-            description: {
+            key_point: {
+                type: Sequelize.STRING(1000),
+                allowNull: true,
+            },
+            auth_token: {
                 type: Sequelize.STRING(500),
                 allowNull: false,
             },
-            createdBy: {
-                type: Sequelize.INTEGER,
+            is_open: {
+                type: Sequelize.BOOLEAN,
                 allowNull: false,
+                defaultValue: false,
             },
             createdAt: {
                 allowNull: false,
@@ -54,6 +68,6 @@ module.exports = {
     },
 
     async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable('test_series');
+        await queryInterface.dropTable('HR_Rounds');
     },
 };

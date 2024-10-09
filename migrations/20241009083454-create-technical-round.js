@@ -2,43 +2,36 @@
 
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('test_series', {
+        await queryInterface.createTable('technical_round', {
             id: {
                 allowNull: false,
                 primaryKey: true,
                 type: Sequelize.INTEGER,
                 autoIncrement: true,
             },
-            language_id: {
+            interview_id: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
-                references: {
-                    model: 'Languages',
-                    key: 'id',
-                },
-                onUpdate: 'CASCADE',
-                onDelete: 'CASCADE',
             },
-            series_name: {
+            lead_id: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+            },
+            question_id: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+            },
+            answer: {
                 type: Sequelize.STRING,
                 allowNull: false,
             },
-            status: {
-                type: Sequelize.ENUM('pending', 'completed'),
-                allowNull: false,
-                defaultValue: 'pending',
-            },
-            time_taken: {
-                type: Sequelize.TIME,
+            answer_status: {
+                type: Sequelize.ENUM('correct', 'incorrect', 'not_attempted'),
                 allowNull: false,
             },
-            description: {
-                type: Sequelize.STRING(500),
-                allowNull: false,
-            },
-            createdBy: {
-                type: Sequelize.INTEGER,
-                allowNull: false,
+            key_point: {
+                type: Sequelize.STRING(1000),
+                allowNull: true,
             },
             createdAt: {
                 allowNull: false,
@@ -54,6 +47,6 @@ module.exports = {
     },
 
     async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable('test_series');
+        await queryInterface.dropTable('technical_round');
     },
 };
