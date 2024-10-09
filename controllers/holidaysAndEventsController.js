@@ -1,10 +1,6 @@
 let { sequelize } = require('../models')
 let { errorResponse, successResponse } = require("../utils/responseHandler")
 
-
-
-
-
 exports.add_holidayOrEvent = async (req, res) => {
     try {
         let { occasion_name, occasion_type, date, occasion_description } = req.body
@@ -53,10 +49,6 @@ exports.add_holidayOrEvent = async (req, res) => {
         return res.status(500).json(errorResponse(error.message))
     }
 }
-
-
-
-
 
 exports.update_holidayOrEvent = async (req, res) => {
     const id = req.query.holidayOrEventId;
@@ -122,10 +114,6 @@ exports.update_holidayOrEvent = async (req, res) => {
     }
 };
 
-
-
-
-
 exports.get_all_holidaysOrEvents = async (req, res) => {
     try {
         const year = parseInt(req.query.year, 10) || new Date().getFullYear();
@@ -152,10 +140,6 @@ exports.get_all_holidaysOrEvents = async (req, res) => {
     }
 }
 
-
-
-
-
 exports.delete_holidayOrEvent = async (req, res) => {
     try {
         const id = req.query.holidayEventId;
@@ -166,7 +150,7 @@ exports.delete_holidayOrEvent = async (req, res) => {
 
         const affectedRows = result.affectedRows || result[0]?.affectedRows || 0;
 
-        if (affectedRows === 0) { return res.status(404).json(errorResponse("Holiday or Event not found."))}
+        if (affectedRows === 0) { return res.status(404).json(errorResponse("Holiday or Event not found.")) }
 
         return res.status(200).json(successResponse("Holiday event deleted successfully."));
 
@@ -175,6 +159,23 @@ exports.delete_holidayOrEvent = async (req, res) => {
         return res.status(500).json(errorResponse(error.message))
     }
 };
+
+exports.get_holidayOrEvent = async (req, res) => {
+    const eventId = req.query.id;
+    if (!eventId) return res.status(400).json({ type: "error", message: "EventId is required to perform this action" });
+    try {
+        const event_fetch_query = `SELECT * FROM holidays_and_events WHERE id = ?`;
+        const [is_event_exist] = await sequelize.query(event_fetch_query, {
+            replacements: [eventId],
+            type: sequelize.QueryTypes.SELECT,
+        });
+        console.log(is_event_exist, "is_event_exist")
+        if (!is_event_exist) return res.status(404).json({ type: "error", message: "Not Found" })
+        return res.status(200).json({ type: "success", data: is_event_exist })
+    } catch (error) {
+        return res.status(400).json({ type: "error", message: error?.message })
+    }
+}
 
 
 

@@ -44,9 +44,9 @@ module.exports = {
         allowNull: true,
       },
       
-      correct_option_id: {
-        type: Sequelize.STRING,
-        allowNull: true,
+      correct_option: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
       },
       createdAt: {
         allowNull: false,

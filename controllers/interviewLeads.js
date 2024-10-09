@@ -83,9 +83,6 @@ exports.create_lead = async (req, res) => {
     }
 }
 
-
-
-
 exports.get_lead = async (req, res) => {
     try {
         const id = req.query.leadId;
@@ -109,10 +106,6 @@ exports.get_lead = async (req, res) => {
         return res.status(500).json(errorResponse(error.message));
     }
 };
-
-
-
-
 
 exports.update_lead = async (req, res) => {
     try {
@@ -225,9 +218,6 @@ exports.update_lead = async (req, res) => {
     }
 };
 
-
-
-
 exports.get_all_leads = async (req, res) => {
     try {
 
@@ -240,7 +230,7 @@ exports.get_all_leads = async (req, res) => {
             SELECT 
                 i.id, i.name, i.phone_number, i.email, i.gender, i.dob, 
                 i.experience, i.current_salary, i.expected_salary, 
-                i.profile, i.last_company, i.state, i.house_address 
+                i.profile, i.last_company, i.state, i.house_address,i.in_round
             FROM 
                 Interview_Leads i
             WHERE 
@@ -258,7 +248,7 @@ exports.get_all_leads = async (req, res) => {
         if (experience) {
             baseQuery += ` AND i.experience >= :experience`;
         }
-     
+
 
 
 
@@ -292,12 +282,12 @@ exports.get_all_leads = async (req, res) => {
             },
         });
 
-       
+
         if (allLeads.length < 1) {
             return res.status(400).json(errorResponse("No leads found with the specified filters."));
         }
 
-      
+
         return res.status(200).json({
             type: "success",
             message: "Data retrieved successfully.",
@@ -314,12 +304,6 @@ exports.get_all_leads = async (req, res) => {
         return res.status(500).json(errorResponse(error.message));
     }
 };
-
-
-
-
-
-
 
 exports.delete_lead = async (req, res) => {
     try {
@@ -347,6 +331,7 @@ exports.delete_lead = async (req, res) => {
         return res.status(500).json({ success: false, message: error.message });
     }
 };
+
 
 
 

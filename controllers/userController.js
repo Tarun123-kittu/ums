@@ -85,7 +85,7 @@ exports.create_user = async (req, res) => {
     const role_id = is_role_exist.id;
     const user_id = is_user_created[0];
 
-    const assigned_role_to_employee = `INSERT INTO employee_roles (employee_id, role_id) VALUES(?, ?)`;
+    const assigned_role_to_employee = `INSERT INTO user_roles (user_id, role_id) VALUES(?, ?)`;
     const [is_role_assigned] = await sequelize.query(assigned_role_to_employee, {
       replacements: [user_id, role_id],
       type: sequelize.QueryTypes.INSERT,
@@ -438,7 +438,7 @@ exports.delete_employee = async (req, res) => {
     });
 
     if (!is_user_deleted) return res.status(400).json({ type: "error", message: "Error while deleting the employee" })
-    return res.status(400).json({
+    return res.status(200).json({
       type: "success",
       message: "Employee deleted successfully !!"
     })
@@ -449,4 +449,97 @@ exports.delete_employee = async (req, res) => {
     });
   }
 }
+
+exports.update_user = async (req, res) => {
+  const {
+    id, name, username, email, mobile, emergency_contact_relationship, emergency_contact_name,
+    emergency_contact, bank_name, account_number, ifsc, increment_date, gender, dob, doj, skype_email,
+    ultivic_email, salary, security, total_security, installments, position, department, status,
+    address
+  } = req.body;
+
+  try {
+    // Check if the `id` is provided
+    if (!id) {
+      return res.status(400).json({ error: "ID is required for updating user." });
+    }
+
+    // Check if the user exists
+    const checkEmailQuery = `SELECT * FROM users WHERE id = ?`;
+    const [existingUser] = await sequelize.query(checkEmailQuery, {
+      replacements: [id],
+      type: sequelize.QueryTypes.SELECT,
+    });
+
+    if (!existingUser) return res.status(400).json({ type: "error", message: "User Not Found" })
+
+    // If the user doesn't exist, return an error
+    if (existingUser.length === 0) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    // Construct the query to update only provided fields, keeping others unchanged
+    const update_user_query = `
+      UPDATE users
+      SET 
+        name = COALESCE(?, name),
+        username = COALESCE(?, username),
+        email = COALESCE(?, email),
+        mobile = COALESCE(?, mobile),
+        emergency_contact_relationship = COALESCE(?, emergency_contact_relationship),
+        emergency_contact_name = COALESCE(?, emergency_contact_name),
+        emergency_contact = COALESCE(?, emergency_contact),
+        bank_name = COALESCE(?, bank_name),
+        account_number = COALESCE(?, account_number),
+        ifsc = COALESCE(?, ifsc),
+        increment_date = COALESCE(?, increment_date),
+        gender = COALESCE(?, gender),
+        dob = COALESCE(?, dob),
+        doj = COALESCE(?, doj),
+        skype_email = COALESCE(?, skype_email),
+        ultivic_email = COALESCE(?, ultivic_email),
+        salary = COALESCE(?, salary),
+        security = COALESCE(?, security),
+        total_security = COALESCE(?, total_security),
+        installments = COALESCE(?, installments),
+        position = COALESCE(?, position),
+        department = COALESCE(?, department),
+        status = COALESCE(?, status),
+        address = COALESCE(?, address)
+      WHERE id = ?
+    `;
+
+    // Execute the query with replacements
+    const result = await sequelize.query(update_user_query, {
+      replacements: [
+        name, username, email, mobile, emergency_contact_relationship, emergency_contact_name,
+        emergency_contact, bank_name, account_number, ifsc, increment_date, gender, dob, doj, skype_email,
+        ultivic_email, salary, security, total_security, installments, position, department, status,
+        address, id
+      ]
+    });
+
+    res.status(200).json({ message: "User updated successfully." });
+
+  } catch (error) {
+    res.status(500).json({ error: "Error updating user", details: error.message });
+  }
+};
+
+exports.get_all_users_name = async (req, res) => {
+  try {
+    const get_users_query = `SELECT username,name,id FROM users WHERE is_disabled = false`;
+    const all_users = await sequelize.query(get_users_query, {
+      type: sequelize.QueryTypes.SELECT,
+    });
+    if (!all_users) return res.status(404).json({ type: "error", message: "No Users Found" })
+
+    return res.status(200).json({ type: "success", data: all_users })
+  } catch (error) {
+    return res.status(400).json({ type: "error", message: error.message })
+  }
+}
+
+
+
 

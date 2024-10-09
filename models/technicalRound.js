@@ -25,6 +25,17 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+<<<<<<< HEAD
+=======
+      answer_status: {
+        type: DataTypes.ENUM('correct', 'incorrect', 'not_attempted'),
+        allowNull: false,
+    },
+    key_point: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+>>>>>>> testing
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,

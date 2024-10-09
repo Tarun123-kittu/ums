@@ -1,18 +1,17 @@
-const { Model, DataTypes } = require('sequelize');
 
-module.exports = (sequelize) => {
-    class HRRound extends Model { }
+'use strict';
 
-    HRRound.init(
-        {
+module.exports = {
+    async up(queryInterface, Sequelize) {
+        await queryInterface.createTable('HR_Rounds', {
             id: {
-                type: DataTypes.INTEGER,
-                primaryKey: true,
-                autoIncrement: true,
                 allowNull: false,
+                primaryKey: true,
+                type: Sequelize.INTEGER,
+                autoIncrement: true,
             },
             interview_id: {
-                type: DataTypes.INTEGER,
+                type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
                     model: 'Interviews',
@@ -21,7 +20,7 @@ module.exports = (sequelize) => {
                 onDelete: 'CASCADE',
             },
             lead_id: {
-                type: DataTypes.INTEGER,
+                type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
                     model: 'Interview_Leads',
@@ -30,7 +29,7 @@ module.exports = (sequelize) => {
                 onDelete: 'CASCADE',
             },
             questionid: {
-                type: DataTypes.INTEGER,
+                type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
                     model: 'HR_Round_Questions',
@@ -39,38 +38,36 @@ module.exports = (sequelize) => {
                 onDelete: 'CASCADE',
             },
             answer: {
-                type: DataTypes.TEXT,
+                type: Sequelize.TEXT,
                 allowNull: true,
             },
             key_point: {
-                type: DataTypes.STRING(1000),
+                type: Sequelize.STRING(1000),
                 allowNull: true,
             },
             auth_token: {
-                type: DataTypes.STRING(500),
+                type: Sequelize.STRING(500),
                 allowNull: false,
             },
             is_open: {
-                type: DataTypes.BOOLEAN,
+                type: Sequelize.BOOLEAN,
                 allowNull: false,
                 defaultValue: false,
             },
             createdAt: {
-                type: DataTypes.DATE,
-                defaultValue: DataTypes.NOW,
+                allowNull: false,
+                type: Sequelize.DATE,
+                defaultValue: Sequelize.NOW,
             },
             updatedAt: {
-                type: DataTypes.DATE,
-                defaultValue: DataTypes.NOW,
+                allowNull: false,
+                type: Sequelize.DATE,
+                defaultValue: Sequelize.NOW,
             },
-        },
-        {
-            sequelize,
-            modelName: 'HRRound',
-            tableName: 'HR_Rounds',
-            timestamps: true,
-        }
-    );
+        });
+    },
 
-    return HRRound;
+    async down(queryInterface, Sequelize) {
+        await queryInterface.dropTable('HR_Rounds');
+    },
 };

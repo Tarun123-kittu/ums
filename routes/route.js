@@ -66,7 +66,10 @@ router.post("/reset_password/:token", validateResetPasswordDataTypes, userContro
 router.post("/change_password", validateChangePassword, validateChangePasswordDataTypes, userController.change_password)
 router.get("/get_employee_details/:id", authenticateToken, userController.get_employee_details)
 router.get("/get_employees", authenticateToken, userController.get_employees)
-router.patch("/delete_employee/:id", authenticateToken, validateGetAttendanceDetails, userController.delete_employee)
+router.patch("/delete_employee/:id", authenticateToken, userController.delete_employee)
+router.put("/update_user", authenticateToken, userController.update_user)
+router.get("/get_all_username", authenticateToken, userController.get_all_users_name)
+
 
 
 
@@ -78,6 +81,8 @@ router.post("/assign_new_permissions_to_roles", authenticateToken, validateAssig
 router.patch("/update_permissions_assigned_to_role", authenticateToken, validateUpdateRolesPermission, rolesPermissionsController.update_permissions_assigned_to_role)
 router.patch("/delete_role", authenticateToken, rolesPermissionsController.disabled_role)
 router.delete("/delete_user_role", authenticateToken, validateDeleteUserRole, rolesPermissionsController.delete_user_role)
+router.get("/get_roles_permissions", authenticateToken, rolesPermissionsController.get_roles_permissions)
+router.get("/get_role_assigned_to_users", authenticateToken, rolesPermissionsController.get_role_assigned_to_users)
 
 
 
@@ -86,6 +91,7 @@ router.post("/add_holidayOrEvent", authenticateToken, validateHolidaysAndEvents,
 router.put("/update_holidayOrEvent", authenticateToken, holidaysAndEventsController.update_holidayOrEvent)
 router.get("/get_all_holidaysOrEvents", authenticateToken, holidaysAndEventsController.get_all_holidaysOrEvents)
 router.delete("/delete_holidayOrEvent", authenticateToken, holidaysAndEventsController.delete_holidayOrEvent)
+router.get("/get_holiday_and_event", authenticateToken, holidaysAndEventsController.get_holidayOrEvent)
 
 
 
@@ -104,7 +110,10 @@ router.post("/apply_leave", authenticateToken, validateLeaveRequest, leaveContro
 router.get("/get_applied_leaves", authenticateToken, leaveController.all_applied_leaves)
 router.get("/get_user_pending_leaves", authenticateToken, leaveController.calculate_pending_leaves)
 router.put("/update_pending_leaaves", authenticateToken, leaveController.update_pending_leave)
-router.get("/all_user_applied_leaves/:status", authenticateToken, leaveController.get_all_users_pending_leaves)
+router.get("/all_user_applied_leaves", authenticateToken, leaveController.get_all_users_pending_leaves)
+router.get("/get_applied_leave_detail", authenticateToken, leaveController.get_applied_leave_details)
+router.get("/all_users_pending_leaves", authenticateToken, leaveController.calculate_pending_leaves_for_all_users)
+router.get("/leave_bank_report", authenticateToken, leaveController.leave_bank_report)
 
 
 
@@ -117,30 +126,37 @@ router.delete("/delete_lead", authenticateToken, validateUpdateLead, interviewLe
 
 
 //hr round 
-router.get("/get_hr_round_questions",authenticateToken,hrRoundController.get_hr_round_questions)
-router.post("/hr_round",authenticateToken,validateHrRound,hrRoundController.hr_round)
-router.put("/hr_round_result",authenticateToken,validateHrRoundResult,hrRoundController.hr_round_result)
-router.put("/update_lead_response",authenticateToken,validateUpdateLeadResonse,hrRoundController.update_lead_response)
+router.get("/get_hr_round_questions", authenticateToken, hrRoundController.get_hr_round_questions)
+router.post("/hr_round", authenticateToken, validateHrRound, hrRoundController.hr_round)
+router.put("/hr_round_result", authenticateToken, validateHrRoundResult, hrRoundController.hr_round_result)
+router.put("/update_lead_response", authenticateToken, validateUpdateLeadResonse, hrRoundController.update_lead_response)
+router.get("/get_hr_assign_questions_to_lead", authenticateToken, hrRoundController.get_hr_assign_questions_to_lead)
+router.get("/get_hr_round_candidate", authenticateToken, hrRoundController.get_hr_round_candidate)
+router.get("/get_hr_round_assign_questions_to_lead", authenticateToken, hrRoundController.get_hr_round_assign_questions_to_lead)
+router.put("/update_key_point", authenticateToken, hrRoundController.update_key_point)
+router.put("/send_test_link", authenticateToken, hrRoundController.sendLeadInterviewLink)
 
 
 
 //languages
-router.post("/create_language",authenticateToken,validateCreateLanguage,languageController.create_language)
-router.get("/get_all_languages",authenticateToken,languageController.get_all_languages)
-router.get("/get_language",authenticateToken,ValidateGetLanguage,languageController.get_language)
-router.put("/update_language",authenticateToken,ValidateUpdateLanguage,languageController.update_language)
-router.delete("/delete_language",authenticateToken,ValidateGetLanguage,languageController.delete_language)
+router.post("/create_language", authenticateToken, validateCreateLanguage, languageController.create_language)
+router.get("/get_all_languages", authenticateToken, languageController.get_all_languages)
+router.get("/get_language", authenticateToken, ValidateGetLanguage, languageController.get_language)
+router.put("/update_language", authenticateToken, ValidateUpdateLanguage, languageController.update_language)
+router.delete("/delete_language", authenticateToken, ValidateGetLanguage, languageController.delete_language)
 
 
 //test series 
-router.post("/create_series",authenticateToken,ValidateCreateSeries,testSeriesController.create_series)
-router.get("/get_all_series",authenticateToken,ValidateGetLanguage,testSeriesController.get_all_series)
-router.get("/get_series",authenticateToken,ValidateGetSeries,testSeriesController.get_series)
-router.put("/update_series",authenticateToken,ValidateUpdateSeries,testSeriesController.update_series)
-router.delete("/delete_series",authenticateToken,ValidateGetSeries,testSeriesController.delete_series)
+router.post("/create_series", authenticateToken, ValidateCreateSeries, testSeriesController.create_series)
+router.get("/get_all_series", authenticateToken, testSeriesController.get_all_series)
+router.get("/get_series", authenticateToken, ValidateGetSeries, testSeriesController.get_series)
+router.put("/update_series", authenticateToken, ValidateUpdateSeries, testSeriesController.update_series)
+router.delete("/delete_series", authenticateToken, ValidateGetSeries, testSeriesController.delete_series)
+router.get("/get_language_test_series", authenticateToken, testSeriesController.get_specific_language_series)
 
 
 //technical round questions
+<<<<<<< HEAD
 router.post("/add_objective",authenticateToken,technicalQuestionsController.add_objective)
 router.post("/add_subjective",authenticateToken,technicalQuestionsController.add_subjective)
 router.post("/add_logical",authenticateToken,technicalQuestionsController.add_logical)
@@ -149,6 +165,27 @@ router.post("/submit_technical_round",authenticateToken,validateSubmitTechincalR
 router.get("/get_lead_technical_response",authenticateToken,technicalQuestionsController.get_lead_technical_response)
 router.put("/technical_round_result",authenticateToken,validateTechnicalRoundResult,technicalQuestionsController.technical_round_result)
 router.put("/handle_link_click_count",authenticateToken,technicalQuestionsController.handle_link_click_count)
+=======
+router.post("/add_objective", authenticateToken, technicalQuestionsController.add_objective)
+router.post("/add_subjective", authenticateToken, technicalQuestionsController.add_subjective)
+router.post("/add_logical", authenticateToken, technicalQuestionsController.add_logical)
+router.get("/get_questions_answers", authenticateToken, technicalQuestionsController.get_questions_answers)
+router.get("/get_lead_questions", technicalQuestionsController.get_lead_questions)
+router.post("/submit_technical_round", technicalQuestionsController.submit_technical_round)
+router.get("/get_logical_subjective_questions", authenticateToken, technicalQuestionsController.get_logical_subjective_questions)
+router.get("/get_objective_questions", authenticateToken, technicalQuestionsController.get_objective_questions)
+router.put("/update_logical_and_subjective_question", authenticateToken, technicalQuestionsController.update_subjective_and_logical_question)
+router.put("/update_objective_question", authenticateToken, technicalQuestionsController.update_objective)
+router.delete("/delete_subjective", authenticateToken, technicalQuestionsController.delete_subjective)
+router.delete("/delete_objective", authenticateToken, technicalQuestionsController.delete_objective)
+router.get("/all_technical_round_leads", authenticateToken, technicalQuestionsController.get_all_technical_round_leads)
+router.put("/update_status", authenticateToken, technicalQuestionsController.update_technical_lead_status)
+router.get("/verify_lead", technicalQuestionsController.check_lead_and_token)
+router.put("/start_test", technicalQuestionsController.start_test)
+router.put("/technical_round_result", technicalQuestionsController.technical_round_result)
+router.get("/get_lead_technical_response", technicalQuestionsController.get_lead_technical_response)
+
+>>>>>>> testing
 
 
 module.exports = router

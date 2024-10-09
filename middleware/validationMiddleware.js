@@ -257,9 +257,9 @@ const validateAttendance = [
 
 const validateUnmarkAttendance = [
     check('report')
-        .trim() 
-        .not().isEmpty().withMessage('Task is required!!') 
-        .bail(), 
+        .trim()
+        .not().isEmpty().withMessage('Task is required!!')
+        .bail(),
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -286,7 +286,7 @@ const validateGetAttendanceDetails = [
 
 
 const validateUpdateUserAttendance = [
-    check("attendanceId","Please provide attendance Id.").not().isEmpty(),
+    check("attendanceId", "Please provide attendance Id.").not().isEmpty(),
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
@@ -346,10 +346,10 @@ const validateUpdateLead = [
 
 
 const validateHrRound = [
-    check("lead_id","Please provide lead Id.").not().isEmpty(),
-    check("responses","Please provide question answers .").not().isEmpty(),
-    (req,res,next)=>{
-        const errors= validationResult(req);
+    check("lead_id", "Please provide lead Id.").not().isEmpty(),
+    check("responses", "Please provide question answers .").not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
         if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
         next();
     }
@@ -358,10 +358,10 @@ const validateHrRound = [
 
 
 const validateHrRoundResult = [
-    check("interview_id","Please provide interview Id.").not().isEmpty(),
-    check("hr_round_result","Please provide result of HR round.").not().isEmpty(),
-    (req,res,next)=>{
-        const errors= validationResult(req);
+    check("interview_id", "Please provide interview Id.").not().isEmpty(),
+    check("hr_round_result", "Please provide result of HR round.").not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
         if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
         next();
     }
@@ -369,9 +369,9 @@ const validateHrRoundResult = [
 
 
 const validateUpdateLeadResonse = [
-    check("id","Please provide question Id.").not().isEmpty(),
-    (req,res,next)=>{
-        const errors= validationResult(req);
+    check("id", "Please provide question Id.").not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
         if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
         next();
     }
@@ -379,9 +379,9 @@ const validateUpdateLeadResonse = [
 
 
 const validateCreateLanguage = [
-    check("language","Please provide language.").not().isEmpty(),
-    (req,res,next)=>{
-        const errors= validationResult(req);
+    check("language", "Please provide language.").not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
         if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
         next();
     }
@@ -389,54 +389,54 @@ const validateCreateLanguage = [
 
 
 const ValidateGetLanguage = [
-    check("languageId","Please provide language Id.").not().isEmpty(),
-    (req,res,next)=>{
-        const errors= validationResult(req);
+    check("languageId", "Please provide language Id.").not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
         if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
         next();
-    } 
+    }
 ]
 
 
 const ValidateUpdateLanguage = [
-    check("languageId","Please provide language Id.").not().isEmpty(),
-    (req,res,next)=>{
-        const errors= validationResult(req);
+    check("languageId", "Please provide language Id.").not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
         if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
         next();
-    } 
+    }
 ]
 
 
 const ValidateCreateSeries = [
-    check("language_id","Please provide language Id.").not().isEmpty(),
-    check("series_name","Please provide series name").not().isEmpty(),
-    (req,res,next)=>{
-        const errors= validationResult(req);
+    check("language_id", "Please provide language Id.").not().isEmpty(),
+    check("series_name", "Please provide series name").not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
         if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
         next();
-    } 
+    }
 ]
 
 
 const ValidateGetSeries = [
-    check("seriesId","Please provide Series Id in the query params.").not().isEmpty(),
-    (req,res,next)=>{
-        const errors= validationResult(req);
+    check("seriesId", "Please provide Series Id in the query params.").not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
         if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
         next();
-    } 
+    }
 ]
 
 
 
 const ValidateUpdateSeries = [
-    check("seriesId","Please provide Series Id").not().isEmpty(),
-    (req,res,next)=>{
-        const errors= validationResult(req);
+    check("seriesId", "Please provide Series Id").not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
         if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
         next();
-    } 
+    }
 ]
 
 

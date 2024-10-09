@@ -26,6 +26,18 @@ module.exports = (sequelize) => {
       allowNull: false,
       defaultValue: 'pending',
     },
+    time_taken: {
+      type: DataTypes.TIME,
+      allowNull: false,
+    },
+    description: {
+      type: DataTypes.STRING(500),
+      allowNull: false,
+    },
+    createdBy: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
