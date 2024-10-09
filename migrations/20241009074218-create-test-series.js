@@ -40,6 +40,10 @@ module.exports = {
                 type: Sequelize.INTEGER,
                 allowNull: false,
             },
+            experience_level:{
+                type: Sequelize.ENUM('fresher', 'intermediate','professional'),
+                allowNull: false,
+            },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE,
