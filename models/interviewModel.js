@@ -35,8 +35,8 @@ module.exports = (sequelize) => {
               allowNull:false
             },
             developer_review:{
-                type:DataTypes.STRING,
-                allowNull:false
+                type: DataTypes.STRING,
+                allowNull: false,
             },
             face_to_face_result:{
                 type:  DataTypes.ENUM('selected', 'rejected', 'pending', 'on hold'),
