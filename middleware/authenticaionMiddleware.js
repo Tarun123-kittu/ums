@@ -13,7 +13,7 @@ let verifyToken = async (req, res, next) => {
             let decoded = jwt.verify(token, config.development.secret_key);
             
             const { user_id } = decoded;
-       
+         
             let roles = await getLatestRoles(user_id)
             
             req.result = {
@@ -24,7 +24,7 @@ let verifyToken = async (req, res, next) => {
         } else {
             return res.status(401).json({ message: "Token is required for authentication.", type: 'error' });
         }
-
+        
         next();
 
     } catch (error) {

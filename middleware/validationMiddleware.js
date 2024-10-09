@@ -440,7 +440,45 @@ const ValidateUpdateSeries = [
 ]
 
 
+const validateTechnicalRoundResult = [
+    check("interview_id","Please provide Interview Id").not().isEmpty(),
+    check("technical_round_result","Please provide technical round result.").not().isEmpty(),
+    (req,res,next)=>{
+        const errors= validationResult(req);
+        if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
+        next();
+    } 
+]
 
+
+
+const validateSubmitTechincalRound = [
+    check("lead_id","Please provide lead Id").not().isEmpty(),
+    check("responses","Please provide  lead response for technical round.").not().isEmpty(),
+    (req,res,next)=>{
+        const errors= validationResult(req);
+        if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
+        next();
+    } 
+]
+
+
+
+const validateCheckLeadAnswer = [
+    check('interview_id', "Interview id not present in request body").not().isEmpty(),
+    check('lead_id', "lead id is not present in the request body").not().isEmpty(),
+    check('question_id', 'question id not present in the request body').not().isEmpty(),
+    check('answer_status', 'answer status is not present in the request body')
+        .not().isEmpty()
+        .isIn(['correct', 'incorrect', 'not_attempted']).withMessage('Answer status must be one of: correct, incorrect, not_attempted'),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ message: errors.array()[0].msg, type: 'error' });
+        }
+        next();
+    }
+];
 
 
 module.exports = {
@@ -471,6 +509,9 @@ module.exports = {
     ValidateUpdateLanguage,
     ValidateCreateSeries,
     ValidateGetSeries,
-    ValidateUpdateSeries
+    ValidateUpdateSeries,
+    validateTechnicalRoundResult,
+    validateSubmitTechincalRound,
+    validateCheckLeadAnswer
 }
 
