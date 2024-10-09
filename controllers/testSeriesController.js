@@ -62,6 +62,8 @@ exports.get_all_series = async (req, res) => {
                 replacements: [id]
             });
 
+            console.log(result)
+
             if (result.length < 1) {
                 return res.status(400).json(errorResponse("No test series created for this language."));
             }
