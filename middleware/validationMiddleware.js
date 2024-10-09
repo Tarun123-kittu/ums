@@ -464,6 +464,23 @@ const validateSubmitTechincalRound = [
 
 
 
+const validateCheckLeadAnswer = [
+    check('interview_id', "Interview id not present in request body").not().isEmpty(),
+    check('lead_id', "lead id is not present in the request body").not().isEmpty(),
+    check('question_id', 'question id not present in the request body').not().isEmpty(),
+    check('answer_status', 'answer status is not present in the request body')
+        .not().isEmpty()
+        .isIn(['correct', 'incorrect', 'not_attempted']).withMessage('Answer status must be one of: correct, incorrect, not_attempted'),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ message: errors.array()[0].msg, type: 'error' });
+        }
+        next();
+    }
+];
+
+
 module.exports = {
     createUserValidator,
     loginValidator,
@@ -494,6 +511,7 @@ module.exports = {
     ValidateGetSeries,
     ValidateUpdateSeries,
     validateTechnicalRoundResult,
-    validateSubmitTechincalRound
+    validateSubmitTechincalRound,
+    validateCheckLeadAnswer
 }
 

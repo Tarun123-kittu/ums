@@ -1084,8 +1084,67 @@ exports.get_lead_technical_response = async (req, res) => {
 
 
 
+exports.check_lead_answer = async(req,res)=>{
+    try{
+        const { interview_id, lead_id, question_id, answer_status } = req.body;
 
+        let transaction = await sequelize.transaction();
 
+        const checkQuery = `
+            SELECT * FROM technical_round
+            WHERE interview_id = :interview_id
+            AND lead_id = :lead_id
+            AND question_id = :question_id
+        `;
+
+        const [result] = await sequelize.query(checkQuery, {
+            replacements: { interview_id, lead_id, question_id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (!result) {
+            await transaction.rollback();
+            return res.status(404).json({
+                message: `Record (pair) not found for interview_id: ${interview_id}, lead_id: ${lead_id}, question_id: ${question_id}`,
+                type: 'error'
+            });
+        }
+
+     
+        const updateQuery = `
+            UPDATE technical_round
+            SET answer_status = :answer_status
+            WHERE interview_id = :interview_id
+            AND lead_id = :lead_id
+            AND question_id = :question_id
+        `;
+
+        const [affectedRows] = await sequelize.query(updateQuery, {
+            replacements: { answer_status, interview_id, lead_id, question_id },
+            type: sequelize.QueryTypes.UPDATE,
+            transaction,
+        });
+
+        if (affectedRows === 0) {
+            await transaction.rollback(); 
+            return res.status(400).json({
+                message: 'Failed to update the answer status.',
+                type: 'error'
+            });
+        }
+
+        await transaction.commit();
+
+        return res.status(200).json({
+            message: 'Answer status updated successfully.',
+            type: 'success'
+        });
+
+    }catch(error){
+        console.log("ERROR::",error)
+        return res.status(500).json(errorResponse(error.response))
+    }
+}
 
 
 
