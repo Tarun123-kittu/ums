@@ -4,6 +4,7 @@ let { errorResponse, successResponse } = require("../utils/responseHandler")
 
 exports.create_series = async (req, res) => {
     try {
+        const createdBy = req.result.user_id
         const { language_id, series_name, time_taken, description } = req.body;
 
         let checkLanguageExistQuery = `SELECT id FROM Languages where id = ?`
@@ -18,11 +19,11 @@ exports.create_series = async (req, res) => {
         }
 
         const createTestSeriesQuery = `
-            INSERT INTO test_series (language_id, series_name,time_taken,description, createdAt, updatedAt)
-            VALUES (?, ?,?,?, NOW(), NOW())
+            INSERT INTO test_series (language_id, series_name,time_taken,description,createdBy, createdAt, updatedAt)
+            VALUES (?, ?,?,?,?, NOW(), NOW())
         `;
 
-        const values = [language_id, series_name, time_taken, description,];
+        const values = [language_id, series_name, time_taken, description, createdBy];
 
         const t = await sequelize.transaction();
 
@@ -62,7 +63,6 @@ exports.get_all_series = async (req, res) => {
                 replacements: [id]
             });
 
-            console.log(result)
 
             if (result.length < 1) {
                 return res.status(400).json(errorResponse("No test series created for this language."));

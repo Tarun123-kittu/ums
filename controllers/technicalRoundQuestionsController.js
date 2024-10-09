@@ -937,7 +937,7 @@ exports.submit_technical_round = async (req, res) => {
 
 
         const insertTechnicalRoundQuery = `
-            INSERT INTO technical_rounds (lead_id, interview_id, question_id, answer,createdAt, updatedAt)
+            INSERT INTO technical_round (lead_id, interview_id, question_id, answer,createdAt, updatedAt)
             VALUES (:lead_id, :interview_id, :question_id, :answer,NOW(),NOW());
         `;
 
@@ -1012,7 +1012,7 @@ exports.get_lead_technical_response = async (req, res) => {
         // Fetch the technical rounds (responses)
         const responsesQuery = `
             SELECT tr.question_id, tr.answer, trq.question_type 
-            FROM technical_rounds tr
+            FROM technical_round tr
             JOIN technical_round_questions trq ON trq.id = tr.question_id 
             WHERE tr.lead_id = :lead_id;
         `;
