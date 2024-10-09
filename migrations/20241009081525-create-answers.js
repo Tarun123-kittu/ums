@@ -46,7 +46,7 @@ module.exports = {
       
       correct_option: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       createdAt: {
         allowNull: false,
