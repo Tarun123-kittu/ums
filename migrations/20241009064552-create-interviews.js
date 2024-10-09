@@ -34,8 +34,8 @@ module.exports = {
                 allowNull: false,
             },
             developer_review:{
-              type:Sequelize.TEXT,
-              allowNull:false
+                type: Sequelize.TEXT,
+                allowNull: false,
             },
             face_to_face_result:{
                 type: Sequelize.ENUM('selected', 'rejected', 'pending', 'on hold'),
