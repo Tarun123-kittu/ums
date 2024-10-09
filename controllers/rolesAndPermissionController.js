@@ -129,7 +129,7 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
         if (user_id?.length > 0) {
             const userRolesValues = user_id.map(id => `(${id}, ${role_id})`).join(', ');
             const insert_user_roles_query = `
-                INSERT INTO user_roles (user_id, role_id) 
+                INSERT INTO user_roles (user_id, role_id ,created_at = CURDATE(),updated_at=CURDATE()) 
                 VALUES ${userRolesValues}
             `;
             await sequelize.query(insert_user_roles_query, {

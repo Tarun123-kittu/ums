@@ -23,7 +23,7 @@ module.exports = {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
-                    model: 'Interview_Leads', 
+                    model: 'Interview_Leads',
                     key: 'id',
                 },
                 onDelete: 'CASCADE',
@@ -40,6 +40,19 @@ module.exports = {
             answer: {
                 type: Sequelize.TEXT,
                 allowNull: true,
+            },
+            key_point: {
+                type: Sequelize.STRING(1000),
+                allowNull: true,
+            },
+            auth_token: {
+                type: Sequelize.STRING(500),
+                allowNull: false,
+            },
+            is_open: {
+                type: Sequelize.BOOLEAN,
+                allowNull: false,
+                defaultValue: false,
             },
             createdAt: {
                 allowNull: false,

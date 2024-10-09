@@ -619,22 +619,59 @@ exports.delete_objective = async (req, res) => {
 };
 
 exports.get_all_technical_round_leads = async (req, res) => {
+    const t = await sequelize.transaction();
+
     try {
-        const all_technical_round_leads = `SELECT il.id,il.name,il.experience,il.profile,i.technical_round_result,i.id AS interview_id FROM interview_leads il JOIN interviews i on i.lead_id = il.id WHERE in_round = 2`;
+        const all_technical_round_leads = `
+            SELECT il.id, il.name, il.experience, il.profile, i.technical_round_result, i.id AS interview_id
+            FROM interview_leads il
+            JOIN interviews i ON i.lead_id = il.id
+            WHERE in_round = 2
+        `;
         const results = await sequelize.query(all_technical_round_leads, {
             type: sequelize.QueryTypes.SELECT,
+            transaction: t
         });
 
-        console.log(results)
-        if (!results) return res.status(400).json({ type: "error", message: "No Lead Found" })
+        if (!results) {
+            await t.rollback();
+            return res.status(400).json({ type: "error", message: "No Lead Found" });
+        }
+
+        const lead_id = results[0]?.id;
+
+        const get_series_id_and_language_id = `
+            SELECT il.assigned_test_series, l.id AS language_id
+            FROM interview_leads il
+            JOIN languages l ON l.language = il.profile
+            WHERE il.id = :lead_id
+        `;
+        const name = await sequelize.query(get_series_id_and_language_id, {
+            replacements: { lead_id },
+            type: sequelize.QueryTypes.SELECT,
+            transaction: t
+        });
+
+        if (!name) {
+            await t.rollback();
+            return res.status(400).json({ type: "error", message: "No series or language data found" });
+        }
+
+        await t.commit();
+
         return res.status(200).json({
             type: "success",
-            data: results
-        })
+            data: {
+                data: results,
+                series_language_data: name
+            }
+        });
     } catch (error) {
+        await t.rollback();
         return res.status(400).json({ type: "error", message: error.message });
     }
-}
+};
+
 
 exports.update_technical_lead_status = async (req, res) => {
     const t = await sequelize.transaction();
@@ -790,33 +827,58 @@ exports.check_lead_and_token = async (req, res) => {
 };
 
 exports.start_test = async (req, res) => {
+    const transaction = await sequelize.transaction(); // Start transaction
     try {
-        const { lead_id } = req.query
-        if (!lead_id) return res.status(400).json({ type: "error", message: "Lead required to perform this action" })
+        const { lead_id } = req.query;
+        if (!lead_id) return res.status(400).json({ type: "error", message: "Lead required to perform this action" });
+
         const check_lead = `
-        SELECT name, id, email 
-        FROM interview_leads 
-        WHERE id = ? AND is_open = 0
-    `;
+            SELECT name, id, email 
+            FROM interview_leads 
+            WHERE id = ? AND is_open = 0
+        `;
         const [data] = await sequelize.query(check_lead, {
             replacements: [lead_id],
             type: sequelize.QueryTypes.SELECT,
+            transaction,
         });
 
-        if (!data) return res.status(400).json({ type: "error", message: "No lead found" })
+        if (!data) {
+            await transaction.rollback();
+            return res.status(400).json({ type: "error", message: "No lead found" });
+        }
+
         const update_is_open = `UPDATE interview_leads SET is_open = 1 WHERE id = ?`;
         const is_open_updated = await sequelize.query(update_is_open, {
             replacements: [lead_id],
-            type: sequelize.QueryTypes.UPDATE
-        })
+            type: sequelize.QueryTypes.UPDATE,
+            transaction,
+        });
 
-        if (!is_open_updated) return res.status(400).json({ type: "error", message: "error while updating the test" })
+        if (!is_open_updated) {
+            await transaction.rollback();
+            return res.status(400).json({ type: "error", message: "Error while updating the test" });
+        }
 
-        return res.status(200).json({ type: "success", message: "Test has been started best of luck" })
+        const is_status_updated = `UPDATE interviews SET technical_round_result = 'opened' WHERE lead_id = ?`;
+        const status_updated = await sequelize.query(is_status_updated, {
+            replacements: [lead_id],
+            type: sequelize.QueryTypes.UPDATE,
+            transaction,
+        });
+
+        if (!status_updated) {
+            await transaction.rollback();
+            return res.status(400).json({ type: "error", message: "Error while updating the test" });
+        }
+
+        await transaction.commit();
+        return res.status(200).json({ type: "success", message: "Test has been started. Best of luck!" });
     } catch (error) {
+        await transaction.rollback();
         return res.status(500).json({ success: false, message: error.message });
     }
-}
+};
 
 exports.submit_technical_round = async (req, res) => {
     try {
@@ -899,5 +961,137 @@ exports.submit_technical_round = async (req, res) => {
         return res.status(500).json(errorResponse.error)
     }
 }
+// developer give result
+exports.technical_round_result = async (req, res) => {
+    try {
+        const { interview_id, technical_round_result } = req.body;
+
+        const transaction = await sequelize.transaction();
+
+        if (!interview_id || !['selected', 'rejected', 'pending', 'on hold'].includes(technical_round_result)) {
+            await transaction.rollback();
+            return res.status(400).json({ error: 'Invalid input data' });
+        }
+
+        const [checkInterview] = await sequelize.query(`SELECT * FROM interviews WHERE id = ${interview_id}`);
+        if (checkInterview.length < 1) { return res.status(400).json(errorResponse("Interview not exist with this interview id")) }
+
+        const [affectedRows] = await sequelize.query(
+            'UPDATE Interviews SET technical_round_result = ? WHERE id = ?',
+            {
+                replacements: [technical_round_result, interview_id],
+                type: sequelize.QueryTypes.UPDATE,
+                transaction,
+            }
+        );
+
+
+        if (affectedRows === 0) {
+            await transaction.rollback();
+            return res.status(404).json({ error: 'Interview not found' });
+        }
+
+
+        await transaction.commit();
+        return res.status(200).json({ message: 'Technical round result updated successfully' });
+    } catch (error) {
+        console.log("ERROR::", error)
+        return res.status(500).json(errorResponse(error.message))
+    }
+}
+
+// lead response
+exports.get_lead_technical_response = async (req, res) => {
+    try {
+        const lead_id = req.query.leadId;
+
+        if (!lead_id) {
+            return res.status(400).json({ message: "Please provide lead id" });
+        }
+
+        // Fetch the technical rounds (responses)
+        const responsesQuery = `
+            SELECT tr.question_id, tr.answer, trq.question_type 
+            FROM technical_rounds tr
+            JOIN technical_round_questions trq ON trq.id = tr.question_id 
+            WHERE tr.lead_id = :lead_id;
+        `;
+        const responses = await sequelize.query(responsesQuery, {
+            replacements: { lead_id },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (responses.length === 0) {
+            return res.status(404).json({ message: 'No responses found for this lead' });
+        }
+
+        // Get the question IDs from the responses
+        const questionIds = responses.map(response => response.question_id);
+
+        // Fetch the actual questions by question ID
+        const questionsQuery = `
+            SELECT id, question
+            FROM technical_round_questions
+            WHERE id IN (:question_ids);
+        `;
+        const questions = await sequelize.query(questionsQuery, {
+            replacements: { question_ids: questionIds },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        const questionsMap = new Map(questions.map(question => [question.id, question]));
+
+        // Fetch options for objective questions (including option ID)
+        const optionsQuery = `
+            SELECT id AS option_id, question_id, option
+            FROM options
+            WHERE question_id IN (:question_ids);
+        `;
+        const options = await sequelize.query(optionsQuery, {
+            replacements: { question_ids: questionIds },
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        // Create a map of options by question ID
+        const optionsMap = options.reduce((map, option) => {
+            if (!map[option.question_id]) {
+                map[option.question_id] = [];
+            }
+            map[option.question_id].push({
+                option_id: option.option_id,
+                option: option.option
+            });
+            return map;
+        }, {});
+
+        // Build the final result with questions, answers, and options (with option_id)
+        const result = responses.map(response => {
+            const question = questionsMap.get(response.question_id)?.question || 'Unknown question';
+            const optionsForQuestion = optionsMap[response.question_id] || null; // Options will be null for non-objective questions
+
+            return {
+                question_id: response.question_id,
+                question,
+                answer: response.answer,
+                question_type: response.question_type,
+                options: optionsForQuestion // Only add options if they exist (includes option_id and option text)
+            };
+        });
+
+        return res.status(200).json(result);
+    } catch (error) {
+        console.log("ERROR::", error);
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+
+
+
+
+
+
+
+
 
 

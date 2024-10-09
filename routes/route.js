@@ -170,6 +170,8 @@ router.get("/all_technical_round_leads", authenticateToken, technicalQuestionsCo
 router.put("/update_status", authenticateToken, technicalQuestionsController.update_technical_lead_status)
 router.get("/verify_lead", technicalQuestionsController.check_lead_and_token)
 router.put("/start_test", technicalQuestionsController.start_test)
+router.put("/technical_round_result", technicalQuestionsController.technical_round_result)
+router.get("/get_lead_technical_response", technicalQuestionsController.get_lead_technical_response)
 
 
 

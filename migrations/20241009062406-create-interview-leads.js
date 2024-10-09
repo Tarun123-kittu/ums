@@ -64,6 +64,24 @@ module.exports = {
                 type: Sequelize.STRING,
                 allowNull: false,
             },
+            in_round: {
+              type: Sequelize.BOOLEAN,
+              allowNull: false,
+              defaultValue: false,
+            },
+            test_auth_token: {
+              type: Sequelize.TEXT,
+              allowNull: true,
+            },
+            is_open: {
+              type: Sequelize.BOOLEAN,
+              allowNull: false,
+              defaultValue: false,
+            },
+            assigned_test_series: {
+              type: Sequelize.INTEGER,
+              allowNull: true,
+            },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE,

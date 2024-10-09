@@ -29,10 +29,6 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      answer: {
-        type: Sequelize.TEXT,
-        allowNull: false,
-      },
       question_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
@@ -43,13 +39,14 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      correct_answer: {
-        type: Sequelize.STRING,
+      answer: {
+        type: Sequelize.TEXT,
         allowNull: true,
       },
+      
       correct_option: {
-        type: Sequelize.STRING,
-        allowNull: true,
+        type: Sequelize.INTEGER,
+        allowNull: false,
       },
       createdAt: {
         allowNull: false,
@@ -68,3 +65,4 @@ module.exports = {
     await queryInterface.dropTable('answers');
   },
 };
+	

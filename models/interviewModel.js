@@ -26,7 +26,21 @@ module.exports = (sequelize) => {
                 defaultValue: 'pending',
             },
             technical_round_result: {
-                type: DataTypes.ENUM('selected', 'rejected', 'pending', 'on hold'),
+                type: DataTypes.ENUM('selected', 'rejected', 'pending', 'on hold','opened'),
+                allowNull: true,
+                defaultValue: 'pending',
+            },
+            technical_round_checked_by:{
+              type:DataTypes.STRING,
+              allowNull:false
+            },
+            face_to_face_result:{
+                type:  DataTypes.ENUM('selected', 'rejected', 'pending', 'on hold'),
+                allowNull: true,
+                defaultValue: 'pending',
+            },
+            final_result:{
+                type:  DataTypes.ENUM('selected', 'rejected', 'pending', 'on hold'),
                 allowNull: true,
                 defaultValue: 'pending',
             },

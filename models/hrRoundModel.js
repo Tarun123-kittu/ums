@@ -1,7 +1,7 @@
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-    class HRRound extends Model {}
+    class HRRound extends Model { }
 
     HRRound.init(
         {
@@ -41,6 +41,19 @@ module.exports = (sequelize) => {
             answer: {
                 type: DataTypes.TEXT,
                 allowNull: true,
+            },
+            key_point: {
+                type: DataTypes.STRING(1000),
+                allowNull: true,
+            },
+            auth_token: {
+                type: DataTypes.STRING(500),
+                allowNull: false,
+            },
+            is_open: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: false,
             },
             createdAt: {
                 type: DataTypes.DATE,

@@ -30,15 +30,15 @@ module.exports = {
             },
             time_taken: {
                 type: Sequelize.TIME,
-                allowNull: false, // Set to NOT NULL
+                allowNull: false,
             },
             description: {
-                type: Sequelize.STRING(500), // VARCHAR(500)
-                allowNull: false, // Set to NOT NULL
+                type: Sequelize.STRING(500),
+                allowNull: false,
             },
             createdBy: {
                 type: Sequelize.INTEGER,
-                allowNull: false, // Set to NOT NULL
+                allowNull: false,
             },
             createdAt: {
                 allowNull: false,

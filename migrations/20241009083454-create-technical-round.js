@@ -2,31 +2,36 @@
 
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('Interviews', {
+        await queryInterface.createTable('technical_round', {
             id: {
                 allowNull: false,
                 primaryKey: true,
                 type: Sequelize.INTEGER,
                 autoIncrement: true,
             },
+            interview_id: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+            },
             lead_id: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
             },
-            interview_link_click_count: {
+            question_id: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
-                defaultValue: 0,
             },
-            hr_round_result: {
-                type: Sequelize.ENUM('selected', 'rejected', 'pending', 'on hold'),
-                allowNull: true,
-                defaultValue: 'pending',
+            answer: {
+                type: Sequelize.STRING,
+                allowNull: false,
             },
-            technical_round_result: {
-                type: Sequelize.ENUM('selected', 'rejected', 'pending', 'on hold'),
+            answer_status: {
+                type: Sequelize.ENUM('correct', 'incorrect', 'not_attempted'),
+                allowNull: false,
+            },
+            key_point: {
+                type: Sequelize.STRING(1000),
                 allowNull: true,
-                defaultValue: 'pending',
             },
             createdAt: {
                 allowNull: false,
@@ -42,6 +47,6 @@ module.exports = {
     },
 
     async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable('Interviews');
+        await queryInterface.dropTable('technical_round');
     },
 };
