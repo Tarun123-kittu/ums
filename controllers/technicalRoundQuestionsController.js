@@ -719,6 +719,9 @@ exports.update_technical_lead_status = async (req, res) => {
     }
 };
 
+
+
+
 exports.get_lead_questions = async (req, res) => {
     try {
         const { lead_id } = req.query
@@ -798,6 +801,8 @@ exports.get_lead_questions = async (req, res) => {
     }
 };
 
+
+
 exports.check_lead_and_token = async (req, res) => {
     try {
         const { lead_id } = req.query;
@@ -823,8 +828,10 @@ exports.check_lead_and_token = async (req, res) => {
     }
 };
 
-exports.start_test = async (req, res) => {
-    const transaction = await sequelize.transaction(); // Start transaction
+
+
+exports.start_test = async (req, res) => {s
+    const transaction = await sequelize.transaction(); 
     try {
         const { lead_id } = req.query;
         if (!lead_id) return res.status(400).json({ type: "error", message: "Lead required to perform this action" });
@@ -876,6 +883,10 @@ exports.start_test = async (req, res) => {
         return res.status(500).json({ success: false, message: error.message });
     }
 };
+
+
+
+
 
 exports.submit_technical_round = async (req, res) => {
     try {
@@ -959,7 +970,9 @@ exports.submit_technical_round = async (req, res) => {
 
 
 
-// developer give result
+
+
+
 exports.technical_round_result = async (req, res) => {
     try {
         let userId = req.result.user_id
@@ -1004,7 +1017,11 @@ exports.technical_round_result = async (req, res) => {
     }
 }
 
-// lead response
+
+
+
+
+
 exports.get_lead_technical_response = async (req, res) => {
     try {
         const lead_id = req.query.leadId;
@@ -1013,7 +1030,7 @@ exports.get_lead_technical_response = async (req, res) => {
             return res.status(400).json({ message: "Please provide lead id" });
         }
 
-        // Fetch the technical rounds (responses)
+
         const responsesQuery = `
             SELECT tr.question_id, tr.answer, trq.question_type 
             FROM technical_rounds tr
@@ -1029,10 +1046,11 @@ exports.get_lead_technical_response = async (req, res) => {
             return res.status(404).json({ message: 'No responses found for this lead' });
         }
 
-        // Get the question IDs from the responses
+   
         const questionIds = responses.map(response => response.question_id);
 
-        // Fetch the actual questions by question ID
+      
+        
         const questionsQuery = `
             SELECT id, question
             FROM technical_round_questions
@@ -1045,7 +1063,7 @@ exports.get_lead_technical_response = async (req, res) => {
 
         const questionsMap = new Map(questions.map(question => [question.id, question]));
 
-        // Fetch options for objective questions (including option ID)
+        
         const optionsQuery = `
             SELECT id AS option_id, question_id, option
             FROM options

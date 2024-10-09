@@ -33,11 +33,15 @@ module.exports = (sequelize) => {
     description: {
       type: DataTypes.STRING(500),
       allowNull: false,
-    },
+    }, 
     createdBy: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    experience_level:{
+      type: DataTypes.ENUM('fresher', 'intermediate','professional'),
+      allowNull: false,
+  },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,

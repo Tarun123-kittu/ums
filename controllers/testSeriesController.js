@@ -4,8 +4,9 @@ let { errorResponse, successResponse } = require("../utils/responseHandler")
 
 exports.create_series = async (req, res) => {
     try {
-        const { language_id, series_name, time_taken, description } = req.body;
-
+        let userId = req.result.user_id
+        const { language_id, series_name, time_taken, description,experience_level } = req.body;
+        console.log(experience_level)
         let checkLanguageExistQuery = `SELECT id FROM Languages where id = ?`
 
         let [language] = await sequelize.query(checkLanguageExistQuery, {
@@ -16,13 +17,19 @@ exports.create_series = async (req, res) => {
         if (language.length < 1) {
             return res.status(400).json(errorResponse("Incorrect language Id please check again."))
         }
+          
+        if(!experience_level){return res.status(400).json(errorResponse("Please add experience"))}
+
+        let [isUserExist]= await sequelize.query(`SELECT * FROM users WHERE id=${userId}`)
+        if(!isUserExist){return res.status(400).json(errorResponse("logged in user not found"))}
+
 
         const createTestSeriesQuery = `
-            INSERT INTO test_series (language_id, series_name,time_taken,description, createdAt, updatedAt)
-            VALUES (?, ?,?,?, NOW(), NOW())
+            INSERT INTO test_series (language_id, series_name,time_taken,description,experience_level,createdBy, createdAt, updatedAt)
+            VALUES (?, ?,?,?,?,?, NOW(), NOW())
         `;
 
-        const values = [language_id, series_name, time_taken, description,];
+        const values = [language_id, series_name, time_taken, description,experience_level,isUserExist[0].id];
 
         const t = await sequelize.transaction();
 
