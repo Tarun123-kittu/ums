@@ -630,12 +630,16 @@ exports.get_all_technical_round_leads = async (req, res) => {
             transaction: t
         });
 
-        if (!results) {
+        if (results?.length === 0) {
             await t.rollback();
-            return res.status(400).json({ type: "error", message: "No Lead Found" });
+            return res.status(200).json({ type: "success", message: "No Lead Found" });
         }
 
+        console.log(results, "this is the results")
+
         const lead_id = results[0]?.id;
+
+        // if (!lead_id) return res.status()
 
         const get_series_id_and_language_id = `
             SELECT il.assigned_test_series, l.id AS language_id

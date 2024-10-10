@@ -220,8 +220,7 @@ exports.update_lead = async (req, res) => {
 
 exports.get_all_leads = async (req, res) => {
     try {
-
-        const { profile, date, experience, page = 1, limit = 10 } = req.query;
+        const { profile, experience, page = 1, limit = 10 } = req.query;
 
         const pageNumber = parseInt(page, 10) || 1;
         const pageSize = parseInt(limit, 10) || 10;
@@ -230,64 +229,66 @@ exports.get_all_leads = async (req, res) => {
             SELECT 
                 i.id, i.name, i.phone_number, i.email, i.gender, i.dob, 
                 i.experience, i.current_salary, i.expected_salary, 
-                i.profile, i.last_company, i.state, i.house_address,i.in_round
+                i.profile, i.last_company, i.state, i.house_address, i.in_round
             FROM 
                 Interview_Leads i
             WHERE 
                 1 = 1
-                ORDER BY createdAt DESC
         `;
 
-
+        // Append filters to the query if provided
         if (profile) {
             baseQuery += ` AND i.profile = :profile`;
-        }
-        if (date) {
-            baseQuery += ` AND DATE(i.dob) = :date`;
         }
         if (experience) {
             baseQuery += ` AND i.experience >= :experience`;
         }
 
+        // Add ORDER BY clause after the filters
+        baseQuery += ` ORDER BY i.createdAt DESC`;
 
-
-
+        // Create count query for total number of leads (without ORDER BY)
         let countQuery = baseQuery.replace(
-            'SELECT i.id, i.name, i.phone_number, i.email, i.gender, i.dob, i.experience, i.current_salary, i.expected_salary, i.profile, i.last_company, i.state, i.house_address',
+            `SELECT i.id, i.name, i.phone_number, i.email, i.gender, i.dob, i.experience, i.current_salary, i.expected_salary, i.profile, i.last_company, i.state, i.house_address, i.in_round`,
             'SELECT COUNT(*) AS total'
-        );
+        ).replace(` ORDER BY i.createdAt DESC`, ''); // Remove ORDER BY for the count query
 
-
+        // Execute the count query to get the total number of results
         const [countResult] = await sequelize.query(countQuery, {
-            replacements: { profile, date, experience },
+            replacements: { profile, experience },
         });
 
+        // Check if countResult contains the total count, handle empty result
+        const totalItems = countResult.length > 0 ? countResult[0].total : 0;
 
-        const total = countResult.length;
+        // Calculate total pages
+        const totalPages = totalItems > 0 ? Math.ceil(totalItems / pageSize) : 1; // Avoid null, default to 1 if no items
 
-
+        // Pagination logic
         const offset = (pageNumber - 1) * pageSize;
-        const totalItems = parseInt(total, 10);
-        const totalPages = Math.ceil(totalItems / pageSize);
 
-
+        // Append LIMIT and OFFSET for pagination in the main query
         const getAllLeadsQuery = `${baseQuery} LIMIT :limit OFFSET :offset`;
+
+        // Execute the main query to get the leads
         const [allLeads] = await sequelize.query(getAllLeadsQuery, {
             replacements: {
                 profile,
-                date,
                 experience,
                 limit: pageSize,
                 offset
             },
         });
 
-
+        // Handle case when no leads are found
         if (allLeads.length < 1) {
-            return res.status(400).json(errorResponse("No leads found with the specified filters."));
+            return res.status(200).json({
+                type: "success",
+                message: "No leads found with the specified filters."
+            });
         }
 
-
+        // Return success response with pagination info
         return res.status(200).json({
             type: "success",
             message: "Data retrieved successfully.",
@@ -301,7 +302,10 @@ exports.get_all_leads = async (req, res) => {
         });
     } catch (error) {
         console.log("ERROR::", error);
-        return res.status(500).json(errorResponse(error.message));
+        return res.status(500).json({
+            type: "error",
+            message: error.message,
+        });
     }
 };
 
@@ -332,9 +336,62 @@ exports.delete_lead = async (req, res) => {
     }
 };
 
+exports.get_face_to_face_round_leads = async (req, res) => {
+    const t = await sequelize.transaction(); // Ensure you start a transaction
+    try {
+        const all_technical_round_leads = `
+            SELECT il.id, il.name, il.experience, il.profile,il.assigned_test_series,il.expected_salary, i.face_to_face_result, i.id AS interview_id,l.id AS language_id
+            FROM interview_leads il
+            JOIN interviews i ON i.lead_id = il.id
+            JOIN languages l ON l.language = il.profile
+            WHERE in_round = 3
+        `;
 
+        const results = await sequelize.query(all_technical_round_leads, {
+            type: sequelize.QueryTypes.SELECT,
+            transaction: t
+        });
 
+        if (results.length === 0) {
+            await t.rollback();
+            return res.status(200).json({ type: "success", message: "No Lead Found" });
+        }
 
+        await t.commit();
 
+        return res.status(200).json({ type: "success", data: results });
+    } catch (error) {
+        await t.rollback();
+        return res.status(400).json({ type: "error", message: error.message });
+    }
+};
 
+exports.get_final_round_leads = async (req, res) => {
+    const t = await sequelize.transaction(); // Ensure you start a transaction
+    try {
+        const all_technical_round_leads = `
+            SELECT il.id, il.name, il.experience, il.profile,il.assigned_test_series,il.expected_salary, i.final_result, i.id AS interview_id,l.id AS language_id
+            FROM interview_leads il
+            JOIN interviews i ON i.lead_id = il.id
+            JOIN languages l ON l.language = il.profile
+            WHERE in_round = 4
+        `;
 
+        const results = await sequelize.query(all_technical_round_leads, {
+            type: sequelize.QueryTypes.SELECT,
+            transaction: t
+        });
+
+        if (results.length === 0) {
+            await t.rollback();
+            return res.status(200).json({ type: "success", message: "No Lead Found" });
+        }
+
+        await t.commit();
+
+        return res.status(200).json({ type: "success", data: results });
+    } catch (error) {
+        await t.rollback();
+        return res.status(400).json({ type: "error", message: error.message });
+    }
+};

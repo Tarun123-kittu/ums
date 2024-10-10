@@ -125,6 +125,8 @@ router.get("/get_lead", authenticateToken, validateUpdateLead, interviewLeadsCon
 router.put("/update_lead", authenticateToken, validateUpdateLead, interviewLeadsController.update_lead)
 router.get("/get_all_leads", authenticateToken, interviewLeadsController.get_all_leads)
 router.delete("/delete_lead", authenticateToken, validateUpdateLead, interviewLeadsController.delete_lead)
+router.get("/get_face_to_face_round_leads", authenticateToken, interviewLeadsController.get_face_to_face_round_leads)
+router.get("/get_final_round_leads", authenticateToken, interviewLeadsController.get_final_round_leads)
 
 
 //hr round 
@@ -174,13 +176,13 @@ router.get("/all_technical_round_leads", authenticateToken, technicalQuestionsCo
 router.put("/update_status", authenticateToken, technicalQuestionsController.update_technical_lead_status)
 router.get("/verify_lead", technicalQuestionsController.check_lead_and_token)
 router.put("/start_test", technicalQuestionsController.start_test)
-router.put("/technical_round_result",authenticateToken, technicalQuestionsController.technical_round_result)
-router.get("/get_lead_technical_response", authenticateToken,technicalQuestionsController.get_lead_technical_response)
-router.put("/check_lead_answer",authenticateToken,validateCheckLeadAnswer,technicalQuestionsController.check_lead_answer)
+router.put("/technical_round_result", authenticateToken, technicalQuestionsController.technical_round_result)
+router.get("/get_lead_technical_response", authenticateToken, technicalQuestionsController.get_lead_technical_response)
+router.put("/check_lead_answer", authenticateToken, validateCheckLeadAnswer, technicalQuestionsController.check_lead_answer)
 
 
 //final and face-to-face round
-router.put("/final_or_face_to_face_round",authenticateToken,validateFaceToFaceOrFinalRound,finalRoundsController.final_or_face_to_face_round)
-router.put("/update_in_round_count",authenticateToken,validateUpdateInRound,finalRoundsController.update_in_round_count)
+router.put("/final_or_face_to_face_round", authenticateToken, validateFaceToFaceOrFinalRound, finalRoundsController.final_or_face_to_face_round)
+router.put("/update_in_round_count", authenticateToken, validateUpdateInRound, finalRoundsController.update_in_round_count)
 
 module.exports = router
