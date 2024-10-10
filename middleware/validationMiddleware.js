@@ -441,25 +441,25 @@ const ValidateUpdateSeries = [
 
 
 const validateTechnicalRoundResult = [
-    check("interview_id","Please provide Interview Id").not().isEmpty(),
-    check("technical_round_result","Please provide technical round result.").not().isEmpty(),
-    (req,res,next)=>{
-        const errors= validationResult(req);
+    check("interview_id", "Please provide Interview Id").not().isEmpty(),
+    check("technical_round_result", "Please provide technical round result.").not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
         if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
         next();
-    } 
+    }
 ]
 
 
 
 const validateSubmitTechincalRound = [
-    check("lead_id","Please provide lead Id").not().isEmpty(),
-    check("responses","Please provide  lead response for technical round.").not().isEmpty(),
-    (req,res,next)=>{
-        const errors= validationResult(req);
+    check("lead_id", "Please provide lead Id").not().isEmpty(),
+    check("responses", "Please provide  lead response for technical round.").not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
         if (!errors.isEmpty()) { return res.status(400).json({ message: errors.array()[0].msg, type: 'error' }); }
         next();
-    } 
+    }
 ]
 
 
@@ -479,6 +479,36 @@ const validateCheckLeadAnswer = [
         next();
     }
 ];
+
+
+const validateFaceToFaceOrFinalRound = [
+    check('leadId', 'Lead Id not present in the request body').not().isEmpty(),
+    check('status', 'status not present in the request body').not().isEmpty()
+        .isIn(['selected', 'rejected', 'pending', 'on hold']).withMessage('staus must be one of : selected, rejected, pending, on hold'),
+    check('round_type', 'round type not present in the request body').not().isEmpty()
+        .isIn(['final','face_to_face']).withMessage('round type must be one of : final, face_to_face'),
+        (req, res, next) => {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ message: errors.array()[0].msg, type: 'error' });
+            }
+            next();
+        }
+]
+
+
+const validateUpdateInRound = [
+    check('leadId','Please add lead Id in the query params').not().isEmpty(),
+    check('in_round_count','Please add in round count').not().isEmpty(),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ message: errors.array()[0].msg, type: 'error' });
+        }
+        next();
+    }
+]
+
 
 
 module.exports = {
@@ -512,6 +542,8 @@ module.exports = {
     ValidateUpdateSeries,
     validateTechnicalRoundResult,
     validateSubmitTechincalRound,
-    validateCheckLeadAnswer
+    validateCheckLeadAnswer,
+    validateFaceToFaceOrFinalRound,
+    validateUpdateInRound
 }
 
