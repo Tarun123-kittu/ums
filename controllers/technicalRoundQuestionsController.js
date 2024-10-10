@@ -669,7 +669,6 @@ exports.get_all_technical_round_leads = async (req, res) => {
     }
 };
 
-
 exports.update_technical_lead_status = async (req, res) => {
     const t = await sequelize.transaction();
 
@@ -718,9 +717,6 @@ exports.update_technical_lead_status = async (req, res) => {
         return res.status(500).json({ type: "error", message: error.message });
     }
 };
-
-
-
 
 exports.get_lead_questions = async (req, res) => {
     try {
@@ -801,8 +797,6 @@ exports.get_lead_questions = async (req, res) => {
     }
 };
 
-
-
 exports.check_lead_and_token = async (req, res) => {
     try {
         const { lead_id } = req.query;
@@ -828,10 +822,9 @@ exports.check_lead_and_token = async (req, res) => {
     }
 };
 
-
-
-exports.start_test = async (req, res) => {s
-    const transaction = await sequelize.transaction(); 
+exports.start_test = async (req, res) => {
+    s
+    const transaction = await sequelize.transaction();
     try {
         const { lead_id } = req.query;
         if (!lead_id) return res.status(400).json({ type: "error", message: "Lead required to perform this action" });
@@ -883,10 +876,6 @@ exports.start_test = async (req, res) => {s
         return res.status(500).json({ success: false, message: error.message });
     }
 };
-
-
-
-
 
 exports.submit_technical_round = async (req, res) => {
     try {
@@ -968,11 +957,6 @@ exports.submit_technical_round = async (req, res) => {
     }
 }
 
-
-
-
-
-
 exports.technical_round_result = async (req, res) => {
     try {
         let userId = req.result.user_id
@@ -988,7 +972,7 @@ exports.technical_round_result = async (req, res) => {
         if (!developer_review) { return res.status(400).json(errorResponse("Please add you review")) }
 
         const [user] = await sequelize.query(`SELECT * FROM users WHERE id =${userId}`)
-        
+
 
         const [checkInterview] = await sequelize.query(`SELECT * FROM interviews WHERE id = ${interview_id}`);
         if (checkInterview.length < 1) { return res.status(400).json(errorResponse("Interview not exist with this interview id")) }
@@ -1017,11 +1001,6 @@ exports.technical_round_result = async (req, res) => {
     }
 }
 
-
-
-
-
-
 exports.get_lead_technical_response = async (req, res) => {
     try {
         const lead_id = req.query.leadId;
@@ -1032,10 +1011,12 @@ exports.get_lead_technical_response = async (req, res) => {
 
 
         const responsesQuery = `
-            SELECT tr.question_id, tr.answer, trq.question_type 
+           SELECT tr.question_id, tr.answer, trq.question_type,tr.answer_status, i.id AS interview_id
             FROM technical_round tr
-            JOIN technical_round_questions trq ON trq.id = tr.question_id 
+            JOIN technical_round_questions trq ON trq.id = tr.question_id
+            JOIN interviews i ON i.id = tr.lead_id
             WHERE tr.lead_id = :lead_id;
+
         `;
         const responses = await sequelize.query(responsesQuery, {
             replacements: { lead_id },
@@ -1046,11 +1027,11 @@ exports.get_lead_technical_response = async (req, res) => {
             return res.status(404).json({ message: 'No responses found for this lead' });
         }
 
-   
+
         const questionIds = responses.map(response => response.question_id);
 
-      
-        
+
+
         const questionsQuery = `
             SELECT id, question
             FROM technical_round_questions
@@ -1063,7 +1044,7 @@ exports.get_lead_technical_response = async (req, res) => {
 
         const questionsMap = new Map(questions.map(question => [question.id, question]));
 
-        
+
         const optionsQuery = `
             SELECT id AS option_id, question_id, option
             FROM options
@@ -1096,7 +1077,9 @@ exports.get_lead_technical_response = async (req, res) => {
                 question,
                 answer: response.answer,
                 question_type: response.question_type,
-                options: optionsForQuestion // Only add options if they exist (includes option_id and option text)
+                options: optionsForQuestion,
+                interview_id: response.interview_id,
+                answer_status: response.answer_status
             };
         });
 
@@ -1106,10 +1089,6 @@ exports.get_lead_technical_response = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
-
-
-
-
 
 exports.check_lead_answer = async (req, res) => {
     try {
