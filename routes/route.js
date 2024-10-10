@@ -9,6 +9,7 @@ const languageController = require("../controllers/languagesControllers")
 const testSeriesController = require("../controllers/testSeriesController")
 const technicalQuestionsController = require("../controllers/technicalRoundQuestionsController")
 const leaveController = require("../controllers/leaveController")
+const finalRoundsController = require("../controllers/finalRoundsController")
 const interviewLeadsController = require('../controllers/interviewLeads')
 const verifyAccess = require("../middleware/verifyAccessMiddleware")
 const authenticateToken = require("../middleware/authenticaionMiddleware")
@@ -38,9 +39,9 @@ const {
     ValidateCreateSeries,
     ValidateGetSeries,
     ValidateUpdateSeries,
-    validateTechnicalRoundResult,
-    validateSubmitTechincalRound,
-    validateCheckLeadAnswer
+    validateCheckLeadAnswer,
+    validateFaceToFaceOrFinalRound,
+    validateUpdateInRound
 } = require('../middleware/validationMiddleware')
 
 const {
@@ -178,5 +179,8 @@ router.get("/get_lead_technical_response", authenticateToken,technicalQuestionsC
 router.put("/check_lead_answer",authenticateToken,validateCheckLeadAnswer,technicalQuestionsController.check_lead_answer)
 
 
+//final and face-to-face round
+router.put("/final_or_face_to_face_round",authenticateToken,validateFaceToFaceOrFinalRound,finalRoundsController.final_or_face_to_face_round)
+router.put("/update_in_round_count",authenticateToken,validateUpdateInRound,finalRoundsController.update_in_round_count)
 
 module.exports = router
