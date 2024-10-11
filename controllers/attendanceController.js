@@ -5,7 +5,7 @@ const { errorResponse, successResponse } = require('../utils/responseHandler');
 
 exports.mark_attendance = async (req, res) => {
     const user_id = req.result.user_id
-    const { date, in_time, login_device, login_mobile } = req.body;
+    const { login_device, login_mobile } = req.body;
     let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
 
     try {
@@ -41,7 +41,7 @@ exports.mark_attendance = async (req, res) => {
 
 exports.unmark_attendance = async (req, res) => {
     const user_id = req.result.user_id
-    const { date, out_time, report, logout_device, logout_mobile } = req.body;
+    const { report, logout_device, logout_mobile } = req.body;
     let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
     try {
         const is_user_mark_attendance_today_query = `SELECT date,in_time,out_time FROM attendances WHERE date = CURDATE() AND user_id = ?`;
@@ -492,3 +492,30 @@ exports.update_attendance_details = async (req, res) => {
         return res.status(500).json(errorResponse(error.message));
     }
 };
+
+exports.get_user_today_attendance = async (req, res) => {
+    try {
+        const user_id = req.result.user_id;
+        const get_attendance_query = `
+            SELECT in_time 
+            FROM attendances 
+            WHERE DATE(createdAt) = CURDATE() AND user_id = ?
+        `;
+        const attendance = await sequelize.query(get_attendance_query, {
+            replacements: [user_id],
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        if (!attendance || attendance.length === 0) {
+            return res.status(400).json({ type: "error", message: "No attendance found for today" });
+        }
+
+        res.status(200).json({
+            type: "success",
+            data: attendance
+        });
+    } catch (error) {
+        return res.status(500).json(errorResponse(error.message));
+    }
+}
+

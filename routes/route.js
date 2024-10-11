@@ -107,6 +107,7 @@ router.get("/get_attendances", authenticateToken, attendanceController.get_atten
 router.get("/get_attendances_report", authenticateToken, attendanceController.get_attendance_report)
 router.put("/mark_break", authenticateToken, attendanceController.mark_break)
 router.put("/unmark_break", authenticateToken, attendanceController.unmark_break)
+router.get("/get_user_today_attendance", authenticateToken, attendanceController.get_user_today_attendance)
 
 // leave routes
 router.post("/apply_leave", authenticateToken, validateLeaveRequest, leaveController.apply_leave)
