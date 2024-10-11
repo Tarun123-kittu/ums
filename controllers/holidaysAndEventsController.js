@@ -184,4 +184,98 @@ exports.get_holidayOrEvent = async (req, res) => {
 
 
 
+exports.get_events_and_birthdays = async (req, res) => {
+    try {
+        const { month, year } = req.query;
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth() + 1;
+
+
+        const selectedMonth = month ? parseInt(month) : currentMonth;
+        const selectedYear = year ? parseInt(year) : currentYear;
+
+
+        const getHolidaysAndEventsQuery = `
+            SELECT 
+                occasion_name, 
+                occasion_type, 
+                occasion_description, 
+                DATE_FORMAT(date, '%Y-%m-%d') as date 
+            FROM 
+                holidays_and_events 
+            WHERE 
+                MONTH(date) = :selectedMonth AND YEAR(date) = :selectedYear
+            ORDER BY date ASC
+        `;
+
+
+        const getBirthdaysQuery = `
+            SELECT 
+                name, 
+                DATE_FORMAT(dob, '%Y-%m-%d') as dob 
+            FROM 
+                users 
+            WHERE 
+                MONTH(dob) = :selectedMonth AND YEAR(dob) = :selectedYear
+            ORDER BY dob ASC
+        `;
+
+        const t = await sequelize.transaction();
+
+
+        const [holidaysAndEvents] = await sequelize.query(getHolidaysAndEventsQuery, {
+            replacements: { selectedMonth, selectedYear },
+            transaction: t,
+        });
+
+        const [birthdays] = await sequelize.query(getBirthdaysQuery, {
+            replacements: { selectedMonth, selectedYear },
+            transaction: t,
+        });
+
+        await t.commit();
+
+
+        const combinedResults = [];
+
+
+        holidaysAndEvents.forEach(event => {
+            combinedResults.push({
+                name: event.occasion_name,
+                description: event.occasion_description || '',
+                date: event.date,
+                type: event.occasion_type,
+                color: event.occasion_type === 'holiday' ? 'green' : 'red'
+            });
+        });
+
+
+        birthdays.forEach(birthday => {
+            combinedResults.push({
+                name: birthday.name,
+                description: 'Birthday',
+                date: birthday.dob,
+                type: 'birthday',
+                color: 'blue'
+            });
+        });
+
+
+        if (combinedResults.length<1){return res.status(400).json(errorResponse(`No data retreived for the month- ${month} and year-${year}`))}
+        combinedResults.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        
+            return res.status(200).json({
+                type: 'success',
+                data: combinedResults,
+                message: `Data for month ${selectedMonth} and year ${selectedYear} retrieved successfully.`
+            });
+
+    } catch (error) {
+        console.log("ERROR::", error);
+        return res.status(500).json(errorResponse(error.message));
+    }
+};
+
+
 

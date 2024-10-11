@@ -235,7 +235,8 @@ const validateDeleteUserRole = [
 
 const validateHolidaysAndEvents = [
     check('occasion_name', 'Please provide occasion name.').not().isEmpty(),
-    check('occasion_type', 'Please provide occasion type.').not().isEmpty(),
+    check('occasion_type', 'Please provide occasion type.').not().isEmpty()
+    .isIn(['holiday','event']).withMessage('ocassion type must be one of : holiday, event'),
     check('date', 'Please provide date.').not().isEmpty(),
     (req, res, next) => {
         const errors = validationResult(req);

@@ -22,21 +22,21 @@ exports.create_user = async (req, res) => {
       address, role, confirm_password
     } = req.body;
 
-    // Check if email already exists
+    
     const checkEmailQuery = `SELECT * FROM users WHERE email = ?`;
     const [existingUser] = await sequelize.query(checkEmailQuery, {
       replacements: [email],
       type: sequelize.QueryTypes.SELECT,
-      transaction: t  // Include the transaction
+      transaction: t 
     });
 
     if (existingUser) {
-      await t.rollback();  // Rollback transaction on error
+      await t.rollback();  
       return res.status(400).json(errorResponse("Email already exists. Please use another email."));
     }
 
     if (confirm_password !== password) {
-      await t.rollback();  // Rollback transaction on error
+      await t.rollback();  
       return res.status(400).json(errorResponse("Password and confirm password do not match."));
     }
 

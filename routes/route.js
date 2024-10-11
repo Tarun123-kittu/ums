@@ -94,6 +94,7 @@ router.put("/update_holidayOrEvent", authenticateToken, holidaysAndEventsControl
 router.get("/get_all_holidaysOrEvents", authenticateToken, holidaysAndEventsController.get_all_holidaysOrEvents)
 router.delete("/delete_holidayOrEvent", authenticateToken, holidaysAndEventsController.delete_holidayOrEvent)
 router.get("/get_holiday_and_event", authenticateToken, holidaysAndEventsController.get_holidayOrEvent)
+router.get("/get_events_and_birthdays",authenticateToken,holidaysAndEventsController.get_events_and_birthdays)
 
 
 

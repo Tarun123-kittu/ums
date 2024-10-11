@@ -218,6 +218,8 @@ exports.update_lead = async (req, res) => {
     }
 };
 
+
+
 exports.get_all_leads = async (req, res) => {
     try {
         const { profile, experience, page = 1, limit = 10 } = req.query;
@@ -236,7 +238,7 @@ exports.get_all_leads = async (req, res) => {
                 1 = 1
         `;
 
-        // Append filters to the query if provided
+      
         if (profile) {
             baseQuery += ` AND i.profile = :profile`;
         }
@@ -244,33 +246,33 @@ exports.get_all_leads = async (req, res) => {
             baseQuery += ` AND i.experience >= :experience`;
         }
 
-        // Add ORDER BY clause after the filters
+     
         baseQuery += ` ORDER BY i.createdAt DESC`;
 
-        // Create count query for total number of leads (without ORDER BY)
+       
         let countQuery = baseQuery.replace(
             `SELECT i.id, i.name, i.phone_number, i.email, i.gender, i.dob, i.experience, i.current_salary, i.expected_salary, i.profile, i.last_company, i.state, i.house_address, i.in_round`,
             'SELECT COUNT(*) AS total'
-        ).replace(` ORDER BY i.createdAt DESC`, ''); // Remove ORDER BY for the count query
+        ).replace(` ORDER BY i.createdAt DESC`, ''); 
 
-        // Execute the count query to get the total number of results
+      
         const [countResult] = await sequelize.query(countQuery, {
             replacements: { profile, experience },
         });
 
-        // Check if countResult contains the total count, handle empty result
+    
         const totalItems = countResult.length > 0 ? countResult[0].total : 0;
 
-        // Calculate total pages
-        const totalPages = totalItems > 0 ? Math.ceil(totalItems / pageSize) : 1; // Avoid null, default to 1 if no items
+     
+        const totalPages = totalItems > 0 ? Math.ceil(totalItems / pageSize) : 1; 
 
-        // Pagination logic
+       
         const offset = (pageNumber - 1) * pageSize;
 
-        // Append LIMIT and OFFSET for pagination in the main query
+ 
         const getAllLeadsQuery = `${baseQuery} LIMIT :limit OFFSET :offset`;
 
-        // Execute the main query to get the leads
+  
         const [allLeads] = await sequelize.query(getAllLeadsQuery, {
             replacements: {
                 profile,
@@ -280,7 +282,7 @@ exports.get_all_leads = async (req, res) => {
             },
         });
 
-        // Handle case when no leads are found
+     
         if (allLeads.length < 1) {
             return res.status(200).json({
                 type: "success",
@@ -288,7 +290,7 @@ exports.get_all_leads = async (req, res) => {
             });
         }
 
-        // Return success response with pagination info
+     
         return res.status(200).json({
             type: "success",
             message: "Data retrieved successfully.",
@@ -336,15 +338,58 @@ exports.delete_lead = async (req, res) => {
     }
 };
 
+
+
+
+
 exports.get_face_to_face_round_leads = async (req, res) => {
-    const t = await sequelize.transaction(); // Ensure you start a transaction
     try {
-        const all_technical_round_leads = `
-            SELECT il.id, il.name, il.experience, il.profile,il.assigned_test_series,il.expected_salary, i.face_to_face_result, i.id AS interview_id,l.id AS language_id
+    const t = await sequelize.transaction(); 
+
+    const { pageNumber = 1, pageSize = 10, profile, experience } = req.query;
+    const page = parseInt(pageNumber, 10) || 1;
+    const limit = parseInt(pageSize, 10) || 10;
+    const offset = (page - 1) * limit;
+
+    
+    let whereClause = "WHERE in_round = 3";
+
+    
+    if (profile) {
+        whereClause += ` AND il.profile LIKE '%${profile}%'`;
+    }
+
+    
+    if (experience) {
+        whereClause += ` AND il.experience = ${experience}`;
+    }
+
+   
+       
+        const totalRecordsQuery = `
+            SELECT COUNT(*) as totalRecords
             FROM interview_leads il
             JOIN interviews i ON i.lead_id = il.id
             JOIN languages l ON l.language = il.profile
-            WHERE in_round = 3
+            ${whereClause}
+        `;
+        const totalRecordsResult = await sequelize.query(totalRecordsQuery, {
+            type: sequelize.QueryTypes.SELECT,
+            transaction: t
+        });
+
+        const totalRecords = totalRecordsResult[0].totalRecords;
+        const totalPages = Math.ceil(totalRecords / limit);
+
+     
+        const all_technical_round_leads = `
+            SELECT il.id, il.name, il.experience, il.profile, il.assigned_test_series, il.expected_salary, 
+                   i.face_to_face_result, i.id AS interview_id, l.id AS language_id
+            FROM interview_leads il
+            JOIN interviews i ON i.lead_id = il.id
+            JOIN languages l ON l.language = il.profile
+            ${whereClause}
+            LIMIT ${limit} OFFSET ${offset}
         `;
 
         const results = await sequelize.query(all_technical_round_leads, {
@@ -352,19 +397,34 @@ exports.get_face_to_face_round_leads = async (req, res) => {
             transaction: t
         });
 
+      
         if (results.length === 0) {
             await t.rollback();
             return res.status(200).json({ type: "success", message: "No Lead Found" });
         }
 
-        await t.commit();
+        await t.commit(); 
 
-        return res.status(200).json({ type: "success", data: results });
+       
+        return res.status(200).json({
+            type: "success",
+            data: results,
+            pagination: {
+                currentPage: page,
+                totalPages: totalPages,
+                totalRecords: totalRecords,
+                pageSize: limit
+            }
+        });
     } catch (error) {
-        await t.rollback();
-        return res.status(400).json({ type: "error", message: error.message });
+        await t.rollback(); 
+        return res.status(500).json(errorResponse(error.message))
     }
 };
+
+
+
+
 
 exports.get_final_round_leads = async (req, res) => {
     const t = await sequelize.transaction(); // Ensure you start a transaction

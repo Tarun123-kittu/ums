@@ -608,23 +608,63 @@ exports.delete_objective = async (req, res) => {
         return res.status(200).json({ type: "success", message: "Question and its options were successfully deleted" });
 
     } catch (error) {
-        // Rollback the transaction in case of an error
+       
         await transaction.rollback();
         console.error("Error deleting question and options:", error);
         return res.status(500).json({ type: "error", message: "An error occurred while deleting the question and its options" });
     }
 };
 
-exports.get_all_technical_round_leads = async (req, res) => {
-    const t = await sequelize.transaction();
 
+
+
+exports.get_all_technical_round_leads = async (req, res) => {   
     try {
+        const t = await sequelize.transaction();
+        const { page = 1, limit = 10, profile, experience } = req.query;
+
+     
+        const offset = (page - 1) * limit;
+
+      
+        let whereClause = "WHERE in_round = 2"; 
+
+        
+        if (profile) {
+            whereClause += ` AND il.profile LIKE '%${profile}%'`;
+        }
+
+       
+        if (experience) {
+            whereClause += ` AND il.experience = ${experience}`;
+        }
+
+
+       
+        const total_records_query = `
+            SELECT COUNT(*) as total
+            FROM interview_leads il
+            JOIN interviews i ON i.lead_id = il.id
+            ${whereClause}
+        `;
+
+        const totalCountResult = await sequelize.query(total_records_query, {
+            type: sequelize.QueryTypes.SELECT,
+            transaction: t
+        });
+
+        const totalRecords = totalCountResult[0].total;
+        const totalPages = Math.ceil(totalRecords / limit);
+
+       
         const all_technical_round_leads = `
             SELECT il.id, il.name, il.experience, il.profile, i.technical_round_result, i.id AS interview_id
             FROM interview_leads il
             JOIN interviews i ON i.lead_id = il.id
-            WHERE in_round = 2
+            ${whereClause}
+            LIMIT ${limit} OFFSET ${offset}
         `;
+
         const results = await sequelize.query(all_technical_round_leads, {
             type: sequelize.QueryTypes.SELECT,
             transaction: t
@@ -635,11 +675,7 @@ exports.get_all_technical_round_leads = async (req, res) => {
             return res.status(200).json({ type: "success", message: "No Lead Found" });
         }
 
-        console.log(results, "this is the results")
-
         const lead_id = results[0]?.id;
-
-        // if (!lead_id) return res.status()
 
         const get_series_id_and_language_id = `
             SELECT il.assigned_test_series, l.id AS language_id
@@ -647,6 +683,7 @@ exports.get_all_technical_round_leads = async (req, res) => {
             JOIN languages l ON l.language = il.profile
             WHERE il.id = :lead_id
         `;
+
         const name = await sequelize.query(get_series_id_and_language_id, {
             replacements: { lead_id },
             type: sequelize.QueryTypes.SELECT,
@@ -664,7 +701,13 @@ exports.get_all_technical_round_leads = async (req, res) => {
             type: "success",
             data: {
                 data: results,
-                series_language_data: name
+                series_language_data: name,
+            },
+            pagination: {
+                totalRecords: totalRecords,
+                totalPages: totalPages,
+                currentPage: page,
+                limit: limit
             }
         });
     } catch (error) {
@@ -672,6 +715,10 @@ exports.get_all_technical_round_leads = async (req, res) => {
         return res.status(400).json({ type: "error", message: error.message });
     }
 };
+
+
+
+
 
 exports.update_technical_lead_status = async (req, res) => {
     const t = await sequelize.transaction();
