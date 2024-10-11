@@ -238,7 +238,7 @@ exports.calculate_pending_leaves = async (req, res) => {
                 doj,
                 total_allowed_leaves: totalAllowedLeaves,
                 used_leaves: usedLeaves,
-                remaining_leaves: remainingLeaves // Allow negative values
+                remaining_leaves: remainingLeaves 
             }
         });
 
@@ -253,7 +253,7 @@ exports.calculate_pending_leaves = async (req, res) => {
 
 exports.update_pending_leave = async (req, res) => {
     const { leave_id, status, remark, user_id, leave_count, email, name, from_date, to_date } = req.body;
-    const transaction = await sequelize.transaction(); // Start a new transaction
+    const transaction = await sequelize.transaction(); 
 
     try {
         const update_leave_query = `UPDATE leaves SET status = ?, remark = ? WHERE id = ?`;
@@ -264,7 +264,7 @@ exports.update_pending_leave = async (req, res) => {
         });
 
         if (!is_leave_updated) {
-            await transaction.rollback(); // Rollback transaction if update fails
+            await transaction.rollback(); 
             return res.status(400).json({ type: "error", message: "Error while updating the leave. Please try again later." });
         }
 
@@ -415,17 +415,17 @@ exports.calculate_pending_leaves_for_all_users = async (req, res) => {
         const usersLeaveData = [];
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth() + 1; // JavaScript months are 0-indexed
+        const currentMonth = currentDate.getMonth() + 1;
 
         for (const user of users) {
             const { userId, name, username, doj } = user;
             const dojDate = new Date(doj);
             const monthsWorked = (currentYear - dojDate.getFullYear()) * 12 + (currentMonth - (dojDate.getMonth() + 1));
 
-            // Minimum allowed leaves for every user is 1
+            
             const totalAllowedLeaves = Math.max(monthsWorked, 1);
 
-            // Query to calculate total accepted leaves for the user
+           
             const select_accepted_leaves_query = `
                 SELECT 
                     COALESCE(SUM(l.count), 0) AS total_accepted_leaves,
@@ -443,10 +443,10 @@ exports.calculate_pending_leaves_for_all_users = async (req, res) => {
             const totalAcceptedLeaves = leaveData.total_accepted_leaves || 0;
             const currentMonthAcceptedLeaves = leaveData.current_month_accepted_leaves || 0;
 
-            // Calculate remaining leaves
+           
             const remainingLeaves = totalAllowedLeaves - totalAcceptedLeaves;
 
-            // Push each user's leave data to the array
+           
             usersLeaveData.push({
                 userId,
                 name,
@@ -455,7 +455,7 @@ exports.calculate_pending_leaves_for_all_users = async (req, res) => {
                 total_allowed_leaves: totalAllowedLeaves,
                 total_accepted_leaves: totalAcceptedLeaves,
                 current_month_accepted_leaves: currentMonthAcceptedLeaves,
-                remaining_leaves: remainingLeaves > 0 ? remainingLeaves : 0 // Ensuring no negative remaining leaves
+                remaining_leaves: remainingLeaves > 0 ? remainingLeaves : 0 
             });
         }
 
@@ -478,7 +478,7 @@ exports.leave_bank_report = async (req, res) => {
         const { session, month, year, page = 1, limit = 10 } = req.query;
         const offset = (page - 1) * limit;
 
-        // Main query to fetch bank leave records
+        
         let bank_report_query = `
             SELECT 
                 u.id, 
@@ -491,7 +491,7 @@ exports.leave_bank_report = async (req, res) => {
             LEFT JOIN 
                 bank_leaves bl ON u.id = bl.user_id
             WHERE 
-                u.is_disabled = false`; // Ensure we only include non-disabled users
+                u.is_disabled = false`; 
 
         if (month) {
             bank_report_query += ` AND MONTH(bl.created_at) = :month`;
@@ -524,7 +524,7 @@ exports.leave_bank_report = async (req, res) => {
 
         console.log("Query Result:", all_bank_records);
 
-        // If no records found, return users with taken_leave = 0 and paid_leave = 0
+       
         if (!all_bank_records || all_bank_records.length === 0) {
             const defaultUsersQuery = `
                 SELECT 
@@ -548,12 +548,12 @@ exports.leave_bank_report = async (req, res) => {
             });
         }
 
-        // Count query remains the same
+       
         let count_query = `
             SELECT COUNT(*) as totalCount
             FROM bank_leaves bl
             JOIN users u ON u.id = bl.user_id
-            WHERE u.is_disabled = false`; // Ensure we only count non-disabled users
+            WHERE u.is_disabled = false`; 
 
         if (month) {
             count_query += ` AND MONTH(bl.created_at) = :month`;

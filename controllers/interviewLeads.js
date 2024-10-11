@@ -346,7 +346,7 @@ exports.get_face_to_face_round_leads = async (req, res) => {
     try {
     const t = await sequelize.transaction(); 
 
-    const { pageNumber = 1, pageSize = 10, profile, experience } = req.query;
+    const { pageNumber = 1, pageSize = 10, profile, experience,result_status } = req.query;
     const page = parseInt(pageNumber, 10) || 1;
     const limit = parseInt(pageSize, 10) || 10;
     const offset = (page - 1) * limit;
@@ -365,6 +365,17 @@ exports.get_face_to_face_round_leads = async (req, res) => {
     }
 
    
+    if (result_status) {
+        const validStatuses = ['selected', 'rejected', 'pending', 'on hold'];
+        if (validStatuses.includes(result_status)) {
+            whereClause += ` AND i.face_to_face_result = '${result_status}'`;
+        } else {
+            return res.status(400).json({
+                type: 'error',
+                message: 'Invalid face_to_face_result filter value.'
+            });
+        }
+    }
        
         const totalRecordsQuery = `
             SELECT COUNT(*) as totalRecords
@@ -427,17 +438,66 @@ exports.get_face_to_face_round_leads = async (req, res) => {
 
 
 exports.get_final_round_leads = async (req, res) => {
-    const t = await sequelize.transaction(); // Ensure you start a transaction
+    const t = await sequelize.transaction();
+    
     try {
-        const all_technical_round_leads = `
-            SELECT il.id, il.name, il.experience, il.profile,il.assigned_test_series,il.expected_salary, i.final_result, i.id AS interview_id,l.id AS language_id
+        const { pageNumber = 1, pageSize = 10, profile, experience, result_status } = req.query;
+        const page = parseInt(pageNumber, 10) || 1;
+        const limit = parseInt(pageSize, 10) || 10;
+        const offset = (page - 1) * limit;
+
+      
+        let whereClause = "WHERE in_round = 4";
+
+        if (profile) {
+            whereClause += ` AND il.profile LIKE '%${profile}%'`;
+        }
+
+        if (experience) {
+            whereClause += ` AND il.experience = ${experience}`;
+        }
+
+        if (result_status) {
+            const validStatuses = ['selected', 'rejected', 'pending', 'on hold'];
+            if (validStatuses.includes(result_status)) {
+                whereClause += ` AND i.final_result = '${result_status}'`;
+            } else {
+                return res.status(400).json({
+                    type: 'error',
+                    message: 'Invalid final result filter value.'
+                });
+            }
+        }
+
+       
+        const countQuery = `
+            SELECT COUNT(*) as totalRecords 
+            FROM interview_leads il 
+            JOIN interviews i ON i.lead_id = il.id 
+            ${whereClause}
+        `;
+
+        const totalRecordsResult = await sequelize.query(countQuery, {
+            type: sequelize.QueryTypes.SELECT,
+            transaction: t
+        });
+
+        const totalRecords = totalRecordsResult[0].totalRecords;
+        const totalPages = Math.ceil(totalRecords / limit);
+
+     
+        const all_final_round_leads = `
+            SELECT il.id, il.name, il.experience, il.profile, 
+                   il.assigned_test_series, il.expected_salary, 
+                   i.final_result, i.id AS interview_id, l.id AS language_id
             FROM interview_leads il
             JOIN interviews i ON i.lead_id = il.id
             JOIN languages l ON l.language = il.profile
-            WHERE in_round = 4
+            ${whereClause}
+            LIMIT ${limit} OFFSET ${offset}
         `;
 
-        const results = await sequelize.query(all_technical_round_leads, {
+        const results = await sequelize.query(all_final_round_leads, {
             type: sequelize.QueryTypes.SELECT,
             transaction: t
         });
@@ -449,9 +509,17 @@ exports.get_final_round_leads = async (req, res) => {
 
         await t.commit();
 
-        return res.status(200).json({ type: "success", data: results });
+        return res.status(200).json({
+            type: "success",
+            data: results,
+            currentPage: page,
+            totalPages: totalPages,
+            totalRecords: totalRecords,
+            pageSize: limit
+        });
     } catch (error) {
         await t.rollback();
-        return res.status(400).json({ type: "error", message: error.message });
+        console.log('ERROR::', error);
+        return res.status(500).json({ type: "error", message: error.message });
     }
 };

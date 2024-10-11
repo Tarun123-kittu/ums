@@ -608,7 +608,7 @@ exports.delete_objective = async (req, res) => {
         return res.status(200).json({ type: "success", message: "Question and its options were successfully deleted" });
 
     } catch (error) {
-       
+
         await transaction.rollback();
         console.error("Error deleting question and options:", error);
         return res.status(500).json({ type: "error", message: "An error occurred while deleting the question and its options" });
@@ -618,29 +618,40 @@ exports.delete_objective = async (req, res) => {
 
 
 
-exports.get_all_technical_round_leads = async (req, res) => {   
+exports.get_all_technical_round_leads = async (req, res) => {
     try {
         const t = await sequelize.transaction();
-        const { page = 1, limit = 10, profile, experience } = req.query;
+        const { page = 1, limit = 10, profile, experience, result_status } = req.query;
 
-     
+
         const offset = (page - 1) * limit;
 
-      
-        let whereClause = "WHERE in_round = 2"; 
 
-        
+        let whereClause = "WHERE in_round = 2";
+
+
         if (profile) {
             whereClause += ` AND il.profile LIKE '%${profile}%'`;
         }
 
-       
+
         if (experience) {
             whereClause += ` AND il.experience = ${experience}`;
         }
 
 
-       
+        if (result_status) {
+            const validStatuses = ['selected', 'rejected', 'pending', 'on hold'];
+            if (validStatuses.includes(result_status)) {
+                whereClause += ` AND i.technical_round_result = '${result_status}'`;
+            } else {
+                return res.status(400).json({
+                    type: 'error',
+                    message: 'Invalid technical_round_result filter value.'
+                });
+            }
+        }
+
         const total_records_query = `
             SELECT COUNT(*) as total
             FROM interview_leads il
@@ -656,7 +667,7 @@ exports.get_all_technical_round_leads = async (req, res) => {
         const totalRecords = totalCountResult[0].total;
         const totalPages = Math.ceil(totalRecords / limit);
 
-       
+
         const all_technical_round_leads = `
             SELECT il.id, il.name, il.experience, il.profile, i.technical_round_result, i.id AS interview_id
             FROM interview_leads il

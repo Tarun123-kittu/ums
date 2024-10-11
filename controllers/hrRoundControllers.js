@@ -224,27 +224,37 @@ exports.get_hr_assign_questions_to_lead = async (req, res) => {
 
 exports.get_hr_round_candidate = async (req, res) => {
     try {
-    const { pageNumber = 1, pageSize = 10, profile, experience } = req.query;
-    const page = parseInt(pageNumber, 10) || 1;
-    const limit = parseInt(pageSize, 10) || 10;
+        const { pageNumber = 1, pageSize = 10, profile, experience, result_status } = req.query;
+        const page = parseInt(pageNumber, 10) || 1;
+        const limit = parseInt(pageSize, 10) || 10;
+        const offset = (page - 1) * limit;
 
-    const offset = (page - 1) * limit;
+        let whereClause = "WHERE i.in_round = 1";
+
+        
+        if (profile) {
+            whereClause += ` AND i.profile LIKE '%${profile}%'`;
+        }
+
+      
+        if (experience) {
+            whereClause += ` AND i.experience = ${experience}`;
+        }
 
   
-    let whereClause = "WHERE i.in_round = 1";
+        if (result_status) {
+            const validStatuses = ['selected', 'rejected', 'pending', 'on hold'];
+            if (validStatuses.includes(result_status)) {
+                whereClause += ` AND iv.hr_round_result = '${result_status}'`;
+            } else {
+                return res.status(400).json({
+                    type: 'error',
+                    message: 'Invalid hr_round_result filter value.'
+                });
+            }
+        }
 
  
-    if (profile) {
-        whereClause += ` AND i.profile LIKE '%${profile}%'`;
-    }
-
-   
-    if (experience) {
-        whereClause += ` AND i.experience = ${experience}`;
-    }
-
-  
-       
         const countQuery = `SELECT COUNT(*) as totalRecords 
                             FROM interview_leads i 
                             JOIN interviews iv ON iv.lead_id = i.id 
@@ -257,7 +267,7 @@ exports.get_hr_round_candidate = async (req, res) => {
         const totalRecords = totalRecordsResult[0].totalRecords;
         const totalPages = Math.ceil(totalRecords / limit);
 
-        
+      
         const get_hr_round_leads = `SELECT 
                                         i.id, 
                                         i.name, 
@@ -276,12 +286,10 @@ exports.get_hr_round_candidate = async (req, res) => {
             type: sequelize.QueryTypes.SELECT,
         });
 
-       
         if (!all_hr_round_candidates.length) {
             return res.status(200).json({ type: "success", message: "No candidate found" });
         }
 
-        
         return res.status(200).json({
             type: "success",
             data: all_hr_round_candidates,
@@ -291,10 +299,11 @@ exports.get_hr_round_candidate = async (req, res) => {
             pageSize: limit
         });
     } catch (error) {
-        console.log('ERROR::',error)
-        return res.status(500).json(errorResponse(error.message))
+        console.log('ERROR::', error);
+        return res.status(500).json(errorResponse(error.message));
     }
 };
+
 
 
 
