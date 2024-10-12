@@ -92,15 +92,31 @@ exports.unmark_attendance = async (req, res) => {
 
 exports.get_attendances = async (req, res) => {
     try {
+        // Get page and limit from query parameters (default to page 1, limit 10 if not provided)
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+
         // Query to get all users who are not disabled
-        const get_all_users = `SELECT id, username, name FROM users WHERE is_disabled = 0`;
+        const get_all_users = `SELECT id, username, name FROM users WHERE is_disabled = 0 LIMIT :limit OFFSET :offset`;
         const is_users_fetched = await sequelize.query(get_all_users, {
+            replacements: { limit, offset },
             type: sequelize.QueryTypes.SELECT
         });
 
         if (!is_users_fetched || is_users_fetched.length === 0) {
             return res.status(400).json({ type: "error", message: "No users found" });
         }
+
+        // Query to get total number of users
+        const total_users_query = `SELECT COUNT(*) AS total_users FROM users WHERE is_disabled = 0`;
+        const total_users_result = await sequelize.query(total_users_query, {
+            type: sequelize.QueryTypes.SELECT
+        });
+        const totalUsers = total_users_result[0].total_users;
+
+        // Calculate total pages
+        const totalPages = Math.ceil(totalUsers / limit);
 
         // Array to store all attendance records
         let all_user_attendances = [];
@@ -160,7 +176,10 @@ exports.get_attendances = async (req, res) => {
 
         return res.status(200).json({
             type: "success",
-            data: all_user_attendances // Single array with all attendance records
+            data: all_user_attendances,
+            currentPage: page,
+            totalPages: totalPages,
+            totalRecords: totalUsers
         });
 
     } catch (error) {
@@ -171,17 +190,25 @@ exports.get_attendances = async (req, res) => {
     }
 };
 
+
 exports.get_attendance_report = async (req, res) => {
     try {
-        const { name, month, year } = req.query;
+        const { name, month, year, page = 1, limit = 10 } = req.query;
+        const offset = (parseInt(page) - 1) * parseInt(limit);
 
+        // Build the base query for fetching users
         let get_all_users_query = `SELECT id FROM users WHERE is_disabled = 0`;
         let replacements = [];
 
+        // If a name filter is provided, add it to the query
         if (name) {
             get_all_users_query += ` AND name LIKE ?`;
             replacements.push(`%${name}%`);
         }
+
+        // Fetch all eligible users (with pagination)
+        get_all_users_query += ` LIMIT ? OFFSET ?`;
+        replacements.push(parseInt(limit), offset);
 
         const is_users_fetched = await sequelize.query(get_all_users_query, {
             replacements: replacements,
@@ -189,11 +216,29 @@ exports.get_attendance_report = async (req, res) => {
         });
 
         if (!is_users_fetched || is_users_fetched.length === 0) {
-            return res.status(400).json(errorResponse("No users found."));
+            return res.status(400).json({ type: "error", message: "No users found." });
         }
+
+        // Query to get the total number of users (for calculating total pages)
+        let total_users_query = `SELECT COUNT(*) AS total_users FROM users WHERE is_disabled = 0`;
+        let totalReplacements = [];
+
+        if (name) {
+            total_users_query += ` AND name LIKE ?`;
+            totalReplacements.push(`%${name}%`);
+        }
+
+        const total_users_result = await sequelize.query(total_users_query, {
+            replacements: totalReplacements,
+            type: sequelize.QueryTypes.SELECT
+        });
+
+        const totalUsers = total_users_result[0].total_users;
+        const totalPages = Math.ceil(totalUsers / limit);
 
         let all_user_attendances = [];
 
+        // Fetch attendance records for each user
         await Promise.all(is_users_fetched.map(async (user) => {
             const userId = user?.id;
 
@@ -224,6 +269,7 @@ exports.get_attendance_report = async (req, res) => {
             `;
             let attendance_replacements = [userId];
 
+            // Apply year and/or month filter if provided
             if (year && month) {
                 get_attendance_report_query += ` AND YEAR(a.date) = ? AND MONTH(a.date) = ?`;
                 attendance_replacements.push(parseInt(year), parseInt(month));
@@ -240,7 +286,7 @@ exports.get_attendance_report = async (req, res) => {
                 type: sequelize.QueryTypes.SELECT
             });
 
-            // Concatenate the results into a single array
+            // Add the attendance records to the overall array
             if (attendance_records.length) {
                 all_user_attendances = all_user_attendances.concat(attendance_records);
             }
@@ -248,14 +294,18 @@ exports.get_attendance_report = async (req, res) => {
 
         return res.status(200).json({
             type: "success",
-            data: all_user_attendances
+            data: all_user_attendances,
+            currentPage: parseInt(page),
+            totalPages: totalPages,
+            totalRecords: totalUsers
         });
 
     } catch (error) {
-        console.log("ERROR::", error.message)
-        return res.status(400).json(errorResponse(error.message));
+        console.log("ERROR::", error.message);
+        return res.status(400).json({ type: "error", message: error.message });
     }
-}
+};
+
 
 exports.mark_break = async (req, res) => {
     const userId = req.result.user_id;

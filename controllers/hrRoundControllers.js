@@ -27,14 +27,14 @@ exports.hr_round = async (req, res) => {
     try {
         const { lead_id, responses } = req.body;
 
-      
+
         if (!lead_id || !Array.isArray(responses)) {
             return res.status(400).json({ error: 'Invalid input data' });
         }
 
         transaction = await sequelize.transaction();
 
-        
+
         const [leads] = await sequelize.query(
             'SELECT * FROM interview_leads WHERE id = ?',
             {
@@ -48,7 +48,7 @@ exports.hr_round = async (req, res) => {
             return res.status(404).json({ error: 'Lead not found' });
         }
 
-   
+
         const [interviewResult] = await sequelize.query(
             'INSERT INTO Interviews (lead_id, interview_link_click_count, hr_round_result, technical_round_result, createdAt, updatedAt) VALUES (?, ?, ?, ?, NOW(), NOW())',
             {
@@ -58,13 +58,13 @@ exports.hr_round = async (req, res) => {
             }
         );
 
-        const interview_id = interviewResult;  
+        const interview_id = interviewResult;
 
-      
+
         for (const response of responses) {
             const { questionid, answer } = response;
 
-         
+
             const [question] = await sequelize.query(
                 'SELECT * FROM HR_Round_Questions WHERE id = ?',
                 {
@@ -79,7 +79,7 @@ exports.hr_round = async (req, res) => {
                 return res.status(404).json({ error: `Question with ID ${questionid} not found` });
             }
 
-           
+
             await sequelize.query(
                 'INSERT INTO HR_Rounds (interview_id, lead_id, questionid, answer) VALUES (?, ?, ?, ?)',
                 {
@@ -90,7 +90,7 @@ exports.hr_round = async (req, res) => {
             );
         }
 
-        
+
         const update_interview_round = `UPDATE interview_leads SET in_round = 1 WHERE id = ?`;
         const is_row_updated = await sequelize.query(
             update_interview_round,
@@ -101,13 +101,13 @@ exports.hr_round = async (req, res) => {
             }
         );
 
-       
+
         await transaction.commit();
 
         return res.status(200).json({ message: 'HR round completed successfully', interview_id });
 
     } catch (error) {
-       
+
         if (transaction) await transaction.rollback();
         console.error("ERROR::", error);
         return res.status(500).json({ error: 'An error occurred while processing the HR round' });
@@ -188,9 +188,6 @@ exports.update_lead_response = async (req, res) => {
     }
 }
 
-
-
-
 exports.get_hr_assign_questions_to_lead = async (req, res) => {
     const { count } = req.query;
     const limit = parseInt(count, 10) || 10;
@@ -218,10 +215,6 @@ exports.get_hr_assign_questions_to_lead = async (req, res) => {
     }
 };
 
-
-
-
-
 exports.get_hr_round_candidate = async (req, res) => {
     try {
         const { pageNumber = 1, pageSize = 10, profile, experience, result_status } = req.query;
@@ -231,17 +224,17 @@ exports.get_hr_round_candidate = async (req, res) => {
 
         let whereClause = "WHERE i.in_round = 1";
 
-        
+
         if (profile) {
             whereClause += ` AND i.profile LIKE '%${profile}%'`;
         }
 
-      
+
         if (experience) {
             whereClause += ` AND i.experience = ${experience}`;
         }
 
-  
+
         if (result_status) {
             const validStatuses = ['selected', 'rejected', 'pending', 'on hold'];
             if (validStatuses.includes(result_status)) {
@@ -254,7 +247,7 @@ exports.get_hr_round_candidate = async (req, res) => {
             }
         }
 
- 
+
         const countQuery = `SELECT COUNT(*) as totalRecords 
                             FROM interview_leads i 
                             JOIN interviews iv ON iv.lead_id = i.id 
@@ -267,7 +260,7 @@ exports.get_hr_round_candidate = async (req, res) => {
         const totalRecords = totalRecordsResult[0].totalRecords;
         const totalPages = Math.ceil(totalRecords / limit);
 
-      
+
         const get_hr_round_leads = `SELECT 
                                         i.id, 
                                         i.name, 
@@ -304,12 +297,6 @@ exports.get_hr_round_candidate = async (req, res) => {
     }
 };
 
-
-
-
-
-
-
 exports.get_hr_round_assign_questions_to_lead = async (req, res) => {
     const { interview_id, lead_id } = req.query
     if (!interview_id || !lead_id) return res.status(400).json({ type: "error", message: "interview id and lead id is required to perform this action" })
@@ -337,9 +324,6 @@ exports.get_hr_round_assign_questions_to_lead = async (req, res) => {
     }
 }
 
-
-
-
 exports.update_key_point = async (req, res) => {
     const { question_id, lead_id, interview_id, key_point } = req.body;
 
@@ -365,7 +349,7 @@ exports.update_key_point = async (req, res) => {
             type: sequelize.QueryTypes.UPDATE
         });
 
-        if (result === 0) {  return res.status(404).json({ type: "error", message: "No matching record found to update" }); }
+        if (result === 0) { return res.status(404).json({ type: "error", message: "No matching record found to update" }); }
 
         return res.status(200).json({ type: "success", message: "Key point updated successfully" });
 
@@ -374,10 +358,6 @@ exports.update_key_point = async (req, res) => {
         return res.status(500).json({ type: "error", message: error?.message });
     }
 };
-
-
-
-
 
 exports.sendLeadInterviewLink = async (req, res) => {
     const t = await sequelize.transaction();

@@ -264,8 +264,9 @@ exports.get_questions_answers = async (req, res) => {
 
         const query = `
                     SELECT q.id AS question_id, q.question, q.question_type, 
-                o.id AS option_id, o.option, a.correct_option, a.answer 
+                o.id AS option_id, o.option, a.correct_option, a.answer,ts.createdBy
             FROM technical_round_questions q 
+            JOIN test_series ts ON ts.id = q.test_series_id
             LEFT JOIN answers a ON q.id = a.question_id 
             LEFT JOIN options o ON q.id = o.question_id AND q.question_type = 'objective' -- Join only for objective questions
             WHERE q.test_series_id = :series_id 
@@ -290,7 +291,8 @@ exports.get_questions_answers = async (req, res) => {
                     question_type: row.question_type,
                     options: [],
                     answer: row.answer,
-                    correct_answer: row.correct_option || null
+                    correct_answer: row.correct_option || null,
+                    createdBy: row.createdBy
                 };
             }
 
@@ -885,7 +887,6 @@ exports.check_lead_and_token = async (req, res) => {
 };
 
 exports.start_test = async (req, res) => {
-    s
     const transaction = await sequelize.transaction();
     try {
         const { lead_id } = req.query;
@@ -1076,7 +1077,7 @@ exports.get_lead_technical_response = async (req, res) => {
            SELECT tr.question_id, tr.answer, trq.question_type,tr.answer_status, i.id AS interview_id
             FROM technical_round tr
             JOIN technical_round_questions trq ON trq.id = tr.question_id
-            JOIN interviews i ON i.id = tr.lead_id
+            JOIN interviews i ON i.lead_id = tr.lead_id
             WHERE tr.lead_id = :lead_id;
 
         `;
@@ -1084,6 +1085,7 @@ exports.get_lead_technical_response = async (req, res) => {
             replacements: { lead_id },
             type: sequelize.QueryTypes.SELECT
         });
+
 
         if (responses.length === 0) {
             return res.status(404).json({ message: 'No responses found for this lead' });

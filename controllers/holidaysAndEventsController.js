@@ -117,28 +117,43 @@ exports.update_holidayOrEvent = async (req, res) => {
 exports.get_all_holidaysOrEvents = async (req, res) => {
     try {
         const year = parseInt(req.query.year, 10) || new Date().getFullYear();
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 10;
+        const offset = (page - 1) * limit;
 
-        if (isNaN(year) || year <= 0) { return res.status(400).json(errorResponse("Invalid year provided.")); }
+        if (isNaN(year) || year <= 0) {
+            return res.status(400).json({ type: "error", message: "Invalid year provided." });
+        }
 
+        // Modified query to include pagination and total count
         const query = `
         SELECT *, COUNT(*) OVER() AS total_count
         FROM holidays_and_events
         WHERE YEAR(date) = :year
+        LIMIT :limit OFFSET :offset
         `;
 
         const results = await sequelize.query(query, {
-            replacements: { year },
+            replacements: { year, limit, offset },
             type: sequelize.QueryTypes.SELECT,
         });
 
         const totalCount = results.length > 0 ? results[0].total_count : 0;
+        const totalPages = Math.ceil(totalCount / limit);
 
-        return res.status(200).json({ type: "success", eventsOrHolidays: results, totalCount });
+        return res.status(200).json({
+            type: "success",
+            eventsOrHolidays: results,
+            currentPage: page,
+            totalPages: totalPages,
+            totalCount: totalCount,
+        });
     } catch (error) {
         console.error("ERROR::", error);
-        return res.status(500).json(errorResponse(error.message))
+        return res.status(500).json({ type: "error", message: error.message });
     }
-}
+};
+
 
 exports.delete_holidayOrEvent = async (req, res) => {
     try {
@@ -177,24 +192,11 @@ exports.get_holidayOrEvent = async (req, res) => {
     }
 }
 
-
-
-
-
-
-
-
 exports.get_events_and_birthdays = async (req, res) => {
     try {
-        const { month, year } = req.query;
-        const currentYear = new Date().getFullYear();
-        const currentMonth = new Date().getMonth() + 1;
+        const currentYear = new Date().getFullYear(); // Get the current year
 
-
-        const selectedMonth = month ? parseInt(month) : currentMonth;
-        const selectedYear = year ? parseInt(year) : currentYear;
-
-
+        // Query to fetch holidays and events for the current year
         const getHolidaysAndEventsQuery = `
             SELECT 
                 occasion_name, 
@@ -204,78 +206,123 @@ exports.get_events_and_birthdays = async (req, res) => {
             FROM 
                 holidays_and_events 
             WHERE 
-                MONTH(date) = :selectedMonth AND YEAR(date) = :selectedYear
+                YEAR(date) = :currentYear
             ORDER BY date ASC
         `;
 
+        // Query to fetch all birthdays and joining dates
+        const getAllBirthdaysAndJoiningQuery = `
+                SELECT 
+            name, 
+            DATE_FORMAT(dob, '%Y-%m-%d') as dob, 
+            DATE_FORMAT(doj, '%Y-%m-%d') as doj
+        FROM 
+            users
+        WHERE 
+            is_disabled = 0
+        ORDER BY 
+            dob ASC, doj ASC;
 
-        const getBirthdaysQuery = `
-            SELECT 
-                name, 
-                DATE_FORMAT(dob, '%Y-%m-%d') as dob 
-            FROM 
-                users 
-            WHERE 
-                MONTH(dob) = :selectedMonth AND YEAR(dob) = :selectedYear
-            ORDER BY dob ASC
         `;
 
         const t = await sequelize.transaction();
 
-
+        // Fetch holidays and events for the current year
         const [holidaysAndEvents] = await sequelize.query(getHolidaysAndEventsQuery, {
-            replacements: { selectedMonth, selectedYear },
+            replacements: { currentYear },
             transaction: t,
         });
 
-        const [birthdays] = await sequelize.query(getBirthdaysQuery, {
-            replacements: { selectedMonth, selectedYear },
+        // Fetch all birthdays and joining dates
+        const [allBirthdaysAndJoining] = await sequelize.query(getAllBirthdaysAndJoiningQuery, {
             transaction: t,
         });
 
         await t.commit();
 
-
         const combinedResults = [];
+        let idCounter = 1; // Initialize id counter
 
-
+        // Combine holidays and events
         holidaysAndEvents.forEach(event => {
             combinedResults.push({
-                name: event.occasion_name,
-                description: event.occasion_description || '',
-                date: event.date,
-                type: event.occasion_type,
-                color: event.occasion_type === 'holiday' ? 'green' : 'red'
+                id: idCounter++,
+                title: event.occasion_name,
+                start: new Date(currentYear, new Date(event.date).getMonth(), new Date(event.date).getDate()),
+                end: new Date(currentYear, new Date(event.date).getMonth(), new Date(event.date).getDate(), 23, 59), // Default to end of the day
+                color: event.occasion_type === 'holiday' ? '#28B463' : '#E74C3C', // Green for holidays, red for events
             });
         });
 
+        // Combine all birthdays and joining anniversaries
+        allBirthdaysAndJoining.forEach(entry => {
+            const birthdayDate = new Date(entry.dob);
+            const joiningDate = new Date(entry.doj);
 
-        birthdays.forEach(birthday => {
-            combinedResults.push({
-                name: birthday.name,
-                description: 'Birthday',
-                date: birthday.dob,
-                type: 'birthday',
-                color: 'blue'
-            });
+            // Replace the year with the current year for birthdays
+            if (entry.dob) {
+                birthdayDate.setFullYear(currentYear);
+                combinedResults.push({
+                    id: idCounter++,
+                    title: `${entry.name}'s Birthday`,
+                    start: new Date(currentYear, birthdayDate.getMonth(), birthdayDate.getDate()),
+                    end: new Date(currentYear, birthdayDate.getMonth(), birthdayDate.getDate(), 23, 59), // Default to end of the day
+                    color: '#3498DB', // Blue for birthdays
+                });
+            }
+
+            // Replace the year with the current year for joining anniversaries
+            if (entry.doj) {
+                joiningDate.setFullYear(currentYear);
+                combinedResults.push({
+                    id: idCounter++,
+                    title: `${entry.name}'s Joining Anniversary`,
+                    start: new Date(currentYear, joiningDate.getMonth(), joiningDate.getDate()),
+                    end: new Date(currentYear, joiningDate.getMonth(), joiningDate.getDate(), 23, 59), // Default to end of the day
+                    color: '#F39C12', // Orange for joining anniversaries
+                });
+            }
         });
 
+        // Function to add all Saturdays and Sundays as weekend holidays
+        const addWeekendHolidays = (year) => {
+            let date = new Date(year, 0, 1); // Start from January 1st
 
-        if (combinedResults.length<1){return res.status(400).json(errorResponse(`No data retreived for the month- ${month} and year-${year}`))}
-        combinedResults.sort((a, b) => new Date(a.date) - new Date(b.date));
+            while (date.getFullYear() === year) {
+                const day = date.getDay();
 
-        
-            return res.status(200).json({
-                type: 'success',
-                data: combinedResults,
-                message: `Data for month ${selectedMonth} and year ${selectedYear} retrieved successfully.`
-            });
+                if (day === 0 || day === 6) { // 0 is Sunday, 6 is Saturday
+                    combinedResults.push({
+                        id: idCounter++,
+                        title: 'Weekend', // Unified title for both Saturday and Sunday
+                        start: new Date(date),
+                        end: new Date(date),
+                        color: '#28B463', // Green for weekend holidays
+                    });
+                }
+
+                date.setDate(date.getDate() + 1); // Move to the next day
+            }
+        };
+
+        // Add all weekends (Saturdays and Sundays) to the combined results
+        addWeekendHolidays(currentYear);
+
+        if (combinedResults.length < 1) {
+            return res.status(400).json(errorResponse(`No data retrieved.`));
+        }
+
+        // Sort the combined results by date
+        combinedResults.sort((a, b) => new Date(a.start) - new Date(b.start));
+
+        return res.status(200).json({
+            type: 'success',
+            data: combinedResults,
+            message: `Data retrieved successfully.`
+        });
 
     } catch (error) {
         console.log("ERROR::", error);
         return res.status(500).json(errorResponse(error.message));
     }
 };
-
-
-

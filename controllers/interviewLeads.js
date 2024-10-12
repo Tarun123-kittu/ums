@@ -227,6 +227,7 @@ exports.get_all_leads = async (req, res) => {
         const pageNumber = parseInt(page, 10) || 1;
         const pageSize = parseInt(limit, 10) || 10;
 
+        // Base query with in_round = 0 condition
         let baseQuery = `
             SELECT 
                 i.id, i.name, i.phone_number, i.email, i.gender, i.dob, 
@@ -235,10 +236,10 @@ exports.get_all_leads = async (req, res) => {
             FROM 
                 Interview_Leads i
             WHERE 
-                1 = 1
+                i.in_round = 0
         `;
 
-      
+        // Adding optional filters
         if (profile) {
             baseQuery += ` AND i.profile = :profile`;
         }
@@ -246,33 +247,39 @@ exports.get_all_leads = async (req, res) => {
             baseQuery += ` AND i.experience >= :experience`;
         }
 
-     
         baseQuery += ` ORDER BY i.createdAt DESC`;
 
-       
-        let countQuery = baseQuery.replace(
-            `SELECT i.id, i.name, i.phone_number, i.email, i.gender, i.dob, i.experience, i.current_salary, i.expected_salary, i.profile, i.last_company, i.state, i.house_address, i.in_round`,
-            'SELECT COUNT(*) AS total'
-        ).replace(` ORDER BY i.createdAt DESC`, ''); 
+        // Count query to calculate total leads with the same conditions
+        let countQuery = `
+            SELECT COUNT(*) AS total
+            FROM Interview_Leads i
+            WHERE i.in_round = 0
+        `;
 
-      
+        // Adding the same filters to the count query
+        if (profile) {
+            countQuery += ` AND i.profile = :profile`;
+        }
+        if (experience) {
+            countQuery += ` AND i.experience >= :experience`;
+        }
+
+        // Execute count query to get total items
         const [countResult] = await sequelize.query(countQuery, {
             replacements: { profile, experience },
         });
 
-    
         const totalItems = countResult.length > 0 ? countResult[0].total : 0;
 
-     
-        const totalPages = totalItems > 0 ? Math.ceil(totalItems / pageSize) : 1; 
+        // Calculate total pages
+        const totalPages = totalItems > 0 ? Math.ceil(totalItems / pageSize) : 1;
 
-       
+        // Calculate offset for pagination
         const offset = (pageNumber - 1) * pageSize;
 
- 
+        // Final data query with pagination
         const getAllLeadsQuery = `${baseQuery} LIMIT :limit OFFSET :offset`;
 
-  
         const [allLeads] = await sequelize.query(getAllLeadsQuery, {
             replacements: {
                 profile,
@@ -282,7 +289,6 @@ exports.get_all_leads = async (req, res) => {
             },
         });
 
-     
         if (allLeads.length < 1) {
             return res.status(200).json({
                 type: "success",
@@ -290,7 +296,7 @@ exports.get_all_leads = async (req, res) => {
             });
         }
 
-     
+        // Return the leads with pagination details
         return res.status(200).json({
             type: "success",
             message: "Data retrieved successfully.",
@@ -310,6 +316,8 @@ exports.get_all_leads = async (req, res) => {
         });
     }
 };
+
+
 
 exports.delete_lead = async (req, res) => {
     try {
@@ -344,39 +352,39 @@ exports.delete_lead = async (req, res) => {
 
 exports.get_face_to_face_round_leads = async (req, res) => {
     try {
-    const t = await sequelize.transaction(); 
+        const t = await sequelize.transaction();
 
-    const { pageNumber = 1, pageSize = 10, profile, experience,result_status } = req.query;
-    const page = parseInt(pageNumber, 10) || 1;
-    const limit = parseInt(pageSize, 10) || 10;
-    const offset = (page - 1) * limit;
+        const { pageNumber = 1, pageSize = 10, profile, experience, result_status } = req.query;
+        const page = parseInt(pageNumber, 10) || 1;
+        const limit = parseInt(pageSize, 10) || 10;
+        const offset = (page - 1) * limit;
 
-    
-    let whereClause = "WHERE in_round = 3";
 
-    
-    if (profile) {
-        whereClause += ` AND il.profile LIKE '%${profile}%'`;
-    }
+        let whereClause = "WHERE in_round = 3";
 
-    
-    if (experience) {
-        whereClause += ` AND il.experience = ${experience}`;
-    }
 
-   
-    if (result_status) {
-        const validStatuses = ['selected', 'rejected', 'pending', 'on hold'];
-        if (validStatuses.includes(result_status)) {
-            whereClause += ` AND i.face_to_face_result = '${result_status}'`;
-        } else {
-            return res.status(400).json({
-                type: 'error',
-                message: 'Invalid face_to_face_result filter value.'
-            });
+        if (profile) {
+            whereClause += ` AND il.profile LIKE '%${profile}%'`;
         }
-    }
-       
+
+
+        if (experience) {
+            whereClause += ` AND il.experience = ${experience}`;
+        }
+
+
+        if (result_status) {
+            const validStatuses = ['selected', 'rejected', 'pending', 'on hold'];
+            if (validStatuses.includes(result_status)) {
+                whereClause += ` AND i.face_to_face_result = '${result_status}'`;
+            } else {
+                return res.status(400).json({
+                    type: 'error',
+                    message: 'Invalid face_to_face_result filter value.'
+                });
+            }
+        }
+
         const totalRecordsQuery = `
             SELECT COUNT(*) as totalRecords
             FROM interview_leads il
@@ -392,7 +400,7 @@ exports.get_face_to_face_round_leads = async (req, res) => {
         const totalRecords = totalRecordsResult[0].totalRecords;
         const totalPages = Math.ceil(totalRecords / limit);
 
-     
+
         const all_technical_round_leads = `
             SELECT il.id, il.name, il.experience, il.profile, il.assigned_test_series, il.expected_salary, 
                    i.face_to_face_result, i.id AS interview_id, l.id AS language_id
@@ -408,15 +416,15 @@ exports.get_face_to_face_round_leads = async (req, res) => {
             transaction: t
         });
 
-      
+
         if (results.length === 0) {
             await t.rollback();
             return res.status(200).json({ type: "success", message: "No Lead Found" });
         }
 
-        await t.commit(); 
+        await t.commit();
 
-       
+
         return res.status(200).json({
             type: "success",
             data: results,
@@ -428,7 +436,7 @@ exports.get_face_to_face_round_leads = async (req, res) => {
             }
         });
     } catch (error) {
-        await t.rollback(); 
+        await t.rollback();
         return res.status(500).json(errorResponse(error.message))
     }
 };
@@ -439,14 +447,14 @@ exports.get_face_to_face_round_leads = async (req, res) => {
 
 exports.get_final_round_leads = async (req, res) => {
     const t = await sequelize.transaction();
-    
+
     try {
         const { pageNumber = 1, pageSize = 10, profile, experience, result_status } = req.query;
         const page = parseInt(pageNumber, 10) || 1;
         const limit = parseInt(pageSize, 10) || 10;
         const offset = (page - 1) * limit;
 
-      
+
         let whereClause = "WHERE in_round = 4";
 
         if (profile) {
@@ -469,7 +477,7 @@ exports.get_final_round_leads = async (req, res) => {
             }
         }
 
-       
+
         const countQuery = `
             SELECT COUNT(*) as totalRecords 
             FROM interview_leads il 
@@ -485,7 +493,7 @@ exports.get_final_round_leads = async (req, res) => {
         const totalRecords = totalRecordsResult[0].totalRecords;
         const totalPages = Math.ceil(totalRecords / limit);
 
-     
+
         const all_final_round_leads = `
             SELECT il.id, il.name, il.experience, il.profile, 
                    il.assigned_test_series, il.expected_salary, 

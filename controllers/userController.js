@@ -12,7 +12,7 @@ const {
 
 
 exports.create_user = async (req, res) => {
-  const t = await sequelize.transaction();  
+  const t = await sequelize.transaction();
 
   try {
     const {
@@ -22,21 +22,21 @@ exports.create_user = async (req, res) => {
       address, role, confirm_password
     } = req.body;
 
-    
+
     const checkEmailQuery = `SELECT * FROM users WHERE email = ?`;
     const [existingUser] = await sequelize.query(checkEmailQuery, {
       replacements: [email],
       type: sequelize.QueryTypes.SELECT,
-      transaction: t 
+      transaction: t
     });
 
     if (existingUser) {
-      await t.rollback();  
+      await t.rollback();
       return res.status(400).json(errorResponse("Email already exists. Please use another email."));
     }
 
     if (confirm_password !== password) {
-      await t.rollback();  
+      await t.rollback();
       return res.status(400).json(errorResponse("Password and confirm password do not match."));
     }
 
@@ -187,6 +187,7 @@ exports.login = async (req, res) => {
       message: "Logged in successfully",
       token,
       roles,
+      id: user_id
     });
 
   } catch (error) {
@@ -377,9 +378,10 @@ exports.get_employee_details = async (req, res) => {
 };
 
 exports.get_employees = async (req, res) => {
-  const { name, status } = req.query;
+  const { name, status, limit = 10, page } = req.query; // default limit is 10, page is 1
 
   try {
+    // Base query for getting employees
     let get_all_employee_query = `
       SELECT 
         id, name, username, email, mobile, emergency_contact_relationship, emergency_contact_name,
@@ -391,18 +393,48 @@ exports.get_employees = async (req, res) => {
       WHERE is_disabled = false
     `;
 
+    // Base query for counting total employees
+    let count_query = `
+      SELECT COUNT(*) AS total 
+      FROM users 
+      WHERE is_disabled = false
+    `;
+
     const replacements = {};
 
+    // Add filters if any
     if (name) {
       get_all_employee_query += ` AND name LIKE :name`;
+      count_query += ` AND name LIKE :name`;
       replacements.name = `%${name}%`;
     }
 
     if (status) {
       get_all_employee_query += ` AND status = :status`;
+      count_query += ` AND status = :status`;
       replacements.status = status;
     }
 
+    // Calculate offset for pagination
+    const offset = (page - 1) * limit;
+    get_all_employee_query += ` LIMIT :limit OFFSET :offset`;
+
+    // Add pagination parameters to replacements
+    replacements.limit = parseInt(limit, 10);
+    replacements.offset = parseInt(offset, 10);
+
+    // Execute the count query to get the total number of employees
+    const totalCountResult = await sequelize.query(count_query, {
+      replacements,
+      type: sequelize.QueryTypes.SELECT,
+    });
+
+    const totalEmployees = totalCountResult[0].total;
+
+    // Calculate total pages dynamically based on limit and total results
+    const totalPages = Math.ceil(totalEmployees / limit);
+
+    // Execute the employee query to get paginated data
     const employee_details = await sequelize.query(get_all_employee_query, {
       replacements,
       type: sequelize.QueryTypes.SELECT,
@@ -415,9 +447,22 @@ exports.get_employees = async (req, res) => {
       });
     }
 
+    // Check if requested page exceeds total available pages
+    if (page > totalPages) {
+      return res.status(400).json({
+        type: "error",
+        message: `Page ${page} exceeds total number of pages (${totalPages}).`
+      });
+    }
+
+    // Return response with employee data and dynamic pagination info
     return res.status(200).json({
       type: "success",
       data: employee_details,
+      total_pages: totalPages,
+      current_page: parseInt(page, 10),
+      total_employees: totalEmployees,
+      limit: parseInt(limit, 10),
     });
   } catch (error) {
     return res.status(400).json({
@@ -426,6 +471,7 @@ exports.get_employees = async (req, res) => {
     });
   }
 };
+
 
 exports.delete_employee = async (req, res) => {
   const { id } = req.params;
