@@ -326,3 +326,131 @@ exports.get_events_and_birthdays = async (req, res) => {
         return res.status(500).json(errorResponse(error.message));
     }
 };
+
+exports.get_current_and_next_month_events = async (req, res) => {
+    try {
+        const currentYear = new Date().getFullYear(); // Get the current year
+        const currentMonth = new Date().getMonth(); // Get the current month (0-based index)
+        const nextMonth = (currentMonth + 1) % 12; // Calculate next month (handling December wrap-around)
+
+        // Query to fetch holidays and events for the current year
+        const getHolidaysAndEventsQuery = `
+            SELECT 
+                occasion_name, 
+                occasion_type, 
+                occasion_description, 
+                DATE_FORMAT(date, '%Y-%m-%d') as date 
+            FROM 
+                holidays_and_events 
+            WHERE 
+                YEAR(date) = :currentYear
+            ORDER BY date ASC
+        `;
+
+        // Query to fetch all birthdays and joining dates
+        const getAllBirthdaysAndJoiningQuery = `
+            SELECT 
+                name, 
+                DATE_FORMAT(dob, '%Y-%m-%d') as dob, 
+                DATE_FORMAT(doj, '%Y-%m-%d') as doj
+            FROM 
+                users
+            WHERE 
+                is_disabled = 0
+            ORDER BY 
+                dob ASC, doj ASC;
+        `;
+
+        const t = await sequelize.transaction();
+
+        // Fetch holidays and events for the current year
+        const [holidaysAndEvents] = await sequelize.query(getHolidaysAndEventsQuery, {
+            replacements: { currentYear },
+            transaction: t,
+        });
+
+        // Fetch all birthdays and joining dates
+        const [allBirthdaysAndJoining] = await sequelize.query(getAllBirthdaysAndJoiningQuery, {
+            transaction: t,
+        });
+
+        await t.commit();
+
+        const currentMonthResults = [];
+        const nextMonthResults = [];
+        let idCounter = 1; // Initialize id counter
+
+        // Combine holidays and events
+        holidaysAndEvents.forEach(event => {
+            const eventDate = new Date(event.date);
+            const month = eventDate.getMonth();
+
+            if (month === currentMonth || month === nextMonth) {
+                currentMonthResults.push({
+                    id: idCounter++,
+                    title: event.occasion_name,
+                    start: new Date(currentYear, eventDate.getMonth(), eventDate.getDate()),
+                    end: new Date(currentYear, eventDate.getMonth(), eventDate.getDate(), 23, 59), // Default to end of the day
+                    color: event.occasion_type === 'holiday' ? '#28B463' : '#E74C3C', // Green for holidays, red for events
+                });
+            }
+        });
+
+        // Combine all birthdays and joining anniversaries
+        allBirthdaysAndJoining.forEach(entry => {
+            const birthdayDate = new Date(entry.dob);
+            const joiningDate = new Date(entry.doj);
+
+            // Replace the year with the current year for birthdays
+            if (entry.dob) {
+                birthdayDate.setFullYear(currentYear);
+                const birthdayEvent = {
+                    id: idCounter++,
+                    title: `${entry.name}'s Birthday`,
+                    start: new Date(currentYear, birthdayDate.getMonth(), birthdayDate.getDate()),
+                    end: new Date(currentYear, birthdayDate.getMonth(), birthdayDate.getDate(), 23, 59), // Default to end of the day
+                    color: '#3498DB', // Blue for birthdays
+                };
+
+                if (birthdayDate.getMonth() === currentMonth) {
+                    currentMonthResults.push(birthdayEvent);
+                } else if (birthdayDate.getMonth() === nextMonth) {
+                    nextMonthResults.push(birthdayEvent);
+                }
+            }
+
+            // Replace the year with the current year for joining anniversaries
+            if (entry.doj) {
+                joiningDate.setFullYear(currentYear);
+                const joiningEvent = {
+                    id: idCounter++,
+                    title: `${entry.name}'s Anniversary`,
+                    start: new Date(currentYear, joiningDate.getMonth(), joiningDate.getDate()),
+                    end: new Date(currentYear, joiningDate.getMonth(), joiningDate.getDate(), 23, 59), // Default to end of the day
+                    color: '#F39C12', // Orange for joining anniversaries
+                };
+
+                if (joiningDate.getMonth() === currentMonth) {
+                    currentMonthResults.push(joiningEvent);
+                } else if (joiningDate.getMonth() === nextMonth) {
+                    nextMonthResults.push(joiningEvent);
+                }
+            }
+        });
+
+        // Return the results for the current and next month
+        return res.status(200).json({
+            type: 'success',
+            data: {
+                currentMonth: currentMonthResults,
+                nextMonth: nextMonthResults,
+            },
+            message: `Data retrieved successfully.`
+        });
+
+    } catch (error) {
+        console.log("ERROR::", error);
+        return res.status(500).json(errorResponse(error.message));
+    }
+};
+

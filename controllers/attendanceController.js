@@ -190,7 +190,6 @@ exports.get_attendances = async (req, res) => {
     }
 };
 
-
 exports.get_attendance_report = async (req, res) => {
     try {
         const { name, month, year, page = 1, limit = 10 } = req.query;
@@ -305,7 +304,6 @@ exports.get_attendance_report = async (req, res) => {
         return res.status(400).json({ type: "error", message: error.message });
     }
 };
-
 
 exports.mark_break = async (req, res) => {
     const userId = req.result.user_id;
@@ -566,6 +564,22 @@ exports.get_user_today_attendance = async (req, res) => {
         });
     } catch (error) {
         return res.status(500).json(errorResponse(error.message));
+    }
+}
+
+exports.get_all_present_employee = async (req, res) => {
+    try {
+        const all_present_employees_query = `SELECT COUNT(*) AS presentEmployees
+                                            FROM attendances 
+                                            WHERE in_time IS NOT NULL 
+                                            AND DATE(createdAt) = CURDATE()`;
+        const [total_present_employees] = await sequelize.query(all_present_employees_query, {
+            type: sequelize.QueryTypes.SELECT
+        })
+
+        return res.status(200).json({ type: "success", total_present_employees })
+    } catch (error) {
+        return res.status(400).json({ type: "error", message: error.message })
     }
 }
 

@@ -95,6 +95,7 @@ router.get("/get_all_holidaysOrEvents", authenticateToken, holidaysAndEventsCont
 router.delete("/delete_holidayOrEvent", authenticateToken, holidaysAndEventsController.delete_holidayOrEvent)
 router.get("/get_holiday_and_event", authenticateToken, holidaysAndEventsController.get_holidayOrEvent)
 router.get("/get_events_and_birthdays", authenticateToken, holidaysAndEventsController.get_events_and_birthdays)
+router.get("/get_current_and_next_month_events", authenticateToken, holidaysAndEventsController.get_current_and_next_month_events)
 
 
 
@@ -108,6 +109,7 @@ router.get("/get_attendances_report", authenticateToken, attendanceController.ge
 router.put("/mark_break", authenticateToken, attendanceController.mark_break)
 router.put("/unmark_break", authenticateToken, attendanceController.unmark_break)
 router.get("/get_user_today_attendance", authenticateToken, attendanceController.get_user_today_attendance)
+router.get("/get_all_present_employee", authenticateToken, attendanceController.get_all_present_employee)
 
 // leave routes
 router.post("/apply_leave", authenticateToken, validateLeaveRequest, leaveController.apply_leave)
