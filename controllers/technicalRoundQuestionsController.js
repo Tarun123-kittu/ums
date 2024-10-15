@@ -339,7 +339,7 @@ exports.get_objective_questions = async (req, res) => {
         const { question_id } = req.query;
         if (!question_id) return res.status(400).json({ type: "error", message: "Question id is required to perform this action" });
 
-        // SQL query to get question and options
+      
         const get_questions_answers = `
             SELECT 
                 q.question, 
@@ -357,18 +357,18 @@ exports.get_objective_questions = async (req, res) => {
                 q.id = ?
         `;
 
-        // Execute the query
+       
         const results = await sequelize.query(get_questions_answers, {
             replacements: [question_id],
             type: sequelize.QueryTypes.SELECT,
         });
 
-        // If no results are found, return an error
+       
         if (results.length === 0) {
             return res.status(400).json({ type: "error", message: "Question not found" });
         }
 
-        // Extract the question details (first row)
+     
         const questionData = {
             question: results[0].question,
             question_id: results[0].question_id,
@@ -376,7 +376,7 @@ exports.get_objective_questions = async (req, res) => {
             options: []
         };
 
-        // Iterate over the results to format the options into an array
+        
         results.forEach(row => {
             questionData.options.push({
                 option_id: row.option_id,
@@ -384,7 +384,7 @@ exports.get_objective_questions = async (req, res) => {
             });
         });
 
-        // Return the formatted response
+       
         return res.status(200).json({ type: "success", data: questionData });
     } catch (error) {
         return res.status(400).json({ type: "error", message: error.message });
@@ -460,7 +460,7 @@ exports.update_objective = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Correct option number is out of range.' });
         }
 
-        // Update the question
+       
         await sequelize.query(`
             UPDATE technical_round_questions
             SET question = ?, updatedAt = NOW()

@@ -62,11 +62,11 @@ exports.create_user = async (req, res) => {
 
     const is_user_created = await sequelize.query(createUserQuery, {
       replacements: values,
-      transaction: t  // Include the transaction
+      transaction: t  
     });
 
     if (!is_user_created) {
-      await t.rollback();  // Rollback transaction on error
+      await t.rollback();  
       return res.status(400).json(errorResponse("Error while creating user, please try again later"));
     }
 
@@ -74,11 +74,11 @@ exports.create_user = async (req, res) => {
     const [is_role_exist] = await sequelize.query(get_role_id, {
       replacements: [role],
       type: sequelize.QueryTypes.SELECT,
-      transaction: t  // Include the transaction
+      transaction: t 
     });
 
     if (!is_role_exist) {
-      await t.rollback();  // Rollback transaction on error
+      await t.rollback();  
       return res.status(400).json(errorResponse("Sorry, role does not exist"));
     }
 
@@ -89,18 +89,18 @@ exports.create_user = async (req, res) => {
     const [is_role_assigned] = await sequelize.query(assigned_role_to_employee, {
       replacements: [user_id, role_id],
       type: sequelize.QueryTypes.INSERT,
-      transaction: t  // Include the transaction
+      transaction: t  
     });
 
     if (!is_role_assigned) {
-      await t.rollback();  // Rollback transaction on error
+      await t.rollback();  
       return res.status(400).json(errorResponse("Error while assigning new role to employee"));
     }
 
-    // Commit the transaction if everything is successful
+   
     await t.commit();
 
-    // Send confirmation email
+  
     await send_email({
       email: email,
       subject: `Ums Credentials`,
@@ -179,7 +179,7 @@ exports.login = async (req, res) => {
       return acc;
     }, []);
 
-    // Create JWT token with roles, employee_id, and other details
+    
     const token = await createToken(roles, user_id, username, email);
 
     return res.status(200).json({
@@ -378,10 +378,10 @@ exports.get_employee_details = async (req, res) => {
 };
 
 exports.get_employees = async (req, res) => {
-  const { name, status, limit = 10, page } = req.query; // default limit is 10, page is 1
+  const { name, status, limit = 10, page } = req.query; 
 
   try {
-    // Base query for getting employees
+  
     let get_all_employee_query = `
       SELECT 
         id, name, username, email, mobile, emergency_contact_relationship, emergency_contact_name,
@@ -393,7 +393,7 @@ exports.get_employees = async (req, res) => {
       WHERE is_disabled = false
     `;
 
-    // Base query for counting total employees
+    
     let count_query = `
       SELECT COUNT(*) AS total 
       FROM users 
@@ -402,7 +402,7 @@ exports.get_employees = async (req, res) => {
 
     const replacements = {};
 
-    // Add filters if any
+   
     if (name) {
       get_all_employee_query += ` AND name LIKE :name`;
       count_query += ` AND name LIKE :name`;
@@ -415,15 +415,15 @@ exports.get_employees = async (req, res) => {
       replacements.status = status;
     }
 
-    // Calculate offset for pagination
+   
     const offset = (page - 1) * limit;
     get_all_employee_query += ` LIMIT :limit OFFSET :offset`;
 
-    // Add pagination parameters to replacements
+    
     replacements.limit = parseInt(limit, 10);
     replacements.offset = parseInt(offset, 10);
 
-    // Execute the count query to get the total number of employees
+   
     const totalCountResult = await sequelize.query(count_query, {
       replacements,
       type: sequelize.QueryTypes.SELECT,
@@ -431,10 +431,10 @@ exports.get_employees = async (req, res) => {
 
     const totalEmployees = totalCountResult[0].total;
 
-    // Calculate total pages dynamically based on limit and total results
+    
     const totalPages = Math.ceil(totalEmployees / limit);
 
-    // Execute the employee query to get paginated data
+  
     const employee_details = await sequelize.query(get_all_employee_query, {
       replacements,
       type: sequelize.QueryTypes.SELECT,
@@ -447,7 +447,7 @@ exports.get_employees = async (req, res) => {
       });
     }
 
-    // Check if requested page exceeds total available pages
+
     if (page > totalPages) {
       return res.status(400).json({
         type: "error",
@@ -455,7 +455,7 @@ exports.get_employees = async (req, res) => {
       });
     }
 
-    // Return response with employee data and dynamic pagination info
+   
     return res.status(200).json({
       type: "success",
       data: employee_details,

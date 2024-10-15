@@ -1,5 +1,5 @@
 let { sequelize } = require('../models');
-let moment = require('moment'); // Assuming you are using Sequelize
+let moment = require('moment');
 let { send_email } = require("../utils/commonFuntions")
 const { CronJob } = require('cron');
 
@@ -182,8 +182,8 @@ exports.all_applied_leaves = async (req, res) => {
 
 exports.calculate_pending_leaves_for_selected_user = async (req, res) => {
     try {
-        // Extract userId from request parameters or body
-        const userId = req.result?.user_id; // or req.body, depending on your request structure
+       
+        const userId = req.result?.user_id; 
 
         if (!userId) {
             return res.status(400).json({
@@ -192,7 +192,7 @@ exports.calculate_pending_leaves_for_selected_user = async (req, res) => {
             });
         }
 
-        // Check if the user exists and is not disabled
+        
         const select_user_query = `
             SELECT 
                 u.id AS userId,
@@ -614,7 +614,7 @@ exports.get_user_applied_leaves = async (req, res) => {
         const user_id = req.result.user_id;
         const { month, year } = req.query;
 
-        // Base query
+       
         let query = `
             SELECT l.id, l.from_date, l.to_date, l.count, l.description, l.createdAt, l.type, l.status, l.remark, u.name 
             FROM leaves l 
@@ -622,25 +622,25 @@ exports.get_user_applied_leaves = async (req, res) => {
             WHERE u.is_disabled = false
         `;
 
-        // Filter by user ID if provided
+      
         if (user_id) {
             query += ` AND u.id = '${user_id}'`;
         }
 
-        // Filter by month if provided
+       
         if (month) {
             query += ` AND MONTH(l.createdAt) = ${month}`;
         }
 
-        // Filter by year if provided
+       
         if (year) {
             query += ` AND YEAR(l.createdAt) = ${year}`;
         }
 
-        // Order by createdAt to ensure records are fetched in the order they were created
+   
         query += ` ORDER BY l.createdAt DESC;`;
 
-        // Execute the query
+       
         let is_leaves_exist = await sequelize.query(query, {
             type: sequelize.QueryTypes.SELECT,
         });
@@ -700,10 +700,10 @@ async function process_cron_job() {
 const job = new CronJob('0 0 1 * *', () => {
     console.log('This job runs at midnight on the first day of every month');
     process_cron_job()
-    // Add your code to be executed here
-}, null, true, 'Asia/Kolkata'); // Set your desired time zone
+    
+}, null, true, 'Asia/Kolkata'); 
 
-// Start the job
+
 job.start();
 
 console.log('Cron job has been scheduled.');
