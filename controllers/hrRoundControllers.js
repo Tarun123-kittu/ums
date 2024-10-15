@@ -114,8 +114,12 @@ exports.hr_round = async (req, res) => {
     }
 }
 
+
+
+
 exports.hr_round_result = async (req, res) => {
     const { interview_id, hr_round_result } = req.body;
+    const currentDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
     const transaction = await sequelize.transaction();
 
@@ -128,9 +132,9 @@ exports.hr_round_result = async (req, res) => {
 
 
         const [affectedRows] = await sequelize.query(
-            'UPDATE Interviews SET hr_round_result = ? WHERE id = ?',
+            'UPDATE Interviews SET hr_round_result = ?,updatedAt = ? WHERE id = ?', 
             {
-                replacements: [hr_round_result, interview_id],
+                replacements: [hr_round_result,currentDate, interview_id],
                 type: sequelize.QueryTypes.UPDATE,
                 transaction,
             }

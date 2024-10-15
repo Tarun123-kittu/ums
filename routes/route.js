@@ -10,6 +10,7 @@ const testSeriesController = require("../controllers/testSeriesController")
 const technicalQuestionsController = require("../controllers/technicalRoundQuestionsController")
 const leaveController = require("../controllers/leaveController")
 const finalRoundsController = require("../controllers/finalRoundsController")
+const dashboardController = require("../controllers/dashboardControllers")
 const interviewLeadsController = require('../controllers/interviewLeads')
 const verifyAccess = require("../middleware/verifyAccessMiddleware")
 const authenticateToken = require("../middleware/authenticaionMiddleware")
@@ -108,8 +109,7 @@ router.get("/get_attendances", authenticateToken, attendanceController.get_atten
 router.get("/get_attendances_report", authenticateToken, attendanceController.get_attendance_report)
 router.put("/mark_break", authenticateToken, attendanceController.mark_break)
 router.put("/unmark_break", authenticateToken, attendanceController.unmark_break)
-router.get("/get_user_today_attendance", authenticateToken, attendanceController.get_user_today_attendance)
-router.get("/get_all_present_employee", authenticateToken, attendanceController.get_all_present_employee)
+
 
 // leave routes
 router.post("/apply_leave", authenticateToken, validateLeaveRequest, leaveController.apply_leave)
@@ -188,5 +188,16 @@ router.put("/check_lead_answer", authenticateToken, validateCheckLeadAnswer, tec
 //final and face-to-face round
 router.put("/final_or_face_to_face_round", authenticateToken, validateFaceToFaceOrFinalRound, finalRoundsController.final_or_face_to_face_round)
 router.put("/update_in_round_count", authenticateToken, validateUpdateInRound, finalRoundsController.update_in_round_count)
+
+
+
+//dashbord
+router.get("/get_dashboard_leaves",authenticateToken,dashboardController.get_dashboard_leaves)
+router.get("/get_dashboard_interview_leads_overview",authenticateToken,dashboardController.get_dashboard_interview_leads_overview)
+router.get("/get_employees_working_time",authenticateToken,dashboardController.get_employees_working_time)
+router.get("/get_user_today_attendance", authenticateToken, dashboardController.get_user_today_attendance)
+router.get("/get_all_present_employee", authenticateToken, dashboardController.get_all_present_employee)
+router.get("/get_all_on_leave_employees",authenticateToken,dashboardController.get_all_on_leave_employees)
+router.get("/get_all_interviews",authenticateToken,dashboardController.get_all_interviews)
 
 module.exports = router

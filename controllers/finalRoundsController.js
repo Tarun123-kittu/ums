@@ -9,19 +9,19 @@ exports.final_or_face_to_face_round = async (req, res) => {
         let leadId = req.body.leadId
         let status = req.body.status;
         let round_type = req.body.round_type;
-        let transaction = sequelize.transaction()
+        let currentDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
         let [isLeadExist] = await sequelize.query(`SELECT * FROM interviews WHERE lead_id = ${leadId}`)
 
         if (isLeadExist.length < 1) {
             return res.status(400).json(errorResponse("Lead not exist in the interviews with this lead Id."))
         }
-
+   
         if (round_type == 'final') {
-            await sequelize.query(`UPDATE interviews SET final_result = "${status}" WHERE  lead_id = ${leadId}`)
+            await sequelize.query(`UPDATE interviews SET final_result = "${status}", updatedAt="${currentDate}" WHERE  lead_id = ${leadId}`)
         }
         if (round_type == 'face_to_face') {
-            await sequelize.query(`UPDATE  interviews SET face_to_face_result = "${status}" WHERE lead_id = ${leadId}`)
+            await sequelize.query(`UPDATE  interviews SET face_to_face_result = "${status}",updatedAt="${currentDate}" WHERE lead_id = ${leadId}`)
         }
 
         return res.status(200).json(successResponse("Result updated successfully"))

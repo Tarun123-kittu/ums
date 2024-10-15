@@ -1020,9 +1020,12 @@ exports.submit_technical_round = async (req, res) => {
     }
 }
 
+
+
 exports.technical_round_result = async (req, res) => {
     try {
         let userId = req.result.user_id
+        let currentDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
         const { interview_id, technical_round_result, developer_review } = req.body;
 
         const transaction = await sequelize.transaction();
@@ -1041,9 +1044,9 @@ exports.technical_round_result = async (req, res) => {
         if (checkInterview.length < 1) { return res.status(400).json(errorResponse("Interview not exist with this interview id")) }
 
         const [affectedRows] = await sequelize.query(
-            'UPDATE Interviews SET technical_round_result = ?, developer_review = ? ,	technical_round_checked_by=? WHERE id = ?',
+            'UPDATE Interviews SET technical_round_result = ?, developer_review = ? ,	technical_round_checked_by=?,updatedAt=?  WHERE id = ?',
             {
-                replacements: [technical_round_result, developer_review, user[0].name, interview_id],
+                replacements: [technical_round_result, developer_review, user[0].name,currentDate, interview_id],
                 type: sequelize.QueryTypes.UPDATE,
                 transaction,
             }

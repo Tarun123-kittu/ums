@@ -7,7 +7,7 @@ module.exports = {
         const roles = [
             { role: 'Admin', createdAt: new Date(), updatedAt: new Date() },
             { role: 'HR', createdAt: new Date(), updatedAt: new Date() },
-            { role: 'Candidate', createdAt: new Date(), updatedAt: new Date() },
+            { role: 'Employee', createdAt: new Date(), updatedAt: new Date() },
             { role: 'Developer', createdAt: new Date(), updatedAt: new Date() }
         ];
 
