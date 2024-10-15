@@ -41,6 +41,8 @@ exports.mark_attendance = async (req, res) => {
 };
 
 
+
+
 exports.unmark_attendance = async (req, res) => {
     const user_id = req.result.user_id
     const { report, logout_device, logout_mobile } = req.body;
@@ -52,7 +54,7 @@ exports.unmark_attendance = async (req, res) => {
             type: sequelize.QueryTypes.SELECT
         });
 
-        console.log(is_user_mark_attendance_today[0]?.out_time)    //null
+        console.log(is_user_mark_attendance_today[0]?.out_time)    
 
         if (is_user_mark_attendance_today.length === 0) {
             return res.status(400).json({ type: "error", message: "You have not marked your attendance today!!" });

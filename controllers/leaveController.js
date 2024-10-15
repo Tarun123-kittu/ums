@@ -177,6 +177,9 @@ exports.all_applied_leaves = async (req, res) => {
     }
 };
 
+
+
+
 exports.calculate_pending_leaves_for_selected_user = async (req, res) => {
     try {
         // Extract userId from request parameters or body

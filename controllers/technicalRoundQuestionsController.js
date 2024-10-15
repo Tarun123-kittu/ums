@@ -1067,6 +1067,9 @@ exports.technical_round_result = async (req, res) => {
     }
 }
 
+
+
+
 exports.get_lead_technical_response = async (req, res) => {
     try {
         const lead_id = req.query.leadId;
