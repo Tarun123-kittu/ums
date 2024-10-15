@@ -40,6 +40,7 @@ exports.mark_attendance = async (req, res) => {
     }
 };
 
+
 exports.unmark_attendance = async (req, res) => {
     const user_id = req.result.user_id
     const { report, logout_device, logout_mobile } = req.body;
@@ -542,6 +543,91 @@ exports.update_attendance_details = async (req, res) => {
     }
 };
 
+
+
+
+
+
+
+exports.get_user_monthly_report = async (req, res) => {
+    try {
+        const userId = req.result.user_id;
+        const { month, year } = req.query;
+
+        // Set current month and year if not provided
+        const currentDate = moment();
+        const selectedMonth = month ? parseInt(month, 10) : currentDate.month() + 1;  // months are 0-indexed in moment.js
+        const selectedYear = year ? parseInt(year, 10) : currentDate.year();
+
+        const startDate = moment(`${selectedYear}-${selectedMonth}-01`).startOf('month').format('YYYY-MM-DD');
+        const endDate = moment(startDate).endOf('month').format('YYYY-MM-DD');
+
+        // SQL query for user attendance
+        const attendanceQuery = `
+            SELECT date, in_time, out_time, report, total_time
+            FROM attendances
+            WHERE user_id = ? AND date BETWEEN ? AND ?;
+        `;
+        const attendanceData = await sequelize.query(attendanceQuery, {
+            replacements: [userId, startDate, endDate],
+            type: sequelize.QueryTypes.SELECT,
+        });
+
+        // SQL query for holidays/events
+        const holidaysQuery = `
+            SELECT occasion_name, occasion_type, date
+            FROM holidays_and_events
+            WHERE date BETWEEN ? AND ?;
+        `;
+        const holidaysData = await sequelize.query(holidaysQuery, {
+            replacements: [startDate, endDate],
+            type: sequelize.QueryTypes.SELECT,
+        });
+
+        // Ensure correct date format for both attendance and holiday data
+        const formattedAttendanceData = attendanceData.map(att => ({
+            ...att,
+            date: moment(att.date).format('YYYY-MM-DD')
+        }));
+
+        const formattedHolidaysData = holidaysData.map(holiday => ({
+            ...holiday,
+            date: moment(holiday.date).format('YYYY-MM-DD')
+        }));
+
+        // Create full list of dates in the month
+        const daysInMonth = moment(endDate).date();  // Get total number of days in the month
+        let reportData = [];
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            let currentDate = moment(`${selectedYear}-${selectedMonth}-${day}`, "YYYY-MM-DD").format('YYYY-MM-DD');
+            let dayOfWeek = moment(currentDate).format('dddd');
+
+            let attendanceForDay = formattedAttendanceData.find(att => att.date === currentDate);
+            let holidayForDay = formattedHolidaysData.find(holiday => holiday.date === currentDate);
+
+            // Prepare the report object for this day
+            let report = {
+                date: currentDate,
+                dayOfWeek: dayOfWeek,
+                in_time: attendanceForDay ? attendanceForDay.in_time : null,
+                out_time: attendanceForDay ? attendanceForDay.out_time : null,
+                report: attendanceForDay ? attendanceForDay.report : null,
+                total_time: attendanceForDay ? attendanceForDay.total_time : null,
+                isWeekend: (dayOfWeek === 'Saturday' || dayOfWeek === 'Sunday'),
+                isHoliday: holidayForDay ? true : false,
+                holidayName: holidayForDay ? holidayForDay.occasion_name : null,
+            };
+
+            reportData.push(report);
+        }
+
+        return res.status(200).json({ reportData });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ type: "error", message: "Internal server error" });
+    }
+};
 
 
 

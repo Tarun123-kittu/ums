@@ -132,8 +132,6 @@ exports.apply_leave = async (req, res) => {
     }
 };
 
-
-
 exports.all_applied_leaves = async (req, res) => {
     try {
         let select_all_applied_leaves_query = `
@@ -179,15 +177,27 @@ exports.all_applied_leaves = async (req, res) => {
     }
 };
 
-exports.calculate_pending_leaves = async (req, res) => {
-    const userId = req.result.user_id; // Assuming the userId is passed in the request params
-
+exports.calculate_pending_leaves_for_selected_user = async (req, res) => {
     try {
+        // Extract userId from request parameters or body
+        const userId = req.result?.user_id; // or req.body, depending on your request structure
+
+        if (!userId) {
+            return res.status(400).json({
+                type: "error",
+                message: "User ID is required"
+            });
+        }
+
+        // Check if the user exists and is not disabled
         const select_user_query = `
             SELECT 
+                u.id AS userId,
+                u.name AS name,
+                u.username AS username,
                 u.doj AS doj
             FROM users u
-            WHERE u.id = :userId
+            WHERE u.id = :userId AND u.is_disabled = false
         `;
 
         const [user] = await sequelize.query(select_user_query, {
@@ -198,48 +208,52 @@ exports.calculate_pending_leaves = async (req, res) => {
         if (!user) {
             return res.status(404).json({
                 type: "error",
-                message: "User not found"
+                message: "User not found or is disabled"
             });
         }
 
-        const { doj } = user;
+        const { name, username, doj } = user;
         const dojDate = new Date(doj);
         const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
 
-        // Calculate months worked
-        let monthsWorked = (currentDate.getFullYear() - dojDate.getFullYear()) * 12 + (currentDate.getMonth() - dojDate.getMonth());
+        const monthsWorked = (currentYear - dojDate.getFullYear()) * 12 + (currentMonth - (dojDate.getMonth() + 1));
+        const totalAllowedLeaves = Math.max(monthsWorked, 1);
 
-        if (monthsWorked < 1) {
-            monthsWorked = 1;
-        }
-        const totalAllowedLeaves = monthsWorked;
-
-        const select_used_leaves_query = `
+        const select_accepted_leaves_query = `
             SELECT 
-                COALESCE(SUM(l.count), 0) AS total_used_leaves
+                COALESCE(SUM(l.count), 0) AS total_accepted_leaves,
+                SUM(CASE WHEN MONTH(l.createdAt) = :currentMonth AND YEAR(l.createdAt) = :currentYear THEN l.count ELSE 0 END) AS current_month_accepted_leaves
             FROM leaves l
             WHERE l.user_id = :userId 
-            AND l.status NOT IN ('PENDING', 'REJECTED')
+            AND l.status = 'ACCEPTED'
         `;
 
-        const [leaveData] = await sequelize.query(select_used_leaves_query, {
+        const [leaveData] = await sequelize.query(select_accepted_leaves_query, {
             type: sequelize.QueryTypes.SELECT,
-            replacements: { userId }
+            replacements: { userId, currentMonth, currentYear }
         });
 
-        const usedLeaves = leaveData.total_used_leaves;
+        const totalAcceptedLeaves = leaveData.total_accepted_leaves || 0;
+        const currentMonthAcceptedLeaves = leaveData.current_month_accepted_leaves || 0;
 
-        const remainingLeaves = totalAllowedLeaves - usedLeaves;
+        const remainingLeaves = totalAllowedLeaves - totalAcceptedLeaves;
+
+        const userLeaveData = {
+            userId,
+            name,
+            username,
+            doj,
+            total_allowed_leaves: totalAllowedLeaves,
+            total_accepted_leaves: totalAcceptedLeaves,
+            current_month_accepted_leaves: currentMonthAcceptedLeaves,
+            remaining_leaves: remainingLeaves > 0 ? remainingLeaves : 0
+        };
 
         return res.status(200).json({
             type: "success",
-            data: {
-                userId,
-                doj,
-                total_allowed_leaves: totalAllowedLeaves,
-                used_leaves: usedLeaves,
-                remaining_leaves: remainingLeaves 
-            }
+            data: userLeaveData
         });
 
     } catch (error) {
@@ -250,10 +264,9 @@ exports.calculate_pending_leaves = async (req, res) => {
     }
 };
 
-
 exports.update_pending_leave = async (req, res) => {
     const { leave_id, status, remark, user_id, leave_count, email, name, from_date, to_date } = req.body;
-    const transaction = await sequelize.transaction(); 
+    const transaction = await sequelize.transaction();
 
     try {
         const update_leave_query = `UPDATE leaves SET status = ?, remark = ? WHERE id = ?`;
@@ -264,7 +277,7 @@ exports.update_pending_leave = async (req, res) => {
         });
 
         if (!is_leave_updated) {
-            await transaction.rollback(); 
+            await transaction.rollback();
             return res.status(400).json({ type: "error", message: "Error while updating the leave. Please try again later." });
         }
 
@@ -329,7 +342,6 @@ exports.update_pending_leave = async (req, res) => {
     }
 };
 
-
 exports.get_all_users_pending_leaves = async (req, res) => {
     try {
         const { name, month, year } = req.query;
@@ -366,7 +378,6 @@ exports.get_all_users_pending_leaves = async (req, res) => {
         return res.status(400).json({ type: "error", message: error.message });
     }
 };
-
 
 exports.get_applied_leave_details = async (req, res) => {
     const leave_id = req.query.leave_id;
@@ -422,10 +433,10 @@ exports.calculate_pending_leaves_for_all_users = async (req, res) => {
             const dojDate = new Date(doj);
             const monthsWorked = (currentYear - dojDate.getFullYear()) * 12 + (currentMonth - (dojDate.getMonth() + 1));
 
-            
+
             const totalAllowedLeaves = Math.max(monthsWorked, 1);
 
-           
+
             const select_accepted_leaves_query = `
                 SELECT 
                     COALESCE(SUM(l.count), 0) AS total_accepted_leaves,
@@ -443,10 +454,10 @@ exports.calculate_pending_leaves_for_all_users = async (req, res) => {
             const totalAcceptedLeaves = leaveData.total_accepted_leaves || 0;
             const currentMonthAcceptedLeaves = leaveData.current_month_accepted_leaves || 0;
 
-           
+
             const remainingLeaves = totalAllowedLeaves - totalAcceptedLeaves;
 
-           
+
             usersLeaveData.push({
                 userId,
                 name,
@@ -455,7 +466,7 @@ exports.calculate_pending_leaves_for_all_users = async (req, res) => {
                 total_allowed_leaves: totalAllowedLeaves,
                 total_accepted_leaves: totalAcceptedLeaves,
                 current_month_accepted_leaves: currentMonthAcceptedLeaves,
-                remaining_leaves: remainingLeaves > 0 ? remainingLeaves : 0 
+                remaining_leaves: remainingLeaves > 0 ? remainingLeaves : 0
             });
         }
 
@@ -472,13 +483,12 @@ exports.calculate_pending_leaves_for_all_users = async (req, res) => {
     }
 };
 
-
 exports.leave_bank_report = async (req, res) => {
     try {
         const { session, month, year, page = 1, limit = 10 } = req.query;
         const offset = (page - 1) * limit;
 
-        
+
         let bank_report_query = `
             SELECT 
                 u.id, 
@@ -491,7 +501,7 @@ exports.leave_bank_report = async (req, res) => {
             LEFT JOIN 
                 bank_leaves bl ON u.id = bl.user_id
             WHERE 
-                u.is_disabled = false`; 
+                u.is_disabled = false`;
 
         if (month) {
             bank_report_query += ` AND MONTH(bl.created_at) = :month`;
@@ -524,7 +534,7 @@ exports.leave_bank_report = async (req, res) => {
 
         console.log("Query Result:", all_bank_records);
 
-       
+
         if (!all_bank_records || all_bank_records.length === 0) {
             const defaultUsersQuery = `
                 SELECT 
@@ -548,12 +558,12 @@ exports.leave_bank_report = async (req, res) => {
             });
         }
 
-       
+
         let count_query = `
             SELECT COUNT(*) as totalCount
             FROM bank_leaves bl
             JOIN users u ON u.id = bl.user_id
-            WHERE u.is_disabled = false`; 
+            WHERE u.is_disabled = false`;
 
         if (month) {
             count_query += ` AND MONTH(bl.created_at) = :month`;
@@ -595,6 +605,55 @@ exports.leave_bank_report = async (req, res) => {
         return res.status(400).json({ type: "error", message: error.message });
     }
 };
+
+exports.get_user_applied_leaves = async (req, res) => {
+    try {
+        const user_id = req.result.user_id;
+        const { month, year } = req.query;
+
+        // Base query
+        let query = `
+            SELECT l.id, l.from_date, l.to_date, l.count, l.description, l.createdAt, l.type, l.status, l.remark, u.name 
+            FROM leaves l 
+            JOIN users u ON u.id = l.user_id 
+            WHERE u.is_disabled = false
+        `;
+
+        // Filter by user ID if provided
+        if (user_id) {
+            query += ` AND u.id = '${user_id}'`;
+        }
+
+        // Filter by month if provided
+        if (month) {
+            query += ` AND MONTH(l.createdAt) = ${month}`;
+        }
+
+        // Filter by year if provided
+        if (year) {
+            query += ` AND YEAR(l.createdAt) = ${year}`;
+        }
+
+        // Order by createdAt to ensure records are fetched in the order they were created
+        query += ` ORDER BY l.createdAt DESC;`;
+
+        // Execute the query
+        let is_leaves_exist = await sequelize.query(query, {
+            type: sequelize.QueryTypes.SELECT,
+        });
+
+        console.log(is_leaves_exist, "is_leaves_exist");
+
+        if (is_leaves_exist.length === 0) {
+            return res.status(200).json({ type: "success", message: "No leaves found" });
+        }
+
+        return res.status(200).json({ type: "success", data: is_leaves_exist });
+    } catch (error) {
+        return res.status(400).json({ type: "error", message: error.message });
+    }
+};
+
 
 async function process_cron_job() {
     try {

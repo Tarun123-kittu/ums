@@ -110,16 +110,16 @@ router.get("/get_attendances_report", authenticateToken, attendanceController.ge
 router.put("/mark_break", authenticateToken, attendanceController.mark_break)
 router.put("/unmark_break", authenticateToken, attendanceController.unmark_break)
 
-
 // leave routes
 router.post("/apply_leave", authenticateToken, validateLeaveRequest, leaveController.apply_leave)
 router.get("/get_applied_leaves", authenticateToken, leaveController.all_applied_leaves)
-router.get("/get_user_pending_leaves", authenticateToken, leaveController.calculate_pending_leaves)
+router.get("/get_user_pending_leaves", authenticateToken, leaveController.calculate_pending_leaves_for_selected_user)
 router.put("/update_pending_leaaves", authenticateToken, leaveController.update_pending_leave)
 router.get("/all_user_applied_leaves", authenticateToken, leaveController.get_all_users_pending_leaves)
 router.get("/get_applied_leave_detail", authenticateToken, leaveController.get_applied_leave_details)
 router.get("/all_users_pending_leaves", authenticateToken, leaveController.calculate_pending_leaves_for_all_users)
 router.get("/leave_bank_report", authenticateToken, leaveController.leave_bank_report)
+router.get("/user_applied_leaves", authenticateToken, leaveController.get_user_applied_leaves)
 
 
 
