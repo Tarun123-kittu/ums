@@ -496,6 +496,10 @@ exports.delete_employee = async (req, res) => {
   }
 }
 
+
+
+
+
 exports.update_user = async (req, res) => {
   const {
     id, name, username, email, mobile, emergency_contact_relationship, emergency_contact_name,
@@ -505,12 +509,12 @@ exports.update_user = async (req, res) => {
   } = req.body;
 
   try {
-    // Check if the `id` is provided
+ 
     if (!id) {
       return res.status(400).json({ error: "ID is required for updating user." });
     }
 
-    // Check if the user exists
+ 
     const checkEmailQuery = `SELECT * FROM users WHERE id = ?`;
     const [existingUser] = await sequelize.query(checkEmailQuery, {
       replacements: [id],
@@ -519,12 +523,12 @@ exports.update_user = async (req, res) => {
 
     if (!existingUser) return res.status(400).json({ type: "error", message: "User Not Found" })
 
-    // If the user doesn't exist, return an error
+ 
     if (existingUser.length === 0) {
       return res.status(404).json({ error: "User not found." });
     }
 
-    // Construct the query to update only provided fields, keeping others unchanged
+   
     const update_user_query = `
       UPDATE users
       SET 
@@ -555,7 +559,7 @@ exports.update_user = async (req, res) => {
       WHERE id = ?
     `;
 
-    // Execute the query with replacements
+    
     const result = await sequelize.query(update_user_query, {
       replacements: [
         name, username, email, mobile, emergency_contact_relationship, emergency_contact_name,
@@ -571,6 +575,10 @@ exports.update_user = async (req, res) => {
     res.status(500).json({ error: "Error updating user", details: error.message });
   }
 };
+
+
+
+
 
 exports.get_all_users_name = async (req, res) => {
   try {

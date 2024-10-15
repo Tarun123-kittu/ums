@@ -3,6 +3,7 @@ const { find_the_total_time } = require("../utils/commonFuntions")
 const moment = require('moment-timezone');
 const { errorResponse, successResponse } = require('../utils/responseHandler');
 
+
 exports.mark_attendance = async (req, res) => {
     const user_id = req.result.user_id
     const { login_device, login_mobile } = req.body;
@@ -39,6 +40,9 @@ exports.mark_attendance = async (req, res) => {
     }
 };
 
+
+
+
 exports.unmark_attendance = async (req, res) => {
     const user_id = req.result.user_id
     const { report, logout_device, logout_mobile } = req.body;
@@ -50,7 +54,7 @@ exports.unmark_attendance = async (req, res) => {
             type: sequelize.QueryTypes.SELECT
         });
 
-        console.log(is_user_mark_attendance_today[0]?.out_time)    //null
+        console.log(is_user_mark_attendance_today[0]?.out_time)    
 
         if (is_user_mark_attendance_today.length === 0) {
             return res.status(400).json({ type: "error", message: "You have not marked your attendance today!!" });
@@ -541,47 +545,11 @@ exports.update_attendance_details = async (req, res) => {
     }
 };
 
-exports.get_user_today_attendance = async (req, res) => {
-    try {
-        const user_id = req.result.user_id;
-        const get_attendance_query = `
-            SELECT in_time,out_time
-            FROM attendances 
-            WHERE DATE(createdAt) = CURDATE() AND user_id = ?
-        `;
-        const attendance = await sequelize.query(get_attendance_query, {
-            replacements: [user_id],
-            type: sequelize.QueryTypes.SELECT
-        });
 
-        if (!attendance || attendance.length === 0) {
-            return res.status(400).json({ type: "error", message: "No attendance found for today" });
-        }
 
-        res.status(200).json({
-            type: "success",
-            data: attendance
-        });
-    } catch (error) {
-        return res.status(500).json(errorResponse(error.message));
-    }
-}
 
-exports.get_all_present_employee = async (req, res) => {
-    try {
-        const all_present_employees_query = `SELECT COUNT(*) AS presentEmployees
-                                            FROM attendances 
-                                            WHERE in_time IS NOT NULL 
-                                            AND DATE(createdAt) = CURDATE()`;
-        const [total_present_employees] = await sequelize.query(all_present_employees_query, {
-            type: sequelize.QueryTypes.SELECT
-        })
 
-        return res.status(200).json({ type: "success", total_present_employees })
-    } catch (error) {
-        return res.status(400).json({ type: "error", message: error.message })
-    }
-}
+
 
 exports.get_user_monthly_report = async (req, res) => {
     try {
