@@ -104,9 +104,6 @@ exports.assign_role = async (req, res) => {
     }
 };
 
-
-
-
 exports.assign_new_permissions_to_new_role = async (req, res) => {
     const { permission_data, role, user_id } = req.body;
 
@@ -177,9 +174,6 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
     }
 };
 
-
-
-
 exports.update_permissions_assigned_to_role = async (req, res) => {
     const { permission_data } = req.body;
 
@@ -248,10 +242,6 @@ exports.update_permissions_assigned_to_role = async (req, res) => {
         }
     }
 };
-
-
-
-
 
 exports.disabled_role = async (req, res) => {
     const { role_id } = req.body;
@@ -342,10 +332,6 @@ exports.disabled_role = async (req, res) => {
         });
     }
 };
-
-// ------ this api need to recheck 
-
-
 
 exports.delete_user_role = async (req, res) => {
     try {
@@ -486,6 +472,19 @@ exports.get_role_assigned_to_users = async (req, res) => {
         });
     }
 };
+
+exports.get_all_roles = async (req, res) => {
+    try {
+        const get_all_roles = `SELECT id,role FROM roles WHERE is_disabled = false`;
+        const all_roles = await sequelize.query(get_all_roles, {
+            type: sequelize.QueryTypes.SELECT
+        })
+
+        return res.status(200).json({ type: "success", data: all_roles })
+    } catch (error) {
+        return res.status(400).json({ type: "error", message: error.message })
+    }
+}
 
 
 
