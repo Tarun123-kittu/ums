@@ -110,16 +110,18 @@ router.put("/mark_break", authenticateToken, attendanceController.mark_break)
 router.put("/unmark_break", authenticateToken, attendanceController.unmark_break)
 router.get("/get_user_today_attendance", authenticateToken, attendanceController.get_user_today_attendance)
 router.get("/get_all_present_employee", authenticateToken, attendanceController.get_all_present_employee)
+router.get("/get_user_monthly_report", authenticateToken, attendanceController.get_user_monthly_report)
 
 // leave routes
 router.post("/apply_leave", authenticateToken, validateLeaveRequest, leaveController.apply_leave)
 router.get("/get_applied_leaves", authenticateToken, leaveController.all_applied_leaves)
-router.get("/get_user_pending_leaves", authenticateToken, leaveController.calculate_pending_leaves)
+router.get("/get_user_pending_leaves", authenticateToken, leaveController.calculate_pending_leaves_for_selected_user)
 router.put("/update_pending_leaaves", authenticateToken, leaveController.update_pending_leave)
 router.get("/all_user_applied_leaves", authenticateToken, leaveController.get_all_users_pending_leaves)
 router.get("/get_applied_leave_detail", authenticateToken, leaveController.get_applied_leave_details)
 router.get("/all_users_pending_leaves", authenticateToken, leaveController.calculate_pending_leaves_for_all_users)
 router.get("/leave_bank_report", authenticateToken, leaveController.leave_bank_report)
+router.get("/user_applied_leaves", authenticateToken, leaveController.get_user_applied_leaves)
 
 
 
