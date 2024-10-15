@@ -317,6 +317,8 @@ const validateLeaveRequest = [
         next();
     }
 ];
+
+
 const validateCreateLeads = [
     check("name", "Please provide name of the lead.").not().isEmpty(),
     check("phone_number", "Please provide phone number of the lead.").not().isEmpty(),

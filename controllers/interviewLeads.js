@@ -227,7 +227,7 @@ exports.get_all_leads = async (req, res) => {
         const pageNumber = parseInt(page, 10) || 1;
         const pageSize = parseInt(limit, 10) || 10;
 
-        // Base query with in_round = 0 condition
+       
         let baseQuery = `
             SELECT 
                 i.id, i.name, i.phone_number, i.email, i.gender, i.dob, 
@@ -239,7 +239,7 @@ exports.get_all_leads = async (req, res) => {
                 i.in_round = 0
         `;
 
-        // Adding optional filters
+       
         if (profile) {
             baseQuery += ` AND i.profile = :profile`;
         }
@@ -249,14 +249,14 @@ exports.get_all_leads = async (req, res) => {
 
         baseQuery += ` ORDER BY i.createdAt DESC`;
 
-        // Count query to calculate total leads with the same conditions
+        
         let countQuery = `
             SELECT COUNT(*) AS total
             FROM Interview_Leads i
             WHERE i.in_round = 0
         `;
 
-        // Adding the same filters to the count query
+        
         if (profile) {
             countQuery += ` AND i.profile = :profile`;
         }
@@ -264,20 +264,20 @@ exports.get_all_leads = async (req, res) => {
             countQuery += ` AND i.experience >= :experience`;
         }
 
-        // Execute count query to get total items
+       
         const [countResult] = await sequelize.query(countQuery, {
             replacements: { profile, experience },
         });
 
         const totalItems = countResult.length > 0 ? countResult[0].total : 0;
 
-        // Calculate total pages
+   
         const totalPages = totalItems > 0 ? Math.ceil(totalItems / pageSize) : 1;
 
-        // Calculate offset for pagination
+      
         const offset = (pageNumber - 1) * pageSize;
 
-        // Final data query with pagination
+     
         const getAllLeadsQuery = `${baseQuery} LIMIT :limit OFFSET :offset`;
 
         const [allLeads] = await sequelize.query(getAllLeadsQuery, {
@@ -296,7 +296,7 @@ exports.get_all_leads = async (req, res) => {
             });
         }
 
-        // Return the leads with pagination details
+       
         return res.status(200).json({
             type: "success",
             message: "Data retrieved successfully.",
