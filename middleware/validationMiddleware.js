@@ -32,7 +32,6 @@ const createUserValidator = [
     check("total_security").optional().not().isEmpty().isNumeric().withMessage("Total security must be numeric."),
     check("installments").optional().not().isEmpty().isNumeric().withMessage("Installments must be numeric."),
 
-    // Handle validation result
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {

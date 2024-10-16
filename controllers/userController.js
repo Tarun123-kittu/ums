@@ -213,7 +213,7 @@ const {
         const role_id = roleRecord[0].id;
 
         await sequelize.query(
-            `INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)`,
+            `INSERT INTO user_roles (user_id, role_id,createdAt,updatedAt) VALUES (?, ?,NOW(),NOW())`,
             { replacements: [user_id[0].user_id, role_id], transaction: t }
         );
 
@@ -221,7 +221,7 @@ const {
         if (documents && documents.length > 0) {
             for (const doc of documents) {
                 await sequelize.query(
-                    `INSERT INTO documents (user_id, document_name) VALUES (?, ?)`,
+                    `INSERT INTO documents (user_id, document_name,createdAt,updatedAt) VALUES (?, ?,NOW(),NOW())`,
                     { replacements: [user_id[0].user_id, doc], transaction: t }
                 );
             }
@@ -644,69 +644,154 @@ exports.update_user = async (req, res) => {
   } = req.body;
 
   try {
- 
+   
     if (!id) {
-      return res.status(400).json({ error: "ID is required for updating user." });
+      return res.status(400).json(errorResponse("ID is required for updating user"));
     }
 
- 
-    const checkEmailQuery = `SELECT * FROM users WHERE id = ?`;
-    const [existingUser] = await sequelize.query(checkEmailQuery, {
+   
+    const checkUserQuery = `SELECT * FROM users WHERE id = ?`;
+    const [existingUser] = await sequelize.query(checkUserQuery, {
       replacements: [id],
       type: sequelize.QueryTypes.SELECT,
     });
 
-    if (!existingUser) return res.status(400).json({ type: "error", message: "User Not Found" })
-
- 
-    if (existingUser.length === 0) {
-      return res.status(404).json({ error: "User not found." });
+    if (!existingUser) {
+      return res.status(404).json(errorResponse("User not found"));
     }
 
    
-    const update_user_query = `
+    const requiredFields = ['name', 'username', 'email', 'mobile', 'gender', 'dob', 'doj', 'position', 'department', 'status', 'address'];
+
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+    if (missingFields.length > 0) {
+      return res.status(400).json(errorResponse(`Missing required fields: ${missingFields.join(', ')}`));
+    }
+
+  
+    const fields = [];
+    const values = [];
+
+    if (name) {
+      fields.push('name = ?');
+      values.push(name);
+    }
+    if (username) {
+      fields.push('username = ?');
+      values.push(username);
+    }
+    if (email) {
+      fields.push('email = ?');
+      values.push(email);
+    }
+    if (mobile) {
+      fields.push('mobile = ?');
+      values.push(mobile);
+    }
+    if (emergency_contact_relationship) {
+      fields.push('emergency_contact_relationship = ?');
+      values.push(emergency_contact_relationship);
+    }
+    if (emergency_contact_name) {
+      fields.push('emergency_contact_name = ?');
+      values.push(emergency_contact_name);
+    }
+    if (emergency_contact) {
+      fields.push('emergency_contact = ?');
+      values.push(emergency_contact);
+    }
+    if (bank_name) {
+      fields.push('bank_name = ?');
+      values.push(bank_name);
+    }
+    if (account_number) {
+      fields.push('account_number = ?');
+      values.push(account_number);
+    }
+    if (ifsc) {
+      fields.push('ifsc = ?');
+      values.push(ifsc);
+    }
+    if (increment_date) {
+      fields.push('increment_date = ?');
+      values.push(increment_date);
+    }
+    if (gender) {
+      fields.push('gender = ?');
+      values.push(gender);
+    }
+    if (dob) {
+      fields.push('dob = ?');
+      values.push(dob);
+    }
+    if (doj) {
+      fields.push('doj = ?');
+      values.push(doj);
+    }
+    if (skype_email) {
+      fields.push('skype_email = ?');
+      values.push(skype_email);
+    }
+    if (ultivic_email) {
+      fields.push('ultivic_email = ?');
+      values.push(ultivic_email);
+    }
+    if (salary) {
+      fields.push('salary = ?');
+      values.push(salary);
+    }
+    if (security) {
+      fields.push('security = ?');
+      values.push(security);
+    }
+    if (total_security) {
+      fields.push('total_security = ?');
+      values.push(total_security);
+    }
+    if (installments) {
+      fields.push('installments = ?');
+      values.push(installments);
+    }
+    if (position) {
+      fields.push('position = ?');
+      values.push(position);
+    }
+    if (department) {
+      fields.push('department = ?');
+      values.push(department);
+    }
+    if (status) {
+      fields.push('status = ?');
+      values.push(status);
+    }
+    if (address) {
+      fields.push('address = ?');
+      values.push(address);
+    }
+
+
+    if (fields.length === 0) {
+      return res.status(400).json(errorResponse("No fields to update"));
+    }
+
+   
+    const updateUserQuery = `
       UPDATE users
-      SET 
-        name = COALESCE(?, name),
-        username = COALESCE(?, username),
-        email = COALESCE(?, email),
-        mobile = COALESCE(?, mobile),
-        emergency_contact_relationship = COALESCE(?, emergency_contact_relationship),
-        emergency_contact_name = COALESCE(?, emergency_contact_name),
-        emergency_contact = COALESCE(?, emergency_contact),
-        bank_name = COALESCE(?, bank_name),
-        account_number = COALESCE(?, account_number),
-        ifsc = COALESCE(?, ifsc),
-        increment_date = COALESCE(?, increment_date),
-        gender = COALESCE(?, gender),
-        dob = COALESCE(?, dob),
-        doj = COALESCE(?, doj),
-        skype_email = COALESCE(?, skype_email),
-        ultivic_email = COALESCE(?, ultivic_email),
-        salary = COALESCE(?, salary),
-        security = COALESCE(?, security),
-        total_security = COALESCE(?, total_security),
-        installments = COALESCE(?, installments),
-        position = COALESCE(?, position),
-        department = COALESCE(?, department),
-        status = COALESCE(?, status),
-        address = COALESCE(?, address)
+      SET ${fields.join(', ')}
       WHERE id = ?
     `;
 
-    
-    const result = await sequelize.query(update_user_query, {
-      replacements: [
-        name, username, email, mobile, emergency_contact_relationship, emergency_contact_name,
-        emergency_contact, bank_name, account_number, ifsc, increment_date, gender, dob, doj, skype_email,
-        ultivic_email, salary, security, total_security, installments, position, department, status,
-        address, id
-      ]
+   
+    values.push(id);
+
+   
+    await sequelize.query(updateUserQuery, {
+      replacements: values,
     });
 
-    res.status(200).json({ message: "User updated successfully." });
-
+    res.status(200).json(successResponse("User updated successfully"));
   } catch (error) {
+    console.error("ERROR::", error);
     res.status(500).json({ error: "Error updating user", details: error.message });
   }
 };
@@ -730,5 +815,27 @@ exports.get_all_users_name = async (req, res) => {
 }
 
 
+
+exports.get_user_documents = async(req,res)=>{
+  try{
+   let userId = req.query.userId
+
+   if(!userId){return res.status(400).json(errorResponse("Please provide user id in the query params"))}
+
+   let [findUser] = await sequelize.query(`SELECT * FROM users WHERE id = ${userId}`)
+   
+   if(findUser.length<1){return res.status(400).json(errorResponse("User not found with this user Id"))}
+   
+   let findDocumentsQuery = `SELECT document_name FROM documents WHERE user_id = ${userId}`
+
+   let [getDocuments] = await sequelize.query(findDocumentsQuery)
+
+   return res.status(200).json(successResponse(getDocuments.length<1?"No documents added for this employee":"Documents retrieved successfully",getDocuments))
+
+  }catch(error){
+    console.log('ERROR::',error)
+    return res.status(400).json({ type: "error", message: error.message })
+  }
+}
 
 
