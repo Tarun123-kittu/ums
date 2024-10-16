@@ -62,7 +62,7 @@ const {
 
 
 // user auth routes 
-router.post("/create_user", authenticateToken, createUserValidator, validateCreateUserDataTypes, userController.create_user)
+router.post("/create_user", authenticateToken, createUserValidator, userController.create_user)
 router.post("/login", loginValidator, validateLoginDAtaTypes, userController.login)
 router.post("/forgot_password", forgetPasswordValidator, validateForgotPasswordDataTypes, userController.forgot_password)
 router.post("/reset_password/:token", validateResetPasswordDataTypes, userController.reset_password)

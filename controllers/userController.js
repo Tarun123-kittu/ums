@@ -11,109 +11,244 @@ const {
 
 
 
-exports.create_user = async (req, res) => {
-  const t = await sequelize.transaction();
-
-  try {
-    const {
-      name, username, email, mobile, emergency_contact_relationship, emergency_contact_name,
-      emergency_contact, bank_name, account_number, ifsc, increment_date, gender, dob, doj, skype_email,
-      ultivic_email, salary, security, total_security, installments, position, department, status, password,
-      address, role, confirm_password
-    } = req.body;
 
 
-    const checkEmailQuery = `SELECT * FROM users WHERE email = ?`;
-    const [existingUser] = await sequelize.query(checkEmailQuery, {
-      replacements: [email],
-      type: sequelize.QueryTypes.SELECT,
-      transaction: t
-    });
+  exports.create_user = async (req, res) => {
+    const t = await sequelize.transaction();
+    try {
+        
+        const {
+            name,
+            username,
+            email,
+            mobile,
+            gender,
+            dob,
+            doj,
+            password,
+            confirm_password,
+            address,
+            role,
+           
+            emergency_contact_relationship,
+            emergency_contact_name,
+            emergency_contact,
+            bank_name,
+            account_number,
+            ifsc,
+            increment_date,
+            skype_email,
+            ultivic_email,
+            salary,
+            security,
+            total_security,
+            installments,
+            position,
+            department,
+            status,
+            documents,
+        } = req.body;
 
-    if (existingUser) {
-      await t.rollback();
-      return res.status(400).json(errorResponse("Email already exists. Please use another email."));
+       
+        console.log("Incoming request body:", req.body);
+
+     
+        const existingUser = await sequelize.query(
+            `SELECT * FROM users WHERE email = ?`,
+            {
+                replacements: [email],
+                type: sequelize.QueryTypes.SELECT,
+                transaction: t,
+            }
+        );
+
+        if (existingUser.length > 0) {
+            await t.rollback();
+            return res.status(400).json({ message: "Email already exists." });
+        }
+
+     
+        if (confirm_password !== password) {
+            await t.rollback();
+            return res.status(400).json({ message: "Password and confirm password do not match." });
+        }
+
+       
+        const hashedPassword = await encrypt_password(password);
+
+       
+        const fields = [
+            'name',
+            'username',
+            'email',
+            'mobile',
+            'gender',
+            'dob',
+            'doj',
+            'password',
+            'address',
+            'role',
+            'position',
+            'department',
+            'status',
+            'createdAt',
+            'updatedAt',
+        ];
+
+        const values = [
+            name,
+            username,
+            email,
+            mobile,
+            gender,
+            dob,
+            doj,
+            hashedPassword,
+            address,
+            role,
+            position,
+            department,
+            status,
+            new Date(),
+            new Date(),
+        ];
+
+
+        if (emergency_contact_relationship) {
+            fields.push('emergency_contact_relationship');
+            values.push(emergency_contact_relationship);
+        }
+
+        if (emergency_contact_name) {
+            fields.push('emergency_contact_name');
+            values.push(emergency_contact_name);
+        }
+
+        if (emergency_contact) {
+            fields.push('emergency_contact');
+            values.push(emergency_contact);
+        }
+
+        if (bank_name) {
+            fields.push('bank_name');
+            values.push(bank_name);
+        }
+
+        if (account_number) {
+            fields.push('account_number');
+            values.push(account_number);
+        }
+
+        if (ifsc) {
+            fields.push('ifsc');
+            values.push(ifsc);
+        }
+
+        if (increment_date) {
+            fields.push('increment_date');
+            values.push(increment_date);
+        }
+
+        if (skype_email) {
+            fields.push('skype_email');
+            values.push(skype_email);
+        }
+
+        if (ultivic_email) {
+            fields.push('ultivic_email');
+            values.push(ultivic_email);
+        }
+
+        if (salary) {
+            fields.push('salary');
+            values.push(salary);
+        }
+
+        if (security) {
+            fields.push('security');
+            values.push(security);
+        }
+
+        if (total_security) {
+            fields.push('total_security');
+            values.push(total_security);
+        }
+
+        if (installments) {
+            fields.push('installments');
+            values.push(installments);
+        }
+
+       
+        const createUserQuery = `
+            INSERT INTO users (${fields.join(', ')}) VALUES (${values.map(() => '?').join(', ')})
+        `;
+
+        
+        console.log("Final SQL query:", createUserQuery);
+        console.log("Values to insert:", values);
+
+       
+        await sequelize.query(createUserQuery, {
+            replacements: values,
+            transaction: t,
+        });
+
+        const user_id = await sequelize.query(
+            `SELECT LAST_INSERT_ID() AS user_id`,
+            { type: sequelize.QueryTypes.SELECT, transaction: t }
+        );
+
+ 
+        const roleRecord = await sequelize.query(
+            `SELECT id FROM roles WHERE role = ?`,
+            { replacements: [role], type: sequelize.QueryTypes.SELECT, transaction: t }
+        );
+
+        if (roleRecord.length === 0) {
+            await t.rollback();
+            return res.status(400).json({ message: "Role does not exist." });
+        }
+
+        const role_id = roleRecord[0].id;
+
+        await sequelize.query(
+            `INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)`,
+            { replacements: [user_id[0].user_id, role_id], transaction: t }
+        );
+
+       
+        if (documents && documents.length > 0) {
+            for (const doc of documents) {
+                await sequelize.query(
+                    `INSERT INTO documents (user_id, document_name) VALUES (?, ?)`,
+                    { replacements: [user_id[0].user_id, doc], transaction: t }
+                );
+            }
+        }
+
+        await t.commit();
+
+      
+        await send_email({
+            email: email,
+            subject: `Ums Credentials`,
+            message: `Hey, your account for Ultivic has been created. Please log in with these credentials. Email: ${email} and password: ${password}`,
+        });
+
+        return res.status(201).json({ message: "User has been created successfully." });
+    } catch (error) {
+        await t.rollback();
+        console.error("ERROR::", error);
+        return res.status(500).json({ message: "An error occurred while creating the user." });
     }
+};
 
-    if (confirm_password !== password) {
-      await t.rollback();
-      return res.status(400).json(errorResponse("Password and confirm password do not match."));
-    }
 
-    const hashedPassword = await encrypt_password(password);
-
-    const createUserQuery = `
-        INSERT INTO users (
-          name, username, email, mobile, emergency_contact_relationship, emergency_contact_name,
-          emergency_contact, bank_name, account_number, ifsc, increment_date, gender, dob, doj, skype_email,
-          ultivic_email, salary, security, total_security, installments, position, department, status, 
-          password, address, role
-        ) VALUES (
-          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?
-        )
-      `;
-
-    const values = [
-      name, username, email, mobile, emergency_contact_relationship, emergency_contact_name,
-      emergency_contact, bank_name, account_number, ifsc, increment_date, gender, dob, doj, skype_email,
-      ultivic_email, salary, security, total_security, installments, position, department, status,
-      hashedPassword, address, role
-    ];
-
-    const is_user_created = await sequelize.query(createUserQuery, {
-      replacements: values,
-      transaction: t  
-    });
-
-    if (!is_user_created) {
-      await t.rollback();  
-      return res.status(400).json(errorResponse("Error while creating user, please try again later"));
-    }
-
-    const get_role_id = `SELECT id FROM roles WHERE role = ?`;
-    const [is_role_exist] = await sequelize.query(get_role_id, {
-      replacements: [role],
-      type: sequelize.QueryTypes.SELECT,
-      transaction: t 
-    });
-
-    if (!is_role_exist) {
-      await t.rollback();  
-      return res.status(400).json(errorResponse("Sorry, role does not exist"));
-    }
-
-    const role_id = is_role_exist.id;
-    const user_id = is_user_created[0];
-
-    const assigned_role_to_employee = `INSERT INTO user_roles (user_id, role_id) VALUES(?, ?)`;
-    const [is_role_assigned] = await sequelize.query(assigned_role_to_employee, {
-      replacements: [user_id, role_id],
-      type: sequelize.QueryTypes.INSERT,
-      transaction: t  
-    });
-
-    if (!is_role_assigned) {
-      await t.rollback();  
-      return res.status(400).json(errorResponse("Error while assigning new role to employee"));
-    }
-
-   
-    await t.commit();
 
   
-    await send_email({
-      email: email,
-      subject: `Ums Credentials`,
-      message: `Hey, your account for Ultivic has been created. Please log in with these credentials. Email: ${email} and password: ${password}`
-    });
-
-    return res.status(201).json(successResponse("User has been created successfully, a confirmation email has been sent to the user's email."));
-  } catch (error) {
-    await t.rollback();  // Rollback transaction on any error
-    console.error("ERROR::", error);
-    return res.status(500).json(errorResponse(error.message));
-  }
-};
+  
+  
 
 
 

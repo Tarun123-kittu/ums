@@ -24,31 +24,31 @@ module.exports = {
             },
             mobile: {
                 type: Sequelize.STRING,
-                allowNull: false,
+                allowNull: true,
             },
             emergency_contact_relationship: {
                 type: Sequelize.STRING,
-                allowNull: false,
+                allowNull: true,
             },
             emergency_contact_name: {
                 type: Sequelize.STRING,
-                allowNull: false,
+                allowNull: true,
             },
             emergency_contact: {
                 type: Sequelize.STRING,
-                allowNull: false,
+                allowNull: true,
             },
             bank_name: {
                 type: Sequelize.STRING,
-                allowNull: false,
+                allowNull: true,
             },
             account_number: {
                 type: Sequelize.STRING,
-                allowNull: false,
+                allowNull: true,
             },
             ifsc: {
                 type: Sequelize.STRING,
-                allowNull: false,
+                allowNull: true,
             },
             increment_date: {
                 type: Sequelize.DATE,
@@ -72,15 +72,15 @@ module.exports = {
             },
             skype_email: {
                 type: Sequelize.STRING,
-                allowNull: false,
+                allowNull: true,
             },
             ultivic_email: {
                 type: Sequelize.STRING,
-                allowNull: false,
+                allowNull: true,
             },
             salary: {
-                type: Sequelize.FLOAT,
-                allowNull: false,
+                type: Sequelize.FLOAT,  
+                allowNull: true,
             },
             security: {
                 type: Sequelize.FLOAT,

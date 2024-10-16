@@ -363,10 +363,13 @@ exports.update_key_point = async (req, res) => {
     }
 };
 
-exports.sendLeadInterviewLink = async (req, res) => {
-    const t = await sequelize.transaction();
 
+
+
+exports.sendLeadInterviewLink = async (req, res) => {
     try {
+    const t = await sequelize.transaction();
+    
         const { lead_id, test_series } = req.query;
 
         if (!lead_id) {

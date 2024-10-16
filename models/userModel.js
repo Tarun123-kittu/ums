@@ -25,31 +25,31 @@ module.exports = (sequelize) => {
     },
     mobile: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     emergency_contact_relationship: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     emergency_contact_name: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     emergency_contact: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     bank_name: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     account_number: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     ifsc: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     increment_date: {
       type: DataTypes.DATE,
@@ -73,15 +73,15 @@ module.exports = (sequelize) => {
     },
     skype_email: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     ultivic_email: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     salary: {
       type: DataTypes.FLOAT,
-      allowNull: false,
+      allowNull: true,
     },
     security: {
       type: DataTypes.FLOAT,
