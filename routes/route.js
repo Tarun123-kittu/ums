@@ -68,9 +68,9 @@ router.post("/change_password", validateChangePassword, validateChangePasswordDa
 router.get("/get_employee_details/:id", authenticateToken, userController.get_employee_details)
 router.get("/get_employees", authenticateToken, userController.get_employees)
 router.patch("/delete_employee/:id", authenticateToken, userController.delete_employee)
-router.put("/update_user", authenticateToken,updateUserValidator, userController.update_user)
+router.put("/update_user", authenticateToken, updateUserValidator, userController.update_user)
 router.get("/get_all_username", authenticateToken, userController.get_all_users_name)
-router.get("/get_user_documents",authenticateToken,userController.get_user_documents)
+router.get("/get_user_documents", authenticateToken, userController.get_user_documents)
 
 
 
@@ -109,6 +109,7 @@ router.get("/get_attendances", authenticateToken, attendanceController.get_atten
 router.get("/get_attendances_report", authenticateToken, attendanceController.get_attendance_report)
 router.put("/mark_break", authenticateToken, attendanceController.mark_break)
 router.put("/unmark_break", authenticateToken, attendanceController.unmark_break)
+router.get("/get_user_monthly_report", authenticateToken, attendanceController.get_user_monthly_report)
 
 // leave routes
 router.post("/apply_leave", authenticateToken, validateLeaveRequest, leaveController.apply_leave)
@@ -192,12 +193,12 @@ router.put("/update_in_round_count", authenticateToken, validateUpdateInRound, f
 
 
 //dashbord
-router.get("/get_dashboard_leaves",authenticateToken,dashboardController.get_dashboard_leaves)
-router.get("/get_dashboard_interview_leads_overview",authenticateToken,dashboardController.get_dashboard_interview_leads_overview)
-router.get("/get_employees_working_time",authenticateToken,dashboardController.get_employees_working_time)
+router.get("/get_dashboard_leaves", authenticateToken, dashboardController.get_dashboard_leaves)
+router.get("/get_dashboard_interview_leads_overview", authenticateToken, dashboardController.get_dashboard_interview_leads_overview)
+router.get("/get_employees_working_time", authenticateToken, dashboardController.get_employees_working_time)
 router.get("/get_user_today_attendance", authenticateToken, dashboardController.get_user_today_attendance)
 router.get("/get_all_present_employee", authenticateToken, dashboardController.get_all_present_employee)
-router.get("/get_all_on_leave_employees",authenticateToken,dashboardController.get_all_on_leave_employees)
-router.get("/get_all_interviews",authenticateToken,dashboardController.get_all_interviews)
+router.get("/get_all_on_leave_employees", authenticateToken, dashboardController.get_all_on_leave_employees)
+router.get("/get_all_interviews", authenticateToken, dashboardController.get_all_interviews)
 
 module.exports = router

@@ -16,21 +16,21 @@ const createUserValidator = [
     check("password", "Please enter your password.").not().isEmpty(),
     check("address", "Address is required.").not().isEmpty(),
     check("role", "Role is required.").not().isEmpty(),
-    
-    // Optional fields
-    check("emergency_contact_relationship").optional().not().isEmpty().withMessage("Emergency contact relationship is required."),
-    check("emergency_contact_name").optional().not().isEmpty().withMessage("Emergency contact name is required."),
-    check("emergency_contact").optional().not().isEmpty().isLength({ min: 10, max: 10 }).isNumeric().withMessage("Emergency contact number must be numeric and 10 digits."),
-    check("bank_name").optional().not().isEmpty().withMessage("Bank name is required."),
-    check("account_number").optional().not().isEmpty().isNumeric().withMessage("Account number must be numeric."),
-    check("ifsc").optional().not().isEmpty().withMessage("IFSC code is required."),
-    check("increment_date").optional().not().isEmpty().isISO8601().withMessage("Invalid date format. Use YYYY-MM-DD."),
-    check("skype_email").optional().not().isEmpty().isEmail().withMessage("Invalid Skype email format."),
-    check("ultivic_email").optional().not().isEmpty().isEmail().withMessage("Invalid Ultivic email format."),
-    check("salary").optional().not().isEmpty().isNumeric().withMessage("Salary must be numeric."),
-    check("security").optional().not().isEmpty().isNumeric().withMessage("Security must be numeric."),
-    check("total_security").optional().not().isEmpty().isNumeric().withMessage("Total security must be numeric."),
-    check("installments").optional().not().isEmpty().isNumeric().withMessage("Installments must be numeric."),
+
+    // // Optional fields
+    // check("emergency_contact_relationship").optional().not().isEmpty().withMessage("Emergency contact relationship is required."),
+    // check("emergency_contact_name").optional().not().isEmpty().withMessage("Emergency contact name is required."),
+    // check("emergency_contact").optional().not().isEmpty().isLength({ min: 10, max: 10 }).isNumeric().withMessage("Emergency contact number must be numeric and 10 digits."),
+    // check("bank_name").optional().not().isEmpty().withMessage("Bank name is required."),
+    // check("account_number").optional().not().isEmpty().isNumeric().withMessage("Account number must be numeric."),
+    // check("ifsc").optional().not().isEmpty().withMessage("IFSC code is required."),
+    // check("increment_date").optional().not().isEmpty().isISO8601().withMessage("Invalid date format. Use YYYY-MM-DD."),
+    // check("skype_email").optional().not().isEmpty().isEmail().withMessage("Invalid Skype email format."),
+    // check("ultivic_email").optional().not().isEmpty().isEmail().withMessage("Invalid Ultivic email format."),
+    // check("salary").optional().not().isEmpty().isNumeric().withMessage("Salary must be numeric."),
+    // check("security").optional().not().isEmpty().isNumeric().withMessage("Security must be numeric."),
+    // check("total_security").optional().not().isEmpty().isNumeric().withMessage("Total security must be numeric."),
+    // check("installments").optional().not().isEmpty().isNumeric().withMessage("Installments must be numeric."),
 
     (req, res, next) => {
         const errors = validationResult(req);
@@ -58,7 +58,7 @@ const updateUserValidator = [
     // check("password", "Please enter your password.").not().isEmpty(),
     check("address", "Address is required.").not().isEmpty(),
     // check("role", "Role is required.").not().isEmpty(),
-    
+
     // Optional fields
     // check("emergency_contact_relationship").optional().not().isEmpty().withMessage("Emergency contact relationship is required."),
     // check("emergency_contact_name").optional().not().isEmpty().withMessage("Emergency contact name is required."),
@@ -271,7 +271,7 @@ const validateDeleteUserRole = [
 const validateHolidaysAndEvents = [
     check('occasion_name', 'Please provide occasion name.').not().isEmpty(),
     check('occasion_type', 'Please provide occasion type.').not().isEmpty()
-    .isIn(['holiday','event']).withMessage('ocassion type must be one of : holiday, event'),
+        .isIn(['holiday', 'event']).withMessage('ocassion type must be one of : holiday, event'),
     check('date', 'Please provide date.').not().isEmpty(),
     (req, res, next) => {
         const errors = validationResult(req);
@@ -524,20 +524,20 @@ const validateFaceToFaceOrFinalRound = [
     check('status', 'status not present in the request body').not().isEmpty()
         .isIn(['selected', 'rejected', 'pending', 'on hold']).withMessage('staus must be one of : selected, rejected, pending, on hold'),
     check('round_type', 'round type not present in the request body').not().isEmpty()
-        .isIn(['final','face_to_face']).withMessage('round type must be one of : final, face_to_face'),
-        (req, res, next) => {
-            const errors = validationResult(req);
-            if (!errors.isEmpty()) {
-                return res.status(400).json({ message: errors.array()[0].msg, type: 'error' });
-            }
-            next();
+        .isIn(['final', 'face_to_face']).withMessage('round type must be one of : final, face_to_face'),
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ message: errors.array()[0].msg, type: 'error' });
         }
+        next();
+    }
 ]
 
 
 const validateUpdateInRound = [
-    check('leadId','Please add lead Id in the query params').not().isEmpty(),
-    check('in_round_count','Please add in round count').not().isEmpty(),
+    check('leadId', 'Please add lead Id in the query params').not().isEmpty(),
+    check('in_round_count', 'Please add in round count').not().isEmpty(),
     (req, res, next) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
