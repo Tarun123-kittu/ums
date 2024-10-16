@@ -43,6 +43,49 @@ const createUserValidator = [
 
 
 
+const updateUserValidator = [
+    // Required fields
+    check("name", "Name is required.").not().isEmpty(),
+    check("username", "Username is required.").not().isEmpty(),
+    check("email", "Email is required.").not().isEmpty().isEmail().withMessage("Please enter a correct email format."),
+    check("mobile", "Mobile number is required.").not().isEmpty().isLength({ min: 10, max: 10 }).isNumeric().withMessage("Mobile number must be numeric and 10 digits."),
+    check("gender", "Gender is required.").not().isEmpty(),
+    check("dob", "Date of birth is required.").not().isEmpty().isISO8601().withMessage("Invalid date format for DOB. Use YYYY-MM-DD."),
+    check("doj", "Date of joining is required.").not().isEmpty().isISO8601().withMessage("Invalid date format for DOJ. Use YYYY-MM-DD."),
+    check("position", "Position is required.").not().isEmpty(),
+    check("department", "Department is required.").not().isEmpty(),
+    check("status", "Status is required.").not().isEmpty(),
+    // check("password", "Please enter your password.").not().isEmpty(),
+    check("address", "Address is required.").not().isEmpty(),
+    // check("role", "Role is required.").not().isEmpty(),
+    
+    // Optional fields
+    // check("emergency_contact_relationship").optional().not().isEmpty().withMessage("Emergency contact relationship is required."),
+    // check("emergency_contact_name").optional().not().isEmpty().withMessage("Emergency contact name is required."),
+    // check("emergency_contact").optional().not().isEmpty().isLength({ min: 10, max: 10 }).isNumeric().withMessage("Emergency contact number must be numeric and 10 digits."),
+    // check("bank_name").optional().not().isEmpty().withMessage("Bank name is required."),
+    // check("account_number").optional().not().isEmpty().isNumeric().withMessage("Account number must be numeric."),
+    // check("ifsc").optional().not().isEmpty().withMessage("IFSC code is required."),
+    // check("increment_date").optional().not().isEmpty().isISO8601().withMessage("Invalid date format. Use YYYY-MM-DD."),
+    // check("skype_email").optional().not().isEmpty().isEmail().withMessage("Invalid Skype email format."),
+    // check("ultivic_email").optional().not().isEmpty().isEmail().withMessage("Invalid Ultivic email format."),
+    // check("salary").optional().not().isEmpty().isNumeric().withMessage("Salary must be numeric."),
+    // check("security").optional().not().isEmpty().isNumeric().withMessage("Security must be numeric."),
+    // check("total_security").optional().not().isEmpty().isNumeric().withMessage("Total security must be numeric."),
+    // check("installments").optional().not().isEmpty().isNumeric().withMessage("Installments must be numeric."),
+
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ message: errors.array()[0].msg, type: 'error' });
+        }
+        next();
+    }
+];
+
+
+
+
 const loginValidator = [
     check("email", "Email is required.").not().isEmpty(),
     check("email", "Please enter a correct email format.").isEmail(),
@@ -539,6 +582,7 @@ module.exports = {
     validateSubmitTechincalRound,
     validateCheckLeadAnswer,
     validateFaceToFaceOrFinalRound,
-    validateUpdateInRound
+    validateUpdateInRound,
+    updateUserValidator
 }
 

@@ -640,7 +640,7 @@ exports.update_user = async (req, res) => {
     id, name, username, email, mobile, emergency_contact_relationship, emergency_contact_name,
     emergency_contact, bank_name, account_number, ifsc, increment_date, gender, dob, doj, skype_email,
     ultivic_email, salary, security, total_security, installments, position, department, status,
-    address
+    address, documents 
   } = req.body;
 
   try {
@@ -660,134 +660,108 @@ exports.update_user = async (req, res) => {
       return res.status(404).json(errorResponse("User not found"));
     }
 
-   
+    
     const requiredFields = ['name', 'username', 'email', 'mobile', 'gender', 'dob', 'doj', 'position', 'department', 'status', 'address'];
-
-    const missingFields = requiredFields.filter(field => !req.body[field]);
+    const missingFields = requiredFields.filter(field => req.body[field] === undefined);
     if (missingFields.length > 0) {
       return res.status(400).json(errorResponse(`Missing required fields: ${missingFields.join(', ')}`));
     }
 
-  
+
     const fields = [];
     const values = [];
 
-    if (name) {
-      fields.push('name = ?');
-      values.push(name);
-    }
-    if (username) {
-      fields.push('username = ?');
-      values.push(username);
-    }
-    if (email) {
-      fields.push('email = ?');
-      values.push(email);
-    }
-    if (mobile) {
-      fields.push('mobile = ?');
-      values.push(mobile);
-    }
-    if (emergency_contact_relationship) {
-      fields.push('emergency_contact_relationship = ?');
-      values.push(emergency_contact_relationship);
-    }
-    if (emergency_contact_name) {
-      fields.push('emergency_contact_name = ?');
-      values.push(emergency_contact_name);
-    }
-    if (emergency_contact) {
-      fields.push('emergency_contact = ?');
-      values.push(emergency_contact);
-    }
-    if (bank_name) {
-      fields.push('bank_name = ?');
-      values.push(bank_name);
-    }
-    if (account_number) {
-      fields.push('account_number = ?');
-      values.push(account_number);
-    }
-    if (ifsc) {
-      fields.push('ifsc = ?');
-      values.push(ifsc);
-    }
-    if (increment_date) {
-      fields.push('increment_date = ?');
-      values.push(increment_date);
-    }
-    if (gender) {
-      fields.push('gender = ?');
-      values.push(gender);
-    }
-    if (dob) {
-      fields.push('dob = ?');
-      values.push(dob);
-    }
-    if (doj) {
-      fields.push('doj = ?');
-      values.push(doj);
-    }
-    if (skype_email) {
-      fields.push('skype_email = ?');
-      values.push(skype_email);
-    }
-    if (ultivic_email) {
-      fields.push('ultivic_email = ?');
-      values.push(ultivic_email);
-    }
-    if (salary) {
-      fields.push('salary = ?');
-      values.push(salary);
-    }
-    if (security) {
-      fields.push('security = ?');
-      values.push(security);
-    }
-    if (total_security) {
-      fields.push('total_security = ?');
-      values.push(total_security);
-    }
-    if (installments) {
-      fields.push('installments = ?');
-      values.push(installments);
-    }
-    if (position) {
-      fields.push('position = ?');
-      values.push(position);
-    }
-    if (department) {
-      fields.push('department = ?');
-      values.push(department);
-    }
-    if (status) {
-      fields.push('status = ?');
-      values.push(status);
-    }
-    if (address) {
-      fields.push('address = ?');
-      values.push(address);
-    }
+    const handleField = (fieldValue, columnName, defaultValue = null) => {
+      if (fieldValue === "") {
+        fields.push(`${columnName} = ?`);
+        values.push(defaultValue); 
+      } else if (fieldValue !== undefined) {
+        fields.push(`${columnName} = ?`);
+        values.push(fieldValue);
+      }
+    };
 
+    handleField(name, 'name');
+    handleField(username, 'username');
+    handleField(email, 'email');
+    handleField(mobile, 'mobile');
+    handleField(emergency_contact_relationship, 'emergency_contact_relationship');
+    handleField(emergency_contact_name, 'emergency_contact_name');
+    handleField(emergency_contact, 'emergency_contact');
+    handleField(bank_name, 'bank_name');
+    handleField(account_number, 'account_number');
+    handleField(ifsc, 'ifsc');
+    handleField(increment_date, 'increment_date');
+    handleField(gender, 'gender');
+    handleField(dob, 'dob');
+    handleField(doj, 'doj');
+    handleField(skype_email, 'skype_email');
+    handleField(ultivic_email, 'ultivic_email');
+    handleField(salary, 'salary');
+    handleField(security, 'security');
+    handleField(total_security, 'total_security');
+    handleField(installments, 'installments');
+    handleField(position, 'position');
+    handleField(department, 'department');
+    handleField(status, 'status');
+    handleField(address, 'address');
 
     if (fields.length === 0) {
       return res.status(400).json(errorResponse("No fields to update"));
     }
 
-   
+  
     const updateUserQuery = `
       UPDATE users
       SET ${fields.join(', ')}
       WHERE id = ?
     `;
 
-   
+    
     values.push(id);
 
-   
+    
     await sequelize.query(updateUserQuery, {
       replacements: values,
     });
+
+    
+    
+    if (Array.isArray(documents)) {
+     
+      const getDocumentsQuery = `SELECT document_name FROM documents WHERE user_id = ?`;
+      const existingDocuments = await sequelize.query(getDocumentsQuery, {
+        replacements: [id],
+        type: sequelize.QueryTypes.SELECT,
+      });
+      
+      const existingDocumentNames = existingDocuments.map(doc => doc.document_name);
+
+  
+      const newDocuments = documents.filter(doc => !existingDocumentNames.includes(doc));
+
+     
+      const documentsToRemove = existingDocumentNames.filter(doc => !documents.includes(doc));
+
+  
+      if (newDocuments.length > 0) {
+        const insertDocumentsQuery = `INSERT INTO documents (user_id, document_name, createdAt, updatedAt) VALUES ${newDocuments.map(() => "(?, ?, NOW(), NOW())").join(", ")}`;
+
+        const insertValues = newDocuments.flatMap(doc => [id, doc]);
+
+        await sequelize.query(insertDocumentsQuery, {
+          replacements: insertValues,
+        });
+      }
+
+      
+      if (documentsToRemove.length > 0) {
+        const deleteDocumentsQuery = `DELETE FROM documents WHERE user_id = ? AND document_name IN (${documentsToRemove.map(() => "?").join(", ")})`;
+        await sequelize.query(deleteDocumentsQuery, {
+          replacements: [id, ...documentsToRemove],
+        });
+      }
+    }
 
     res.status(200).json(successResponse("User updated successfully"));
   } catch (error) {
@@ -795,6 +769,9 @@ exports.update_user = async (req, res) => {
     res.status(500).json({ error: "Error updating user", details: error.message });
   }
 };
+
+
+
 
 
 

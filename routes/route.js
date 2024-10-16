@@ -42,7 +42,8 @@ const {
     ValidateUpdateSeries,
     validateCheckLeadAnswer,
     validateFaceToFaceOrFinalRound,
-    validateUpdateInRound
+    validateUpdateInRound,
+    updateUserValidator
 } = require('../middleware/validationMiddleware')
 
 const {
@@ -58,9 +59,6 @@ const {
 
 
 
-
-
-
 // user auth routes 
 router.post("/create_user", authenticateToken, createUserValidator, userController.create_user)
 router.post("/login", loginValidator, validateLoginDAtaTypes, userController.login)
@@ -70,7 +68,7 @@ router.post("/change_password", validateChangePassword, validateChangePasswordDa
 router.get("/get_employee_details/:id", authenticateToken, userController.get_employee_details)
 router.get("/get_employees", authenticateToken, userController.get_employees)
 router.patch("/delete_employee/:id", authenticateToken, userController.delete_employee)
-router.put("/update_user", authenticateToken,createUserValidator, userController.update_user)
+router.put("/update_user", authenticateToken,updateUserValidator, userController.update_user)
 router.get("/get_all_username", authenticateToken, userController.get_all_users_name)
 router.get("/get_user_documents",authenticateToken,userController.get_user_documents)
 
