@@ -83,6 +83,9 @@ exports.create_lead = async (req, res) => {
     }
 }
 
+
+
+
 exports.get_lead = async (req, res) => {
     try {
         const id = req.query.leadId;
