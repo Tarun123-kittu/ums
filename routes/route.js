@@ -70,8 +70,9 @@ router.post("/change_password", validateChangePassword, validateChangePasswordDa
 router.get("/get_employee_details/:id", authenticateToken, userController.get_employee_details)
 router.get("/get_employees", authenticateToken, userController.get_employees)
 router.patch("/delete_employee/:id", authenticateToken, userController.delete_employee)
-router.put("/update_user", authenticateToken, userController.update_user)
+router.put("/update_user", authenticateToken,createUserValidator, userController.update_user)
 router.get("/get_all_username", authenticateToken, userController.get_all_users_name)
+router.get("/get_user_documents",authenticateToken,userController.get_user_documents)
 
 
 
