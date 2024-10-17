@@ -193,11 +193,14 @@ exports.get_holidayOrEvent = async (req, res) => {
 }
 
 
+
+
+
 exports.get_events_and_birthdays = async (req, res) => {
     try {
         const currentYear = new Date().getFullYear();
 
-    
+     
         const getHolidaysAndEventsQuery = `
             SELECT 
                 occasion_name, 
@@ -213,28 +216,25 @@ exports.get_events_and_birthdays = async (req, res) => {
 
         
         const getAllBirthdaysAndJoiningQuery = `
-                SELECT 
-            name, 
-            DATE_FORMAT(dob, '%Y-%m-%d') as dob, 
-            DATE_FORMAT(doj, '%Y-%m-%d') as doj
-        FROM 
-            users
-        WHERE 
-            is_disabled = 0
-        ORDER BY 
-            dob ASC, doj ASC;
-
+            SELECT 
+                name, 
+                DATE_FORMAT(dob, '%Y-%m-%d') as dob, 
+                DATE_FORMAT(doj, '%Y-%m-%d') as doj
+            FROM 
+                users
+            WHERE 
+                is_disabled = 0
+            ORDER BY 
+                dob ASC, doj ASC;
         `;
 
         const t = await sequelize.transaction();
 
-      
         const [holidaysAndEvents] = await sequelize.query(getHolidaysAndEventsQuery, {
             replacements: { currentYear },
             transaction: t,
         });
 
-        
         const [allBirthdaysAndJoining] = await sequelize.query(getAllBirthdaysAndJoiningQuery, {
             transaction: t,
         });
@@ -242,52 +242,51 @@ exports.get_events_and_birthdays = async (req, res) => {
         await t.commit();
 
         const combinedResults = [];
-        let idCounter = 1; 
+        let idCounter = 1;
 
-
-        console.log("holidays and events ------",holidaysAndEvents)
-     
+       
         holidaysAndEvents.forEach(event => {
             combinedResults.push({
                 id: idCounter++,
                 title: event.occasion_name,
                 start: new Date(currentYear, new Date(event.date).getMonth(), new Date(event.date).getDate()),
-                end: new Date(currentYear, new Date(event.date).getMonth(), new Date(event.date).getDate(), 23, 59), 
-                color: event.occasion_type == 'holiday' ? '#28B463' : '#E74C3C',
+                end: new Date(currentYear, new Date(event.date).getMonth(), new Date(event.date).getDate(), 23, 59),
+                color: event.occasion_type === 'holiday' ? '#8E44AD' : '#E74C3C',
             });
         });
 
-      
+       
         allBirthdaysAndJoining.forEach(entry => {
+            
             const birthdayDate = new Date(entry.dob);
             const joiningDate = new Date(entry.doj);
 
-         
+            
             if (entry.dob) {
                 birthdayDate.setFullYear(currentYear);
                 combinedResults.push({
                     id: idCounter++,
                     title: `${entry.name}'s Birthday`,
                     start: new Date(currentYear, birthdayDate.getMonth(), birthdayDate.getDate()),
-                    end: new Date(currentYear, birthdayDate.getMonth(), birthdayDate.getDate(), 23, 59), 
+                    end: new Date(currentYear, birthdayDate.getMonth(), birthdayDate.getDate(), 23, 59),
                     color: '#3498DB', 
                 });
             }
 
-          
+           
             if (entry.doj) {
                 joiningDate.setFullYear(currentYear);
                 combinedResults.push({
                     id: idCounter++,
                     title: `${entry.name}'s Joining Anniversary`,
                     start: new Date(currentYear, joiningDate.getMonth(), joiningDate.getDate()),
-                    end: new Date(currentYear, joiningDate.getMonth(), joiningDate.getDate(), 23, 59), 
+                    end: new Date(currentYear, joiningDate.getMonth(), joiningDate.getDate(), 23, 59),
                     color: '#F39C12',
                 });
             }
         });
 
-    
+      
         const addWeekendHolidays = (year) => {
             let date = new Date(year, 0, 1);
 
@@ -297,7 +296,7 @@ exports.get_events_and_birthdays = async (req, res) => {
                 if (day === 0 || day === 6) { 
                     combinedResults.push({
                         id: idCounter++,
-                        title: 'Weekend', 
+                        title: 'Weekend',
                         start: new Date(date),
                         end: new Date(date),
                         color: '#28B463', 
@@ -315,7 +314,7 @@ exports.get_events_and_birthdays = async (req, res) => {
             return res.status(400).json(errorResponse(`No data retrieved.`));
         }
 
-       
+        
         combinedResults.sort((a, b) => new Date(a.start) - new Date(b.start));
 
         return res.status(200).json({
@@ -329,6 +328,10 @@ exports.get_events_and_birthdays = async (req, res) => {
         return res.status(500).json(errorResponse(error.message));
     }
 };
+
+
+
+
 
 
 
@@ -374,7 +377,7 @@ exports.get_current_and_next_month_events = async (req, res) => {
             transaction: t,
         });
 
-       
+  
         const [allBirthdaysAndJoining] = await sequelize.query(getAllBirthdaysAndJoiningQuery, {
             transaction: t,
         });
