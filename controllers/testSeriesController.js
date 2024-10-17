@@ -103,6 +103,7 @@ exports.get_all_series = async (req, res) => {
                     ts.id
             `;
 
+           
             let [result] = await sequelize.query(getAllSeriesQuery, {
                 replacements: [id]
             });
@@ -134,6 +135,7 @@ exports.get_all_series = async (req, res) => {
                     ts.status,
                     ts.time_taken,
                     ts.description,
+                    ts.experience_level,
                     ts.createdBy,
                     u.name,
                     l.language,
