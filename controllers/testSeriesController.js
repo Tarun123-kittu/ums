@@ -2,11 +2,14 @@ let { sequelize } = require('../models')
 let { errorResponse, successResponse } = require("../utils/responseHandler")
 
 
+
+
+
 exports.create_series = async (req, res) => {
     try {
         let userId = req.result.user_id
         const { language_id, series_name, time_taken, description, experience_level } = req.body;
-        console.log(experience_level)
+       
         let checkLanguageExistQuery = `SELECT id FROM Languages where id = ?`
 
         let [language] = await sequelize.query(checkLanguageExistQuery, {

@@ -1,6 +1,6 @@
 const { successResponse, errorResponse } = require("../utils/responseHandler")
 const { sequelize } = require("../models");
-
+const moment = require('moment-timezone');
 
 
 
@@ -141,17 +141,22 @@ exports.get_dashboard_interview_leads_overview = async (req, res) => {
 
 exports.get_employees_working_time = async (req, res) => {
     try {
+        let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
+       
+        
         const query = `
             SELECT 
                 u.id AS user_id,
-                u.name AS employee_name,
+                u.name AS user_name,
                 a.in_time,
                 a.out_time,
-                -- Calculate working hours, using current time if out_time is null
-                IFNULL(
-                    TIMEDIFF(a.out_time, a.in_time), 
-                    TIMEDIFF(NOW(), a.in_time)
-                ) AS working_hours 
+                -- Calculate working hours using TIMESTAMPDIFF to handle date and time
+                CASE 
+                    WHEN a.out_time IS NULL THEN 
+                        TIMESTAMPDIFF(SECOND, CONCAT(CURDATE(), ' ', a.in_time), :currentTime) 
+                    ELSE 
+                        TIMESTAMPDIFF(SECOND, CONCAT(CURDATE(), ' ', a.in_time), CONCAT(CURDATE(), ' ', a.out_time)) 
+                END AS working_seconds
             FROM 
                 attendances a
             JOIN 
@@ -163,24 +168,28 @@ exports.get_employees_working_time = async (req, res) => {
         `;
 
         const result = await sequelize.query(query, {
+            replacements: { currentTime: current_time },
             type: sequelize.QueryTypes.SELECT
         });
 
-        console.log("Query Result:", result);
-
-        return res.status(200).json({
-            success: true,
-            data: result
+        
+        result.forEach(entry => {
+            const seconds = entry.working_seconds;
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            entry.working_hours = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            delete entry.working_seconds;
         });
+
+
+        return res.status(200).json(successResponse(result));
+
     } catch (error) {
         console.error("ERROR::", error);
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        return res.status(500).json(errorResponse(error.message));
     }
 };
-
 
 
 

@@ -13,242 +13,240 @@ const {
 
 
 
-  exports.create_user = async (req, res) => {
-    const t = await sequelize.transaction();
-    try {
-        
-        const {
-            name,
-            username,
-            email,
-            mobile,
-            gender,
-            dob,
-            doj,
-            password,
-            confirm_password,
-            address,
-            role,
-           
-            emergency_contact_relationship,
-            emergency_contact_name,
-            emergency_contact,
-            bank_name,
-            account_number,
-            ifsc,
-            increment_date,
-            skype_email,
-            ultivic_email,
-            salary,
-            security,
-            total_security,
-            installments,
-            position,
-            department,
-            status,
-            documents,
-        } = req.body;
+exports.create_user = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
 
-       
-        console.log("Incoming request body:", req.body);
+    const {
+      name,
+      username,
+      email,
+      mobile,
+      gender,
+      dob,
+      doj,
+      password,
+      confirm_password,
+      address,
+      role,
 
-     
-        const existingUser = await sequelize.query(
-            `SELECT * FROM users WHERE email = ?`,
-            {
-                replacements: [email],
-                type: sequelize.QueryTypes.SELECT,
-                transaction: t,
-            }
-        );
-
-        if (existingUser.length > 0) {
-            await t.rollback();
-            return res.status(400).json({ message: "Email already exists." });
-        }
-
-     
-        if (confirm_password !== password) {
-            await t.rollback();
-            return res.status(400).json({ message: "Password and confirm password do not match." });
-        }
-
-       
-        const hashedPassword = await encrypt_password(password);
-
-       
-        const fields = [
-            'name',
-            'username',
-            'email',
-            'mobile',
-            'gender',
-            'dob',
-            'doj',
-            'password',
-            'address',
-            'role',
-            'position',
-            'department',
-            'status',
-            'createdAt',
-            'updatedAt',
-        ];
-
-        const values = [
-            name,
-            username,
-            email,
-            mobile,
-            gender,
-            dob,
-            doj,
-            hashedPassword,
-            address,
-            role,
-            position,
-            department,
-            status,
-            new Date(),
-            new Date(),
-        ];
+      emergency_contact_relationship,
+      emergency_contact_name,
+      emergency_contact,
+      bank_name,
+      account_number,
+      ifsc,
+      increment_date,
+      skype_email,
+      ultivic_email,
+      salary,
+      security,
+      total_security,
+      installments,
+      position,
+      department,
+      status,
+      documents,
+    } = req.body;
 
 
-        if (emergency_contact_relationship) {
-            fields.push('emergency_contact_relationship');
-            values.push(emergency_contact_relationship);
-        }
 
-        if (emergency_contact_name) {
-            fields.push('emergency_contact_name');
-            values.push(emergency_contact_name);
-        }
 
-        if (emergency_contact) {
-            fields.push('emergency_contact');
-            values.push(emergency_contact);
-        }
+    const existingUser = await sequelize.query(
+      `SELECT * FROM users WHERE email = ?`,
+      {
+        replacements: [email],
+        type: sequelize.QueryTypes.SELECT,
+        transaction: t,
+      }
+    );
 
-        if (bank_name) {
-            fields.push('bank_name');
-            values.push(bank_name);
-        }
+    if (existingUser.length > 0) {
+      await t.rollback();
+      return res.status(400).json({ message: "Email already exists." });
+    }
 
-        if (account_number) {
-            fields.push('account_number');
-            values.push(account_number);
-        }
 
-        if (ifsc) {
-            fields.push('ifsc');
-            values.push(ifsc);
-        }
+    if (confirm_password !== password) {
+      await t.rollback();
+      return res.status(400).json({ message: "Password and confirm password do not match." });
+    }
 
-        if (increment_date) {
-            fields.push('increment_date');
-            values.push(increment_date);
-        }
 
-        if (skype_email) {
-            fields.push('skype_email');
-            values.push(skype_email);
-        }
+    const hashedPassword = await encrypt_password(password);
 
-        if (ultivic_email) {
-            fields.push('ultivic_email');
-            values.push(ultivic_email);
-        }
 
-        if (salary) {
-            fields.push('salary');
-            values.push(salary);
-        }
+    const fields = [
+      'name',
+      'username',
+      'email',
+      'mobile',
+      'gender',
+      'dob',
+      'doj',
+      'password',
+      'address',
+      'role',
+      'position',
+      'department',
+      'status',
+      'createdAt',
+      'updatedAt',
+    ];
 
-        if (security) {
-            fields.push('security');
-            values.push(security);
-        }
+    const values = [
+      name,
+      username,
+      email,
+      mobile,
+      gender,
+      dob,
+      doj,
+      hashedPassword,
+      address,
+      role,
+      position,
+      department,
+      status,
+      new Date(),
+      new Date(),
+    ];
 
-        if (total_security) {
-            fields.push('total_security');
-            values.push(total_security);
-        }
 
-        if (installments) {
-            fields.push('installments');
-            values.push(installments);
-        }
+    if (emergency_contact_relationship) {
+      fields.push('emergency_contact_relationship');
+      values.push(emergency_contact_relationship);
+    }
 
-       
-        const createUserQuery = `
+    if (emergency_contact_name) {
+      fields.push('emergency_contact_name');
+      values.push(emergency_contact_name);
+    }
+
+    if (emergency_contact) {
+      fields.push('emergency_contact');
+      values.push(emergency_contact);
+    }
+
+    if (bank_name) {
+      fields.push('bank_name');
+      values.push(bank_name);
+    }
+
+    if (account_number) {
+      fields.push('account_number');
+      values.push(account_number);
+    }
+
+    if (ifsc) {
+      fields.push('ifsc');
+      values.push(ifsc);
+    }
+
+    if (increment_date) {
+      fields.push('increment_date');
+      values.push(increment_date);
+    }
+
+    if (skype_email) {
+      fields.push('skype_email');
+      values.push(skype_email);
+    }
+
+    if (ultivic_email) {
+      fields.push('ultivic_email');
+      values.push(ultivic_email);
+    }
+
+    if (salary) {
+      fields.push('salary');
+      values.push(salary);
+    }
+
+    if (security) {
+      fields.push('security');
+      values.push(security);
+    }
+
+    if (total_security) {
+      fields.push('total_security');
+      values.push(total_security);
+    }
+
+    if (installments) {
+      fields.push('installments');
+      values.push(installments);
+    }
+
+
+    const createUserQuery = `
             INSERT INTO users (${fields.join(', ')}) VALUES (${values.map(() => '?').join(', ')})
         `;
 
-        
-        console.log("Final SQL query:", createUserQuery);
-        console.log("Values to insert:", values);
 
-       
-        await sequelize.query(createUserQuery, {
-            replacements: values,
-            transaction: t,
-        });
 
-        const user_id = await sequelize.query(
-            `SELECT LAST_INSERT_ID() AS user_id`,
-            { type: sequelize.QueryTypes.SELECT, transaction: t }
-        );
 
- 
-        const roleRecord = await sequelize.query(
-            `SELECT id FROM roles WHERE role = ?`,
-            { replacements: [role], type: sequelize.QueryTypes.SELECT, transaction: t }
-        );
 
-        if (roleRecord.length === 0) {
-            await t.rollback();
-            return res.status(400).json({ message: "Role does not exist." });
-        }
+    await sequelize.query(createUserQuery, {
+      replacements: values,
+      transaction: t,
+    });
 
-        const role_id = roleRecord[0].id;
+    const user_id = await sequelize.query(
+      `SELECT LAST_INSERT_ID() AS user_id`,
+      { type: sequelize.QueryTypes.SELECT, transaction: t }
+    );
 
-        await sequelize.query(
-            `INSERT INTO user_roles (user_id, role_id,createdAt,updatedAt) VALUES (?, ?,NOW(),NOW())`,
-            { replacements: [user_id[0].user_id, role_id], transaction: t }
-        );
 
-       
-        if (documents && documents.length > 0) {
-            for (const doc of documents) {
-                await sequelize.query(
-                    `INSERT INTO documents (user_id, document_name,createdAt,updatedAt) VALUES (?, ?,NOW(),NOW())`,
-                    { replacements: [user_id[0].user_id, doc], transaction: t }
-                );
-            }
-        }
+    const roleRecord = await sequelize.query(
+      `SELECT id FROM roles WHERE role = ?`,
+      { replacements: [role], type: sequelize.QueryTypes.SELECT, transaction: t }
+    );
 
-        await t.commit();
-
-      
-        await send_email({
-            email: email,
-            subject: `Ums Credentials`,
-            message: `Hey, your account for Ultivic has been created. Please log in with these credentials. Email: ${email} and password: ${password}`,
-        });
-
-        return res.status(201).json({ message: "User has been created successfully." });
-    } catch (error) {
-        await t.rollback();
-        console.error("ERROR::", error);
-        return res.status(500).json({ message: "An error occurred while creating the user." });
+    if (roleRecord.length === 0) {
+      await t.rollback();
+      return res.status(400).json({ message: "Role does not exist." });
     }
+
+    const role_id = roleRecord[0].id;
+
+    await sequelize.query(
+      `INSERT INTO user_roles (user_id, role_id,createdAt,updatedAt) VALUES (?, ?,NOW(),NOW())`,
+      { replacements: [user_id[0].user_id, role_id], transaction: t }
+    );
+
+
+    if (documents && documents.length > 0) {
+      for (const doc of documents) {
+        await sequelize.query(
+          `INSERT INTO documents (user_id, document_name,createdAt,updatedAt) VALUES (?, ?,NOW(),NOW())`,
+          { replacements: [user_id[0].user_id, doc], transaction: t }
+        );
+      }
+    }
+
+    await t.commit();
+
+
+    await send_email({
+      email: email,
+      subject: `Ums Credentials`,
+      message: `Hey, your account for Ultivic has been created. Please log in with these credentials. Email: ${email} and password: ${password}`,
+    });
+
+    return res.status(201).json({ message: "User has been created successfully." });
+  } catch (error) {
+    await t.rollback();
+    console.error("ERROR::", error);
+    return res.status(500).json({ message: "An error occurred while creating the user." });
+  }
 };
 
 
 
-  
-  
-  
+
+
+
 
 
 
@@ -314,7 +312,7 @@ exports.login = async (req, res) => {
       return acc;
     }, []);
 
-    
+
     const token = await createToken(roles, user_id, username, email);
 
     return res.status(200).json({
@@ -512,11 +510,16 @@ exports.get_employee_details = async (req, res) => {
   }
 };
 
+
+
+
+
+
 exports.get_employees = async (req, res) => {
-  const { name, status, limit = 10, page } = req.query; 
+  const { name, status, limit = 10, page } = req.query;
 
   try {
-  
+
     let get_all_employee_query = `
       SELECT 
         id, name, username, email, mobile, emergency_contact_relationship, emergency_contact_name,
@@ -528,7 +531,7 @@ exports.get_employees = async (req, res) => {
       WHERE is_disabled = false
     `;
 
-    
+
     let count_query = `
       SELECT COUNT(*) AS total 
       FROM users 
@@ -537,7 +540,7 @@ exports.get_employees = async (req, res) => {
 
     const replacements = {};
 
-   
+
     if (name) {
       get_all_employee_query += ` AND name LIKE :name`;
       count_query += ` AND name LIKE :name`;
@@ -550,15 +553,15 @@ exports.get_employees = async (req, res) => {
       replacements.status = status;
     }
 
-   
+
     const offset = (page - 1) * limit;
     get_all_employee_query += ` LIMIT :limit OFFSET :offset`;
 
-    
+
     replacements.limit = parseInt(limit, 10);
     replacements.offset = parseInt(offset, 10);
 
-   
+
     const totalCountResult = await sequelize.query(count_query, {
       replacements,
       type: sequelize.QueryTypes.SELECT,
@@ -566,10 +569,10 @@ exports.get_employees = async (req, res) => {
 
     const totalEmployees = totalCountResult[0].total;
 
-    
+
     const totalPages = Math.ceil(totalEmployees / limit);
 
-  
+
     const employee_details = await sequelize.query(get_all_employee_query, {
       replacements,
       type: sequelize.QueryTypes.SELECT,
@@ -590,7 +593,7 @@ exports.get_employees = async (req, res) => {
       });
     }
 
-   
+
     return res.status(200).json({
       type: "success",
       data: employee_details,
@@ -600,12 +603,15 @@ exports.get_employees = async (req, res) => {
       limit: parseInt(limit, 10),
     });
   } catch (error) {
-    return res.status(400).json({
-      type: "error",
-      message: error?.message,
-    });
+    console.log('ERROR::', error)
+    return res.status(500).json(errorResponse(error.message))
   }
 };
+
+
+
+
+
 
 
 exports.delete_employee = async (req, res) => {
@@ -640,16 +646,16 @@ exports.update_user = async (req, res) => {
     id, name, username, email, mobile, emergency_contact_relationship, emergency_contact_name,
     emergency_contact, bank_name, account_number, ifsc, increment_date, gender, dob, doj, skype_email,
     ultivic_email, salary, security, total_security, installments, position, department, status,
-    address, documents 
+    address, documents
   } = req.body;
 
   try {
-   
+
     if (!id) {
       return res.status(400).json(errorResponse("ID is required for updating user"));
     }
 
-   
+
     const checkUserQuery = `SELECT * FROM users WHERE id = ?`;
     const [existingUser] = await sequelize.query(checkUserQuery, {
       replacements: [id],
@@ -660,7 +666,7 @@ exports.update_user = async (req, res) => {
       return res.status(404).json(errorResponse("User not found"));
     }
 
-    
+
     const requiredFields = ['name', 'username', 'email', 'mobile', 'gender', 'dob', 'doj', 'position', 'department', 'status', 'address'];
     const missingFields = requiredFields.filter(field => req.body[field] === undefined);
     if (missingFields.length > 0) {
@@ -674,7 +680,7 @@ exports.update_user = async (req, res) => {
     const handleField = (fieldValue, columnName, defaultValue = null) => {
       if (fieldValue === "") {
         fields.push(`${columnName} = ?`);
-        values.push(defaultValue); 
+        values.push(defaultValue);
       } else if (fieldValue !== undefined) {
         fields.push(`${columnName} = ?`);
         values.push(fieldValue);
@@ -710,40 +716,40 @@ exports.update_user = async (req, res) => {
       return res.status(400).json(errorResponse("No fields to update"));
     }
 
-  
+
     const updateUserQuery = `
       UPDATE users
       SET ${fields.join(', ')}
       WHERE id = ?
     `;
 
-    
+
     values.push(id);
 
-    
+
     await sequelize.query(updateUserQuery, {
       replacements: values,
     });
 
-    
-    
+
+
     if (Array.isArray(documents)) {
-     
+
       const getDocumentsQuery = `SELECT document_name FROM documents WHERE user_id = ?`;
       const existingDocuments = await sequelize.query(getDocumentsQuery, {
         replacements: [id],
         type: sequelize.QueryTypes.SELECT,
       });
-      
+
       const existingDocumentNames = existingDocuments.map(doc => doc.document_name);
 
-  
+
       const newDocuments = documents.filter(doc => !existingDocumentNames.includes(doc));
 
-     
+
       const documentsToRemove = existingDocumentNames.filter(doc => !documents.includes(doc));
 
-  
+
       if (newDocuments.length > 0) {
         const insertDocumentsQuery = `INSERT INTO documents (user_id, document_name, createdAt, updatedAt) VALUES ${newDocuments.map(() => "(?, ?, NOW(), NOW())").join(", ")}`;
 
@@ -754,7 +760,7 @@ exports.update_user = async (req, res) => {
         });
       }
 
-      
+
       if (documentsToRemove.length > 0) {
         const deleteDocumentsQuery = `DELETE FROM documents WHERE user_id = ? AND document_name IN (${documentsToRemove.map(() => "?").join(", ")})`;
         await sequelize.query(deleteDocumentsQuery, {
@@ -793,24 +799,24 @@ exports.get_all_users_name = async (req, res) => {
 
 
 
-exports.get_user_documents = async(req,res)=>{
-  try{
-   let userId = req.query.userId
+exports.get_user_documents = async (req, res) => {
+  try {
+    let userId = req.query.userId
 
-   if(!userId){return res.status(400).json(errorResponse("Please provide user id in the query params"))}
+    if (!userId) { return res.status(400).json(errorResponse("Please provide user id in the query params")) }
 
-   let [findUser] = await sequelize.query(`SELECT * FROM users WHERE id = ${userId}`)
-   
-   if(findUser.length<1){return res.status(400).json(errorResponse("User not found with this user Id"))}
-   
-   let findDocumentsQuery = `SELECT document_name FROM documents WHERE user_id = ${userId}`
+    let [findUser] = await sequelize.query(`SELECT * FROM users WHERE id = ${userId}`)
 
-   let [getDocuments] = await sequelize.query(findDocumentsQuery)
+    if (findUser.length < 1) { return res.status(400).json(errorResponse("User not found with this user Id")) }
 
-   return res.status(200).json(successResponse(getDocuments.length<1?"No documents added for this employee":"Documents retrieved successfully",getDocuments))
+    let findDocumentsQuery = `SELECT document_name FROM documents WHERE user_id = ${userId}`
 
-  }catch(error){
-    console.log('ERROR::',error)
+    let [getDocuments] = await sequelize.query(findDocumentsQuery)
+
+    return res.status(200).json(successResponse(getDocuments.length < 1 ? "No documents added for this employee" : "Documents retrieved successfully", getDocuments))
+
+  } catch (error) {
+    console.log('ERROR::', error)
     return res.status(400).json({ type: "error", message: error.message })
   }
 }

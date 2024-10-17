@@ -1,6 +1,7 @@
 let jwt = require('jsonwebtoken');
 const config = require('../config/config');
 const getLatestRoles = require("../utils/getLatestRoles")
+const {errorResponse,successResponse} = require("../utils/responseHandler")
 
 let verifyToken = async (req, res, next) => {
     try {
@@ -22,14 +23,14 @@ let verifyToken = async (req, res, next) => {
             };
            
         } else {
-            return res.status(401).json({ message: "Token is required for authentication.", type: 'error' });
+            return res.status(401).json(errorResponse("Token is required for authentication"));
         }
         
         next();
 
     } catch (error) {
         console.log("ERROR::", error);
-        return res.status(401).json({ message: "Unauthorized user", type: "error", data: error.message });
+        return res.status(401).json(errorResponse("Unauthorized user"));
     }
 };
 
