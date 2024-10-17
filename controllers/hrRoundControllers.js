@@ -278,7 +278,7 @@ exports.get_hr_round_candidate = async (req, res) => {
         JOIN 
             interviews iv ON iv.lead_id = i.id 
         ${whereClause}
-        ORDER BY iv.createdAt DESC  
+        ORDER BY i.createdAt DESC  
         LIMIT ${limit} OFFSET ${offset};
     `;
 
