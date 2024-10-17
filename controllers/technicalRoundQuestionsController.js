@@ -685,6 +685,7 @@ exports.get_all_technical_round_leads = async (req, res) => {
             FROM interview_leads il
             JOIN interviews i ON i.lead_id = il.id
             ${whereClause}
+            ORDER BY il.createdAt DESC  
             LIMIT ${limit} OFFSET ${offset}
         `;
 

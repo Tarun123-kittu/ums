@@ -230,7 +230,7 @@ exports.get_all_leads = async (req, res) => {
         const pageNumber = parseInt(page, 10) || 1;
         const pageSize = parseInt(limit, 10) || 10;
 
-       
+
         let baseQuery = `
             SELECT 
                 i.id, i.name, i.phone_number, i.email, i.gender, i.dob, 
@@ -242,7 +242,7 @@ exports.get_all_leads = async (req, res) => {
                 i.in_round = 0
         `;
 
-       
+
         if (profile) {
             baseQuery += ` AND i.profile = :profile`;
         }
@@ -252,14 +252,14 @@ exports.get_all_leads = async (req, res) => {
 
         baseQuery += ` ORDER BY i.createdAt DESC`;
 
-        
+
         let countQuery = `
             SELECT COUNT(*) AS total
             FROM Interview_Leads i
             WHERE i.in_round = 0
         `;
 
-        
+
         if (profile) {
             countQuery += ` AND i.profile = :profile`;
         }
@@ -267,20 +267,20 @@ exports.get_all_leads = async (req, res) => {
             countQuery += ` AND i.experience >= :experience`;
         }
 
-       
+
         const [countResult] = await sequelize.query(countQuery, {
             replacements: { profile, experience },
         });
 
         const totalItems = countResult.length > 0 ? countResult[0].total : 0;
 
-   
+
         const totalPages = totalItems > 0 ? Math.ceil(totalItems / pageSize) : 1;
 
-      
+
         const offset = (pageNumber - 1) * pageSize;
 
-     
+
         const getAllLeadsQuery = `${baseQuery} LIMIT :limit OFFSET :offset`;
 
         const [allLeads] = await sequelize.query(getAllLeadsQuery, {
@@ -299,7 +299,7 @@ exports.get_all_leads = async (req, res) => {
             });
         }
 
-       
+
         return res.status(200).json({
             type: "success",
             message: "Data retrieved successfully.",
@@ -411,6 +411,7 @@ exports.get_face_to_face_round_leads = async (req, res) => {
             JOIN interviews i ON i.lead_id = il.id
             JOIN languages l ON l.language = il.profile
             ${whereClause}
+            ORDER BY il.createdAt DESC  
             LIMIT ${limit} OFFSET ${offset}
         `;
 
@@ -505,6 +506,7 @@ exports.get_final_round_leads = async (req, res) => {
             JOIN interviews i ON i.lead_id = il.id
             JOIN languages l ON l.language = il.profile
             ${whereClause}
+            ORDER BY il.createdAt DESC  
             LIMIT ${limit} OFFSET ${offset}
         `;
 
