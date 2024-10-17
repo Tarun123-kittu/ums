@@ -84,6 +84,7 @@ exports.get_all_series = async (req, res) => {
                     ts.series_name,
                     ts.status,
                     ts.time_taken,
+                    ts.experience_level,
                     ts.description,
                     ts.createdBy,
                     u.name,
