@@ -8,8 +8,6 @@ exports.add_objective = async (req, res) => {
     try {
         const { test_series_id, language_id, question, options, correct_option_number } = req.body;
 
-        console.log(test_series_id, language_id, question, options, correct_option_number)
-
 
         if (!test_series_id || !language_id || !question || !options || options.length !== 4 || !correct_option_number) {
             await t.rollback();
@@ -27,13 +25,13 @@ exports.add_objective = async (req, res) => {
         }
 
 
-        const [seriesExists] = await sequelize.query('SELECT 1 FROM test_series WHERE id = :test_series_id', {
+        const [seriesExists] = await sequelize.query(`SELECT * FROM test_series WHERE id = ${test_series_id} AND language_id = ${language_id}`, {
             replacements: { test_series_id },
             transaction: t
         });
 
-
-        if (seriesExists.length === 0) {
+     
+        if (seriesExists.length <1) {
             await t.rollback();
             return res.status(404).json({ success: false, message: 'Test series not found for the given language.' });
         }
@@ -90,6 +88,10 @@ exports.add_objective = async (req, res) => {
     }
 };
 
+
+
+
+
 exports.add_subjective = async (req, res) => {
     const t = await sequelize.transaction();
     try {
@@ -108,12 +110,12 @@ exports.add_subjective = async (req, res) => {
         }
 
 
-        const [seriesExists] = await sequelize.query('SELECT 1 FROM test_series WHERE id = :test_series_id', {
+        const [seriesExists] = await sequelize.query(`SELECT * FROM test_series WHERE id = ${test_series_id} AND language_id = ${language_id}`, {
             replacements: { test_series_id },
             transaction: t
         });
 
-        if (seriesExists.length === 0) {
+        if (seriesExists.length <1) {
             await t.rollback();
             return res.status(404).json({ success: false, message: 'Test series not found for the given language.' });
         }
@@ -165,6 +167,10 @@ exports.add_subjective = async (req, res) => {
     }
 };
 
+
+
+
+
 exports.add_logical = async (req, res) => {
     const t = await sequelize.transaction();
     try {
@@ -183,12 +189,12 @@ exports.add_logical = async (req, res) => {
         }
 
 
-        const [seriesExists] = await sequelize.query('SELECT 1 FROM test_series WHERE id = :test_series_id', {
+        const [seriesExists] = await sequelize.query(`SELECT * FROM test_series WHERE id = ${test_series_id} AND language_id = ${language_id}`, {
             replacements: { test_series_id },
             transaction: t
         });
 
-        if (seriesExists.length === 0) {
+        if (seriesExists.length <1) {
             await t.rollback();
             return res.status(404).json({ success: false, message: 'Test series not found for the given language.' });
         }
@@ -233,6 +239,10 @@ exports.add_logical = async (req, res) => {
         return res.status(500).json({ success: false, message: 'An error occurred while creating the logical question.' });
     }
 };
+
+
+
+
 
 exports.get_questions_answers = async (req, res) => {
     try {

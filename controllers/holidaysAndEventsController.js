@@ -192,6 +192,7 @@ exports.get_holidayOrEvent = async (req, res) => {
     }
 }
 
+
 exports.get_events_and_birthdays = async (req, res) => {
     try {
         const currentYear = new Date().getFullYear();
@@ -243,6 +244,8 @@ exports.get_events_and_birthdays = async (req, res) => {
         const combinedResults = [];
         let idCounter = 1; 
 
+
+        console.log("holidays and events ------",holidaysAndEvents)
      
         holidaysAndEvents.forEach(event => {
             combinedResults.push({
@@ -250,7 +253,7 @@ exports.get_events_and_birthdays = async (req, res) => {
                 title: event.occasion_name,
                 start: new Date(currentYear, new Date(event.date).getMonth(), new Date(event.date).getDate()),
                 end: new Date(currentYear, new Date(event.date).getMonth(), new Date(event.date).getDate(), 23, 59), 
-                color: event.occasion_type === 'holiday' ? '#28B463' : '#E74C3C',
+                color: event.occasion_type == 'holiday' ? '#28B463' : '#E74C3C',
             });
         });
 

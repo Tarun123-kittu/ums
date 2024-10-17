@@ -48,10 +48,21 @@ exports.create_series = async (req, res) => {
     }
 }
 
+
+
+
+
+
 exports.get_all_series = async (req, res) => {
     try {
         let id = req.query.languageId;
 
+        
+        const MIN_OBJECTIVE = 3;
+        const MIN_SUBJECTIVE = 3;
+        const MIN_LOGICAL = 1;
+
+        
         if (id) {
             let checkLanguageExistQuery = `SELECT id FROM Languages WHERE id = ?`;
 
@@ -63,40 +74,93 @@ exports.get_all_series = async (req, res) => {
                 return res.status(400).json(errorResponse("Incorrect language Id, please check again."));
             }
 
-            let getAllSeriesQuery = `SELECT * FROM test_series WHERE language_id = ?`;
+            let getAllSeriesQuery = `
+                SELECT 
+                    ts.id,
+                    ts.language_id,
+                    ts.series_name,
+                    ts.status,
+                    ts.time_taken,
+                    ts.description,
+                    ts.createdBy,
+                    u.name,
+                    l.language,
+                    COALESCE(SUM(CASE WHEN trq.question_type = 'objective' THEN 1 ELSE 0 END), 0) AS objective_count,
+                    COALESCE(SUM(CASE WHEN trq.question_type = 'subjective' THEN 1 ELSE 0 END), 0) AS subjective_count,
+                    COALESCE(SUM(CASE WHEN trq.question_type = 'logical' THEN 1 ELSE 0 END), 0) AS logical_count
+                FROM 
+                    test_series ts
+                    JOIN users u ON ts.createdBy = u.id
+                    JOIN languages l ON l.id = ts.language_id
+                    LEFT JOIN technical_round_questions trq ON ts.id = trq.test_series_id
+                WHERE 
+                    ts.language_id = ?
+                GROUP BY 
+                    ts.id
+            `;
 
             let [result] = await sequelize.query(getAllSeriesQuery, {
                 replacements: [id]
             });
 
-
             if (result.length < 1) {
                 return res.status(400).json(errorResponse("No test series created for this language."));
             }
 
+          
+            result = result.map(series => {
+                series.isCompleted = (
+                    series.objective_count >= MIN_OBJECTIVE &&
+                    series.subjective_count >= MIN_SUBJECTIVE &&
+                    series.logical_count >= MIN_LOGICAL
+                ) ? 'completed' : 'incomplete';
+
+                return series;
+            });
+
             return res.status(200).json(successResponse("Test series fetched successfully.", result));
 
         } else {
-            let getAllSeriesQuery = `SELECT 
-    ts.id,
-    ts.language_id,
-    ts.series_name,
-    ts.status,
-    ts.time_taken,
-    ts.description,
-    ts.createdBy,
-  u.name,
-    l.language
-FROM 
-    test_series ts
-     JOIN users u ON ts.createdBy = u.id
- JOIN languages l ON l.id = ts.language_id;`;
+         
+            let getAllSeriesQuery = `
+                SELECT 
+                    ts.id,
+                    ts.language_id,
+                    ts.series_name,
+                    ts.status,
+                    ts.time_taken,
+                    ts.description,
+                    ts.createdBy,
+                    u.name,
+                    l.language,
+                    COALESCE(SUM(CASE WHEN trq.question_type = 'objective' THEN 1 ELSE 0 END), 0) AS objective_count,
+                    COALESCE(SUM(CASE WHEN trq.question_type = 'subjective' THEN 1 ELSE 0 END), 0) AS subjective_count,
+                    COALESCE(SUM(CASE WHEN trq.question_type = 'logical' THEN 1 ELSE 0 END), 0) AS logical_count
+                FROM 
+                    test_series ts
+                    JOIN users u ON ts.createdBy = u.id
+                    JOIN languages l ON l.id = ts.language_id
+                    LEFT JOIN technical_round_questions trq ON ts.id = trq.test_series_id
+                GROUP BY 
+                    ts.id
+            `;
 
             let [result] = await sequelize.query(getAllSeriesQuery);
 
             if (result.length < 1) {
                 return res.status(200).json(successResponse("No test series available."));
             }
+
+           
+            result = result.map(series => {
+                series.isCompleted = (
+                    series.objective_count >= MIN_OBJECTIVE &&
+                    series.subjective_count >= MIN_SUBJECTIVE &&
+                    series.logical_count >= MIN_LOGICAL
+                ) ? 'completed' : 'incomplete';
+
+                return series;
+            });
 
             return res.status(200).json(successResponse("All test series fetched successfully.", result));
         }
@@ -105,7 +169,10 @@ FROM
         console.log("ERROR:: ", error);
         return res.status(500).json(errorResponse(error.message));
     }
-}
+};
+
+
+
 
 exports.get_series = async (req, res) => {
     try {

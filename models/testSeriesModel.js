@@ -34,6 +34,10 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(500),
       allowNull: false,
     },
+    experience_level:{
+      type: DataTypes.STRING(500),
+      allowNull: false,
+  },
     createdBy: {
       type: DataTypes.INTEGER,
       allowNull: false,

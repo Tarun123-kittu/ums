@@ -33,7 +33,7 @@ exports.create_language = async (req, res) => {
 
 exports.get_all_languages = async (req, res) => {
     try {
-        let getAllLanguagesQuery = ` SELECT * FROM Languages ORDER BY createdAt DESC`
+        let getAllLanguagesQuery = ` SELECT language FROM Languages ORDER BY createdAt DESC`
 
         let [result] = await sequelize.query(getAllLanguagesQuery)
 

@@ -166,7 +166,7 @@ exports.get_employees_working_time = async (req, res) => {
             type: sequelize.QueryTypes.SELECT
         });
 
-        console.log("Query Result:", result); 
+        console.log("Query Result:", result);
 
         return res.status(200).json({
             success: true,
@@ -190,7 +190,7 @@ exports.get_user_today_attendance = async (req, res) => {
     try {
         const user_id = req.result.user_id;
         const get_attendance_query = `
-            SELECT in_time 
+         SELECT in_time,out_time
             FROM attendances 
             WHERE DATE(createdAt) = CURDATE() AND user_id = ?
         `;

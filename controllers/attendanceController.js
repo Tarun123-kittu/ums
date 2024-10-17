@@ -549,20 +549,21 @@ exports.update_attendance_details = async (req, res) => {
 
 
 
-
-
 exports.get_user_monthly_report = async (req, res) => {
     try {
         const userId = req.result.user_id;
         const { month, year } = req.query;
 
+        const [isUserExist] = await sequelize.query(`SELECT * FROM users WHERE id = ${userId}`)
      
+        if(isUserExist.length<1){return res.status(400).json(errorResponse("User not found"))}
+
         const currentDate = moment();
-        const selectedMonth = month ? parseInt(month, 10) : currentDate.month() + 1; 
+        const selectedMonth = month ? parseInt(month, 10) : currentDate.month() + 1;
         const selectedYear = year ? parseInt(year, 10) : currentDate.year();
 
         const startDate = moment(`${selectedYear}-${selectedMonth}-01`).startOf('month').format('YYYY-MM-DD');
-        const endDate = moment(startDate).endOf('month').format('YYYY-MM-DD');
+        const endDate = moment().format('YYYY-MM-DD'); 
 
        
         const attendanceQuery = `
@@ -575,7 +576,7 @@ exports.get_user_monthly_report = async (req, res) => {
             type: sequelize.QueryTypes.SELECT,
         });
 
-       
+    
         const holidaysQuery = `
             SELECT occasion_name, occasion_type, date
             FROM holidays_and_events
@@ -586,7 +587,7 @@ exports.get_user_monthly_report = async (req, res) => {
             type: sequelize.QueryTypes.SELECT,
         });
 
-       
+        
         const formattedAttendanceData = attendanceData.map(att => ({
             ...att,
             date: moment(att.date).format('YYYY-MM-DD')
@@ -597,10 +598,11 @@ exports.get_user_monthly_report = async (req, res) => {
             date: moment(holiday.date).format('YYYY-MM-DD')
         }));
 
-      
-        const daysInMonth = moment(endDate).date();  
+    
+        const daysInMonth = moment(endDate).date();
         let reportData = [];
 
+      
         for (let day = 1; day <= daysInMonth; day++) {
             let currentDate = moment(`${selectedYear}-${selectedMonth}-${day}`, "YYYY-MM-DD").format('YYYY-MM-DD');
             let dayOfWeek = moment(currentDate).format('dddd');
@@ -608,7 +610,6 @@ exports.get_user_monthly_report = async (req, res) => {
             let attendanceForDay = formattedAttendanceData.find(att => att.date === currentDate);
             let holidayForDay = formattedHolidaysData.find(holiday => holiday.date === currentDate);
 
-           
             let report = {
                 date: currentDate,
                 dayOfWeek: dayOfWeek,
@@ -624,13 +625,11 @@ exports.get_user_monthly_report = async (req, res) => {
             reportData.push(report);
         }
 
-        return res.status(200).json({ reportData });
+        return res.status(200).json(successResponse(reportData));
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ type: "error", message: "Internal server error" });
+        console.error("ERROR",error);
+        return res.status(500).json(errorResponse(error.message));
     }
 };
-
-
 
 
