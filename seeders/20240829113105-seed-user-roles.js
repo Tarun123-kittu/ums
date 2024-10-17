@@ -8,7 +8,6 @@ module.exports = {
 
         const userRolesMappings = [
             { userId: '1', roleId: '1' },  
-            { userId: "1", roleId: "3" }   
         ];
 
         for (const mapping of userRolesMappings) {

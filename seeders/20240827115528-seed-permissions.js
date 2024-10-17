@@ -11,7 +11,9 @@ module.exports = {
             { permission: 'Interviews', createdAt: new Date(), updatedAt: new Date() },
             { permission: 'Users', createdAt: new Date(), updatedAt: new Date() },
             { permission: 'Test', createdAt: new Date(), updatedAt: new Date() },
-            { permission: 'Leaves', createdAt: new Date(), updatedAt: new Date() }
+            { permission: 'Leaves', createdAt: new Date(), updatedAt: new Date() },
+            { permission: 'Dashboard', createdAt: new Date(), updatedAt: new Date() },
+            { permission: 'Teams', createdAt: new Date(), updatedAt: new Date() }
         ];
 
         for (const permission of permissions) {
