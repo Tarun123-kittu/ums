@@ -1,3 +1,7 @@
+const { errorResponse, successResponse } = require("../utils/responseHandler")
+
+
+
 const validateCreateUserDataTypes = (req, res, next) => {
     const body = req.body;
 
@@ -12,43 +16,45 @@ const validateCreateUserDataTypes = (req, res, next) => {
         bank_name: 'string',
         account_number: 'string',
         ifsc: 'string',
-        increment_date: 'string', 
+        increment_date: 'string',
         gender: 'string',
-        dob: 'string',  
-        doj: 'string',  
+        dob: 'string',
+        doj: 'string',
         skype_email: 'string',
         ultivic_email: 'string',
-        salary: 'number', 
-        security: 'number', 
-        total_security: 'number', 
+        salary: 'number',
+        security: 'number',
+        total_security: 'number',
         installments: 'number',
         position: 'string',
         department: 'string',
         status: 'string',
         password: 'string',
         address: 'string',
-        role: 'string' 
+        role: 'string'
     };
 
     for (const [field, expectedType] of Object.entries(expectedTypes)) {
         const actualType = typeof body[field];
 
-        console.log(`Checking field: ${field}, Expected: ${expectedType}, Actual: ${actualType}`); 
+        console.log(`Checking field: ${field}, Expected: ${expectedType}, Actual: ${actualType}`);
 
         if (expectedType === 'number' && actualType === 'string' && !isNaN(parseFloat(body[field]))) {
-            continue; 
+            continue;
         }
 
         if (actualType !== expectedType) {
-            return res.status(400).json({
-                type: 'error',
-                message: `Invalid data type for field '${field}'. Expected '${expectedType}', but got '${actualType}'.`
-            });
+            return res.status(400).json(errorResponse(`Invalid data type for field '${field}'. Expected '${expectedType}', but got '${actualType}'.`))
+
         }
     }
-
     next();
 };
+
+
+
+
+
 
 const validateLoginDAtaTypes = (req, res, next) => {
     const body = req.body;
@@ -62,10 +68,7 @@ const validateLoginDAtaTypes = (req, res, next) => {
         console.log(`Checking field: ${field}, Expected: ${expectedType}, Actual: ${actualType}`); // Log field check
 
         if (actualType !== expectedType) {
-            return res.status(400).json({
-                type: 'error',
-                message: `Invalid data type for field '${field}'. Expected '${expectedType}', but got '${actualType}'.`
-            });
+            return res.status(400).json(errorResponse(`Invalid data type for field '${field}'. Expected '${expectedType}', but got '${actualType}'.`))
         }
     }
 
@@ -80,7 +83,7 @@ const validateForgotPasswordDataTypes = (req, res, next) => {
 
     for (const [field, expectedType] of Object.entries(expectedTypes)) {
         const actualType = typeof body[field];
-        console.log(`Checking field: ${field}, Expected: ${expectedType}, Actual: ${actualType}`); // Log field check
+        
 
         if (actualType !== expectedType) {
             return res.status(400).json({

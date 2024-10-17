@@ -132,9 +132,9 @@ exports.hr_round_result = async (req, res) => {
 
 
         const [affectedRows] = await sequelize.query(
-            'UPDATE Interviews SET hr_round_result = ?,updatedAt = ? WHERE id = ?', 
+            'UPDATE Interviews SET hr_round_result = ?,updatedAt = ? WHERE id = ?',
             {
-                replacements: [hr_round_result,currentDate, interview_id],
+                replacements: [hr_round_result, currentDate, interview_id],
                 type: sequelize.QueryTypes.UPDATE,
                 transaction,
             }
@@ -265,19 +265,23 @@ exports.get_hr_round_candidate = async (req, res) => {
         const totalPages = Math.ceil(totalRecords / limit);
 
 
-        const get_hr_round_leads = `SELECT 
-                                        i.id, 
-                                        i.name, 
-                                        i.experience, 
-                                        i.profile, 
-                                        iv.hr_round_result,
-                                        iv.id AS interview_id
-                                    FROM 
-                                        interview_leads i 
-                                    JOIN 
-                                        interviews iv ON iv.lead_id = i.id 
-                                    ${whereClause}
-                                    LIMIT ${limit} OFFSET ${offset};`;
+        const get_hr_round_leads = `
+        SELECT 
+            i.id, 
+            i.name, 
+            i.experience, 
+            i.profile, 
+            iv.hr_round_result,
+            iv.id AS interview_id
+        FROM 
+            interview_leads i 
+        JOIN 
+            interviews iv ON iv.lead_id = i.id 
+        ${whereClause}
+        ORDER BY iv.createdAt DESC  
+        LIMIT ${limit} OFFSET ${offset};
+    `;
+
 
         const all_hr_round_candidates = await sequelize.query(get_hr_round_leads, {
             type: sequelize.QueryTypes.SELECT,
@@ -300,6 +304,9 @@ exports.get_hr_round_candidate = async (req, res) => {
         return res.status(500).json(errorResponse(error.message));
     }
 };
+
+
+
 
 exports.get_hr_round_assign_questions_to_lead = async (req, res) => {
     const { interview_id, lead_id } = req.query
@@ -368,8 +375,8 @@ exports.update_key_point = async (req, res) => {
 
 exports.sendLeadInterviewLink = async (req, res) => {
     try {
-    const t = await sequelize.transaction();
-    
+        const t = await sequelize.transaction();
+
         const { lead_id, test_series } = req.query;
 
         if (!lead_id) {
