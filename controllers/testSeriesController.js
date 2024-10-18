@@ -202,6 +202,11 @@ exports.get_series = async (req, res) => {
     }
 }
 
+
+
+
+
+
 exports.update_series = async (req, res) => {
     try {
         const id = req.body.seriesId;
@@ -251,6 +256,10 @@ exports.update_series = async (req, res) => {
     }
 }
 
+
+
+
+
 exports.delete_series = async (req, res) => {
     try {
         const id = req.query.seriesId;
@@ -279,6 +288,11 @@ exports.delete_series = async (req, res) => {
         return res.status(500).json(errorResponse(error.message))
     }
 }
+
+
+
+
+
 
 exports.get_specific_language_series = async (req, res) => {
     const transaction = await sequelize.transaction();

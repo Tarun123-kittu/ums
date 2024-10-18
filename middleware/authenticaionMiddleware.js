@@ -3,6 +3,8 @@ const config = require('../config/config');
 const getLatestRoles = require("../utils/getLatestRoles")
 const {errorResponse,successResponse} = require("../utils/responseHandler")
 
+
+
 let verifyToken = async (req, res, next) => {
     try {
         let token = req.headers.authorization;
@@ -33,5 +35,7 @@ let verifyToken = async (req, res, next) => {
         return res.status(401).json(errorResponse("Unauthorized user"));
     }
 };
+
+
 
 module.exports = verifyToken;

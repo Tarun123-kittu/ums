@@ -12,7 +12,6 @@ const leaveController = require("../controllers/leaveController")
 const finalRoundsController = require("../controllers/finalRoundsController")
 const dashboardController = require("../controllers/dashboardControllers")
 const interviewLeadsController = require('../controllers/interviewLeads')
-const verifyAccess = require("../middleware/verifyAccessMiddleware")
 const authenticateToken = require("../middleware/authenticaionMiddleware")
 const {
     createUserValidator,
@@ -23,7 +22,6 @@ const {
     validateAssignRolesPermission,
     validateDeleteUserRole,
     validateHolidaysAndEvents,
-    disableRoleValidations,
     assignRoleValidations,
     validateUnmarkAttendance,
     validateGetAttendanceDetails,
@@ -47,13 +45,12 @@ const {
 } = require('../middleware/validationMiddleware')
 
 const {
-    validateCreateUserDataTypes,
     validateLoginDAtaTypes,
     validateForgotPasswordDataTypes,
     validateResetPasswordDataTypes,
     validateChangePasswordDataTypes,
-    validateDisableRoleDataTypes,
 } = require("../middleware/validateUserDataTypes")
+
 
 
 
@@ -110,6 +107,8 @@ router.get("/get_attendances_report", authenticateToken, attendanceController.ge
 router.put("/mark_break", authenticateToken, attendanceController.mark_break)
 router.put("/unmark_break", authenticateToken, attendanceController.unmark_break)
 router.get("/get_user_monthly_report", authenticateToken, attendanceController.get_user_monthly_report)
+
+
 
 // leave routes
 router.post("/apply_leave", authenticateToken, validateLeaveRequest, leaveController.apply_leave)
@@ -200,5 +199,8 @@ router.get("/get_user_today_attendance", authenticateToken, dashboardController.
 router.get("/get_all_present_employee", authenticateToken, dashboardController.get_all_present_employee)
 router.get("/get_all_on_leave_employees", authenticateToken, dashboardController.get_all_on_leave_employees)
 router.get("/get_all_interviews", authenticateToken, dashboardController.get_all_interviews)
+
+
+
 
 module.exports = router

@@ -1,5 +1,6 @@
 const { sequelize } = require('../models');
 
+
 const getLatestRoles = async (userId) => {
     try {
       

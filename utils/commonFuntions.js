@@ -9,6 +9,8 @@ const moment = require('moment-timezone');
 
 
 
+
+
 const createToken = async (roles, user_id, username, email) => {
     return new Promise((resolve, reject) => {
         jwt.sign({ roles, user_id, username, email }, process.env.JWT_SECRET, (err, token) => {
@@ -23,6 +25,8 @@ const createToken = async (roles, user_id, username, email) => {
 
 
 
+
+
 const passwordResetToken = async () => {
     const resetToken = await crypto.randomBytes(32).toString('hex')
 
@@ -30,6 +34,9 @@ const passwordResetToken = async () => {
     this.passwordResetExpiresIn = Date.now() + 10 * 60 * 1000
     return resetToken
 }
+
+
+
 
 
 const encrypt_password = async (password) => {
@@ -43,6 +50,9 @@ const encrypt_password = async (password) => {
 }
 
 
+
+
+
 const password_compare = async (user_password, password) => {
     try {
         const match = await bcrypt.compare(password, user_password);
@@ -52,6 +62,7 @@ const password_compare = async (user_password, password) => {
         throw error;
     }
 }
+
 
 
 
@@ -81,6 +92,11 @@ const send_email = async (options) => {
     }
 };
 
+
+
+
+
+
 function find_the_total_time(mark_time) {
     let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
     let current_date = current_time.split(' ')[0];
@@ -100,6 +116,8 @@ function find_the_total_time(mark_time) {
 
     return time_difference;
 }
+
+
 
 
 
