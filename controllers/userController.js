@@ -238,12 +238,9 @@ exports.create_user = async (req, res) => {
   } catch (error) {
     await t.rollback();
     console.error("ERROR::", error);
-    return res.status(500).json({ message: "An error occurred while creating the user." });
+    return res.status(500).json(errorResponse(error.message));
   }
 };
-
-
-
 
 
 
