@@ -1,7 +1,7 @@
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  class TechnicalRound extends Model {}
+  class TechnicalRound extends Model { }
 
   TechnicalRound.init({
     id: {
@@ -22,16 +22,16 @@ module.exports = (sequelize) => {
       allowNull: false,
     },
     answer: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      answer_status: {
-        type: DataTypes.ENUM('correct', 'incorrect', 'not_attempted'),
-        allowNull: false,
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    answer_status: {
+      type: DataTypes.ENUM('correct', 'incorrect', 'not_attempted','pending'),
+      defaultValue:'pending'
     },
     key_point: {
-        type: DataTypes.STRING,
-        allowNull: true,
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     createdAt: {
       type: DataTypes.DATE,
