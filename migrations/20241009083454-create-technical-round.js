@@ -27,7 +27,7 @@ module.exports = {
             },
             answer_status: {
                 type: Sequelize.ENUM('correct', 'incorrect', 'not_attempted','pending'),
-                defaultValue: pending,
+                defaultValue: 'pending',
             },
             key_point: {
                 type: Sequelize.STRING(1000),
