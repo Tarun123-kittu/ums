@@ -702,7 +702,7 @@ exports.get_all_technical_round_leads = async (req, res) => {
         const lead_id = results[0]?.id;
 
         const get_series_id_and_language_id = `
-            SELECT il.assigned_test_series, l.id AS language_id
+         SELECT il.assigned_test_series, l.id AS language_id
             FROM interview_leads il
             JOIN languages l ON l.id = il.profile
             WHERE il.id = :lead_id
@@ -982,7 +982,7 @@ exports.submit_technical_round = async (req, res) => {
         });
 
         if (!lastInterview) {
-            return res.status(404).json({ message: 'No interview found for this lead' });
+            return res.status(404).json(errorResponse("No interview found for this lead"));
         }
 
         const interview_id = lastInterview.id;
@@ -1173,6 +1173,9 @@ exports.get_lead_technical_response = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
+
+
 
 exports.check_lead_answer = async (req, res) => {
     try {
