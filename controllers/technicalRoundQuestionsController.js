@@ -30,8 +30,8 @@ exports.add_objective = async (req, res) => {
             transaction: t
         });
 
-     
-        if (seriesExists.length <1) {
+
+        if (seriesExists.length < 1) {
             await t.rollback();
             return res.status(404).json({ success: false, message: 'Test series not found for the given language.' });
         }
@@ -115,7 +115,7 @@ exports.add_subjective = async (req, res) => {
             transaction: t
         });
 
-        if (seriesExists.length <1) {
+        if (seriesExists.length < 1) {
             await t.rollback();
             return res.status(404).json({ success: false, message: 'Test series not found for the given language.' });
         }
@@ -194,7 +194,7 @@ exports.add_logical = async (req, res) => {
             transaction: t
         });
 
-        if (seriesExists.length <1) {
+        if (seriesExists.length < 1) {
             await t.rollback();
             return res.status(404).json({ success: false, message: 'Test series not found for the given language.' });
         }
@@ -349,7 +349,7 @@ exports.get_objective_questions = async (req, res) => {
         const { question_id } = req.query;
         if (!question_id) return res.status(400).json({ type: "error", message: "Question id is required to perform this action" });
 
-      
+
         const get_questions_answers = `
             SELECT 
                 q.question, 
@@ -367,18 +367,18 @@ exports.get_objective_questions = async (req, res) => {
                 q.id = ?
         `;
 
-       
+
         const results = await sequelize.query(get_questions_answers, {
             replacements: [question_id],
             type: sequelize.QueryTypes.SELECT,
         });
 
-       
+
         if (results.length === 0) {
             return res.status(400).json({ type: "error", message: "Question not found" });
         }
 
-     
+
         const questionData = {
             question: results[0].question,
             question_id: results[0].question_id,
@@ -386,7 +386,7 @@ exports.get_objective_questions = async (req, res) => {
             options: []
         };
 
-        
+
         results.forEach(row => {
             questionData.options.push({
                 option_id: row.option_id,
@@ -394,7 +394,7 @@ exports.get_objective_questions = async (req, res) => {
             });
         });
 
-       
+
         return res.status(200).json({ type: "success", data: questionData });
     } catch (error) {
         return res.status(400).json({ type: "error", message: error.message });
@@ -470,7 +470,7 @@ exports.update_objective = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Correct option number is out of range.' });
         }
 
-       
+
         await sequelize.query(`
             UPDATE technical_round_questions
             SET question = ?, updatedAt = NOW()
@@ -704,7 +704,7 @@ exports.get_all_technical_round_leads = async (req, res) => {
         const get_series_id_and_language_id = `
             SELECT il.assigned_test_series, l.id AS language_id
             FROM interview_leads il
-            JOIN languages l ON l.language = il.profile
+            JOIN languages l ON l.id = il.profile
             WHERE il.id = :lead_id
         `;
 
@@ -807,7 +807,7 @@ exports.get_lead_questions = async (req, res) => {
                                     FROM 
                                         interview_leads il
                                     JOIN 
-                                        languages l ON l.language = il.profile
+                                        languages l ON l.id = il.profile
                                     JOIN 
                                         test_series ts ON il.assigned_test_series = ts.id
                                     WHERE 
@@ -1060,7 +1060,7 @@ exports.technical_round_result = async (req, res) => {
         const [affectedRows] = await sequelize.query(
             'UPDATE Interviews SET technical_round_result = ?, developer_review = ? ,	technical_round_checked_by=?,updatedAt=?  WHERE id = ?',
             {
-                replacements: [technical_round_result, developer_review, user[0].name,currentDate, interview_id],
+                replacements: [technical_round_result, developer_review, user[0].name, currentDate, interview_id],
                 type: sequelize.QueryTypes.UPDATE,
                 transaction,
             }

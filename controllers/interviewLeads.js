@@ -392,7 +392,7 @@ exports.get_face_to_face_round_leads = async (req, res) => {
             SELECT COUNT(*) as totalRecords
             FROM interview_leads il
             JOIN interviews i ON i.lead_id = il.id
-            JOIN languages l ON l.language = il.profile
+            JOIN languages l ON l.id = il.profile
             ${whereClause}
         `;
         const totalRecordsResult = await sequelize.query(totalRecordsQuery, {
@@ -409,7 +409,7 @@ exports.get_face_to_face_round_leads = async (req, res) => {
                    i.face_to_face_result, i.id AS interview_id, l.id AS language_id
             FROM interview_leads il
             JOIN interviews i ON i.lead_id = il.id
-            JOIN languages l ON l.language = il.profile
+            JOIN languages l ON l.id = il.profile
             ${whereClause}
             ORDER BY il.createdAt DESC  
             LIMIT ${limit} OFFSET ${offset}
@@ -504,7 +504,7 @@ exports.get_final_round_leads = async (req, res) => {
                    i.final_result, i.id AS interview_id, l.id AS language_id
             FROM interview_leads il
             JOIN interviews i ON i.lead_id = il.id
-            JOIN languages l ON l.language = il.profile
+            JOIN languages l ON l.id = il.profile
             ${whereClause}
             ORDER BY il.createdAt DESC  
             LIMIT ${limit} OFFSET ${offset}
