@@ -16,28 +16,28 @@ exports.mark_attendance = async (req, res) => {
     try {
         const is_today_attendance_marked_query = `SELECT date FROM attendances WHERE date = CURDATE() AND user_id = ?`;
         const [is_today_attendance_marked] = await sequelize.query(is_today_attendance_marked_query, {
-        replacements: [user_id],
-        type: sequelize.QueryTypes.SELECT
+            replacements: [user_id],
+            type: sequelize.QueryTypes.SELECT
         });
         if (is_today_attendance_marked) return res.status(400).json({ type: "error", message: "You already marked your attendance !!" })
 
         const mark_attendance_query = `INSERT INTO attendances (date, user_id, in_time, status, login_device, login_mobile, created_by, createdAt, updatedAt) VALUES (?, ?, ?, "PRESENT", ?, ?, ?, ?, ?)`;
 
         const [is_attendance_marked] = await sequelize.query(mark_attendance_query, {
-        replacements: [current_time, user_id, current_time, login_device, login_mobile, user_id, current_time, current_time],
-        type: sequelize.QueryTypes.INSERT
+            replacements: [current_time, user_id, current_time, login_device, login_mobile, user_id, current_time, current_time],
+            type: sequelize.QueryTypes.INSERT
         });
 
         if (!is_attendance_marked) {
-        return res.status(400).json({ type: "error", message: "Attendance marking failed" });
+            return res.status(400).json({ type: "error", message: "Attendance marking failed" });
         }
 
         res.status(200).json({
-        type: "success",
-        message: "Attendance marked successfully"
+            type: "success",
+            message: "Attendance marked successfully"
         });
     } catch (error) {
-        console.log("ERROR::",error)
+        console.log("ERROR::", error)
         res.status(400).json(errorResponse(error.message));
     }
 };
@@ -48,23 +48,26 @@ exports.mark_attendance = async (req, res) => {
 
 exports.unmark_attendance = async (req, res) => {
     const user_id = req.result.user_id
+    console.log(user_id)
     const { report, logout_device, logout_mobile } = req.body;
     let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
+    let current_data = moment().tz('Asia/Kolkata').format('YYYY-MM-DD')
     try {
-        const is_user_mark_attendance_today_query = `SELECT date,in_time,out_time FROM attendances WHERE date = CURDATE() AND user_id = ?`;
+        const is_user_mark_attendance_today_query = `SELECT date,in_time,out_time FROM attendances WHERE date = ? AND user_id = ?`;
         const is_user_mark_attendance_today = await sequelize.query(is_user_mark_attendance_today_query, {
-        replacements: [user_id],
-        type: sequelize.QueryTypes.SELECT
+            replacements: [current_data, user_id],
+            type: sequelize.QueryTypes.SELECT
         });
 
-        console.log(is_user_mark_attendance_today[0]?.out_time)
+        console.log(is_user_mark_attendance_today)
+
 
         if (is_user_mark_attendance_today.length === 0) {
-        return res.status(400).json(errorResponse("You have not marked your attendance today!!"));
+            return res.status(400).json(errorResponse("You have not marked your attendance today!!"));
         }
 
         if (is_user_mark_attendance_today[0]?.out_time !== null) {
-        return res.status(400).json(errorResponse("You already unmark your attendance Thanks !!"));
+            return res.status(400).json(errorResponse("You already unmark your attendance Thanks !!"));
         }
 
         let total_time = find_the_total_time(is_user_mark_attendance_today[0]?.in_time)
@@ -77,20 +80,20 @@ exports.unmark_attendance = async (req, res) => {
             logout_device = ?, 
             logout_mobile = ?
         WHERE 
-           date = CURDATE() AND 
+           date = ? AND 
            user_id = ?`;
 
         const result = await sequelize.query(unmark_attendance_query, {
-        replacements: [current_time, report, total_time, logout_device, logout_mobile, user_id],
-        type: sequelize.QueryTypes.UPDATE
+            replacements: [current_time, report, total_time, logout_device, logout_mobile, current_data, user_id],
+            type: sequelize.QueryTypes.UPDATE
         });
         if (!result) return res.status(400).json(errorResponse("Error while unmarking attendance!!"));
 
 
         res.status(200).json(successResponse("Thankyou!"));
     } catch (error) {
-       console.log("ERROR::",error)
-       return res.status(500).json(errorResponse(error.message))
+        console.log("ERROR::", error)
+        return res.status(500).json(errorResponse(error.message))
     }
 };
 
@@ -107,18 +110,18 @@ exports.get_attendances = async (req, res) => {
 
         const get_all_users = `SELECT id, username, name FROM users WHERE is_disabled = 0 LIMIT :limit OFFSET :offset`;
         const is_users_fetched = await sequelize.query(get_all_users, {
-        replacements: { limit, offset },
-        type: sequelize.QueryTypes.SELECT
+            replacements: { limit, offset },
+            type: sequelize.QueryTypes.SELECT
         });
 
         if (!is_users_fetched || is_users_fetched.length === 0) {
-        return res.status(400).json(errorResponse("No users found"));
+            return res.status(400).json(errorResponse("No users found"));
         }
 
 
         const total_users_query = `SELECT COUNT(*) AS total_users FROM users WHERE is_disabled = 0`;
         const total_users_result = await sequelize.query(total_users_query, {
-        type: sequelize.QueryTypes.SELECT
+            type: sequelize.QueryTypes.SELECT
         });
         const totalUsers = total_users_result[0].total_users;
 
@@ -127,9 +130,9 @@ exports.get_attendances = async (req, res) => {
         let all_user_attendances = [];
 
         await Promise.all(is_users_fetched.map(async (user) => {
-        const userId = user?.id;
+            const userId = user?.id;
 
-        const get_attendance_report_query = `
+            const get_attendance_report_query = `
                 SELECT 
                     u.username,
                     u.name,
@@ -153,15 +156,15 @@ exports.get_attendances = async (req, res) => {
             `;
 
 
-        const attendance_records = await sequelize.query(get_attendance_report_query, {
-        replacements: [userId],
-        type: sequelize.QueryTypes.SELECT
-        });
+            const attendance_records = await sequelize.query(get_attendance_report_query, {
+                replacements: [userId],
+                type: sequelize.QueryTypes.SELECT
+            });
 
 
-        if (attendance_records.length > 0) {
-        all_user_attendances = all_user_attendances.concat(attendance_records);
-        } else {
+            if (attendance_records.length > 0) {
+                all_user_attendances = all_user_attendances.concat(attendance_records);
+            } else {
                 all_user_attendances.push({
                     username: user.username,
                     name: user.name,
@@ -174,7 +177,7 @@ exports.get_attendances = async (req, res) => {
                     logout_mobile: null,
                     on_break: null
                 });
-        }
+            }
         }));
 
         return res.status(200).json({
@@ -186,7 +189,7 @@ exports.get_attendances = async (req, res) => {
         });
 
     } catch (error) {
-        console.log("ERROR::",error)
+        console.log("ERROR::", error)
         return res.status(500).json(errorResponse(error.message))
     }
 };
@@ -206,8 +209,8 @@ exports.get_attendance_report = async (req, res) => {
 
 
         if (name) {
-        get_all_users_query += ` AND name LIKE ?`;
-        replacements.push(`%${name}%`);
+            get_all_users_query += ` AND name LIKE ?`;
+            replacements.push(`%${name}%`);
         }
 
 
@@ -220,7 +223,7 @@ exports.get_attendance_report = async (req, res) => {
             type: sequelize.QueryTypes.SELECT
         });
 
-        if (!is_users_fetched || is_users_fetched.length === 0) { return res.status(400).json(errorResponse('No users found'));}
+        if (!is_users_fetched || is_users_fetched.length === 0) { return res.status(400).json(errorResponse('No users found')); }
 
         let total_users_query = `SELECT COUNT(*) AS total_users FROM users WHERE is_disabled = 0`;
         let totalReplacements = [];
@@ -241,9 +244,9 @@ exports.get_attendance_report = async (req, res) => {
         let all_user_attendances = [];
 
         await Promise.all(is_users_fetched.map(async (user) => {
-        const userId = user?.id;
+            const userId = user?.id;
 
-        let get_attendance_report_query = `
+            let get_attendance_report_query = `
                 SELECT 
                     u.username,
                     u.name,
@@ -556,22 +559,22 @@ exports.get_user_monthly_report = async (req, res) => {
         const { month, year } = req.query;
 
         const [isUserExist] = await sequelize.query(`SELECT * FROM users WHERE id = ${userId}`);
-        if (isUserExist.length < 1) { 
-            return res.status(400).json(errorResponse("User not found")); 
+        if (isUserExist.length < 1) {
+            return res.status(400).json(errorResponse("User not found"));
         }
 
         const currentDate = moment();
         const selectedMonth = month ? parseInt(month, 10) : currentDate.month() + 1;
         const selectedYear = year ? parseInt(year, 10) : currentDate.year();
 
-        
+
         const startDate = moment(`${selectedYear}-${selectedMonth}-01`).startOf('month').format('YYYY-MM-DD');
 
-       
+
         const isCurrentMonth = selectedYear === currentDate.year() && selectedMonth === currentDate.month() + 1;
         const endDate = isCurrentMonth ? currentDate.format('YYYY-MM-DD') : moment(`${selectedYear}-${selectedMonth}-01`).endOf('month').format('YYYY-MM-DD');
 
-       
+
         const attendanceQuery = `
             SELECT date, in_time, out_time, report, total_time
             FROM attendances
@@ -582,7 +585,7 @@ exports.get_user_monthly_report = async (req, res) => {
             type: sequelize.QueryTypes.SELECT,
         });
 
-     
+
         const holidaysQuery = `
             SELECT occasion_name, occasion_type, date
             FROM holidays_and_events
@@ -593,33 +596,33 @@ exports.get_user_monthly_report = async (req, res) => {
             type: sequelize.QueryTypes.SELECT,
         });
 
-       
+
         const formattedAttendanceData = attendanceData.map(att => ({
             ...att,
             date: moment(att.date).format('YYYY-MM-DD')
         }));
 
-       
+
         const formattedHolidaysData = holidaysData.map(holiday => ({
             ...holiday,
             date: moment(holiday.date).format('YYYY-MM-DD')
         }));
 
-       
+
         const daysInMonth = isCurrentMonth ? currentDate.date() : moment(`${selectedYear}-${selectedMonth}`, "YYYY-MM").daysInMonth();
 
         let reportData = [];
 
-      
+
         for (let day = 1; day <= daysInMonth; day++) {
             let currentDate = moment(`${selectedYear}-${selectedMonth}-${day}`, "YYYY-MM-DD").format('YYYY-MM-DD');
             let dayOfWeek = moment(currentDate).format('dddd');
 
-          
+
             let attendanceForDay = formattedAttendanceData.find(att => att.date === currentDate);
             let holidayForDay = formattedHolidaysData.find(holiday => holiday.date === currentDate);
 
-        
+
             let report = {
                 date: currentDate,
                 dayOfWeek: dayOfWeek,
@@ -635,7 +638,7 @@ exports.get_user_monthly_report = async (req, res) => {
             reportData.push(report);
         }
 
-    
+
         return res.status(200).json(successResponse(reportData));
     } catch (error) {
         console.error("ERROR", error);
