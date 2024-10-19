@@ -46,19 +46,19 @@ exports.get_roles_and_users = async (req, res) => {
             return res.status(400).json(errorResponse("No data found."));
         }
 
-        
+
         const groupedData = rolesWithUsers.reduce((acc, { role, role_id, username, user_id }) => {
             if (!acc[role]) {
-                acc[role] = { role, role_id, users: [] }; 
+                acc[role] = { role, role_id, users: [] };
             }
-            if (username) {  
-                acc[role].users.push({ username, user_id }); 
+            if (username) {
+                acc[role].users.push({ username, user_id });
             }
             return acc;
         }, {});
 
-        
-        const rolesWithTheirUsers = Object.values(groupedData); 
+
+        const rolesWithTheirUsers = Object.values(groupedData);
 
         return res.status(200).json(successResponse('Successfully fetched.', rolesWithTheirUsers));
 
@@ -85,7 +85,7 @@ exports.assign_role = async (req, res) => {
 
 
         const assign_new_role_query = `
-            INSERT INTO user_roles (user_id, role_id, created_at, updated_at) 
+            INSERT INTO user_roles (user_id, role_id, createdAt, updatedAt) 
             VALUES (?, ?, NOW(), NOW())`;
 
         const is_role_assigned = await sequelize.query(assign_new_role_query, {
@@ -110,7 +110,7 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
     const transaction = await sequelize.transaction();
 
     try {
-     
+
         const add_new_role_query = `INSERT INTO roles (role) VALUES (?)`;
         const [insert_role_result] = await sequelize.query(add_new_role_query, {
             replacements: [role],
@@ -122,7 +122,7 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
         if (!role_id) throw new Error("Error while creating new role");
 
 
-       
+
         if (user_id?.length > 0) {
             const userRolesValues = user_id.map(id => `(${id}, ${role_id})`).join(', ');
             const insert_user_roles_query = `
@@ -136,7 +136,7 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
         }
 
 
-     
+
         const permissionValues = permission_data.map(obj =>
             `(${role_id}, ${obj.permission_id}, ${obj.can_view ? 1 : 0}, ${obj.can_create ? 1 : 0}, ${obj.can_update ? 1 : 0}, ${obj.can_delete ? 1 : 0})`
         ).join(', ');
@@ -151,7 +151,7 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
             transaction
         });
 
-       
+
         await transaction.commit();
         res.status(200).json({
             type: "success",
@@ -177,17 +177,17 @@ exports.assign_new_permissions_to_new_role = async (req, res) => {
 exports.update_permissions_assigned_to_role = async (req, res) => {
     const { permission_data } = req.body;
 
-   
+
     const MAX_RETRIES = 3;
 
     let attempt = 0;
     let success = false;
 
-    
+
     while (attempt < MAX_RETRIES && !success) {
         attempt++;
         try {
-          
+
             await sequelize.transaction(async (t) => {
                 const updatePromises = permission_data.map((obj) => {
                     const query = `
@@ -211,7 +211,7 @@ exports.update_permissions_assigned_to_role = async (req, res) => {
                 await Promise.all(updatePromises);
             });
 
-            success = true; 
+            success = true;
 
             res.status(200).json({
                 type: "success",
@@ -220,20 +220,20 @@ exports.update_permissions_assigned_to_role = async (req, res) => {
 
         } catch (error) {
             if (error.message.includes("Deadlock found")) {
-               
+
                 console.error(`Deadlock detected. Retrying attempt ${attempt}/${MAX_RETRIES}`);
 
                 if (attempt >= MAX_RETRIES) {
-                   
+
                     return res.status(500).json({
                         type: "error",
                         message: "Max retries reached. Deadlock could not be resolved. Please try again later."
                     });
                 }
-              
-                await new Promise(res => setTimeout(res, 100 * attempt)); 
+
+                await new Promise(res => setTimeout(res, 100 * attempt));
             } else {
-               
+
                 return res.status(400).json({
                     type: "error",
                     message: error.message
@@ -256,7 +256,7 @@ exports.disabled_role = async (req, res) => {
     const transaction = await sequelize.transaction();
 
     try {
-    
+
         const disableRoleQuery = `UPDATE roles SET is_disabled = true WHERE id = ?`;
         const [result] = await sequelize.query(disableRoleQuery, {
             replacements: [role_id],
@@ -264,13 +264,13 @@ exports.disabled_role = async (req, res) => {
             transaction
         });
 
-        
+
         const affectedRows = result;
         if (affectedRows === 0) {
             throw new Error("Error while disabling role in 'roles' table or no rows were affected.");
         }
 
-       
+
         const checkRoleInUserRoles = `SELECT * FROM user_roles WHERE role_id = ?`;
         const isRoleExistInUserRoles = await sequelize.query(checkRoleInUserRoles, {
             replacements: [role_id],
@@ -278,7 +278,7 @@ exports.disabled_role = async (req, res) => {
             transaction
         });
 
-       
+
         const checkRoleInRolesPermissions = `SELECT * FROM roles_permissions WHERE role_id = ?`;
         const isRoleExistInRolesPermissions = await sequelize.query(checkRoleInRolesPermissions, {
             replacements: [role_id],
@@ -286,7 +286,7 @@ exports.disabled_role = async (req, res) => {
             transaction
         });
 
-    
+
         if (isRoleExistInRolesPermissions.length > 0) {
             const disableRoleInRolesPermissions = `UPDATE roles_permissions SET is_disabled = true WHERE role_id = ?`;
             const [resultInRolesPermissions] = await sequelize.query(disableRoleInRolesPermissions, {
@@ -301,7 +301,7 @@ exports.disabled_role = async (req, res) => {
             }
         }
 
-       
+
         if (isRoleExistInUserRoles.length > 0) {
             const disableRoleInUserRoles = `UPDATE user_roles SET is_disabled = true WHERE role_id = ?`;
             const [resultInUserRoles] = await sequelize.query(disableRoleInUserRoles, {
@@ -316,7 +316,7 @@ exports.disabled_role = async (req, res) => {
             }
         }
 
-        
+
         await transaction.commit();
 
         res.status(200).json({
