@@ -2,7 +2,7 @@ let { sequelize } = require('../models');
 let moment = require('moment');
 let { send_email } = require("../utils/commonFuntions")
 const { CronJob } = require('cron');
-
+const { errorResponse, successResponse } = require('../utils/responseHandler');
 
 
 
@@ -189,8 +189,8 @@ exports.all_applied_leaves = async (req, res) => {
 
 exports.calculate_pending_leaves_for_selected_user = async (req, res) => {
     try {
-       
-        const userId = req.result?.user_id; 
+
+        const userId = req.result?.user_id;
 
         if (!userId) {
             return res.status(400).json({
@@ -199,7 +199,7 @@ exports.calculate_pending_leaves_for_selected_user = async (req, res) => {
             });
         }
 
-        
+
         const select_user_query = `
             SELECT 
                 u.id AS userId,
@@ -298,9 +298,9 @@ exports.update_pending_leave = async (req, res) => {
         if (status === "ACCEPTED") {
             const select_current_month_leaves = `
                 SELECT * FROM bank_leaves 
-                WHERE user_id = ? 
-                AND MONTH(created_at) = MONTH(NOW()) 
-                AND YEAR(created_at) = YEAR(NOW())`;
+                WHERE employee_id = ? 
+                AND MONTH(createdAt) = MONTH(NOW()) 
+                AND YEAR(createdAt) = YEAR(NOW())`;
 
             const [selected_leave_details] = await sequelize.query(select_current_month_leaves, {
                 replacements: [user_id],
@@ -528,30 +528,21 @@ exports.leave_bank_report = async (req, res) => {
             FROM 
                 users u
             LEFT JOIN 
-                bank_leaves bl ON u.id = bl.employee_id
+                bank_leaves bl 
+            ON 
+                u.id = bl.employee_id
+                AND (MONTH(bl.createdAt) = :month OR :month IS NULL)
+                AND (YEAR(bl.createdAt) = :year OR :year IS NULL)
+                AND (bl.session = :session OR :session IS NULL)
             WHERE 
-                u.is_disabled = false`;
-
-        if (month) {
-            bank_report_query += ` AND MONTH(bl.createdAt) = :month`;
-        } else {
-            bank_report_query += ` AND MONTH(bl.createdAt) = MONTH(CURDATE())`;
-        }
-
-        if (year) {
-            bank_report_query += ` AND YEAR(bl.createdAt) = :year`;
-        }
-
-        if (session) {
-            bank_report_query += ` AND bl.session = :session`;
-        }
-
-        bank_report_query += ` LIMIT :limit OFFSET :offset`;
+                u.is_disabled = false
+            LIMIT :limit OFFSET :offset
+        `;
 
         const replacements = {
-            month: month ? parseInt(month) : undefined,
-            year: year ? parseInt(year) : undefined,
-            session: session ? session : undefined,
+            month: month ? parseInt(month) : null,
+            year: year ? parseInt(year) : null,
+            session: session || null,
             limit: parseInt(limit),
             offset: offset,
         };
@@ -575,10 +566,16 @@ exports.leave_bank_report = async (req, res) => {
                 FROM 
                     users u 
                 WHERE 
-                    u.is_disabled = false`;
+                    u.is_disabled = false
+                LIMIT :limit OFFSET :offset
+            `;
 
             const defaultUsers = await sequelize.query(defaultUsersQuery, {
                 type: sequelize.QueryTypes.SELECT,
+                replacements: {
+                    limit: parseInt(limit),
+                    offset: offset
+                }
             });
 
             return res.status(200).json({
@@ -590,30 +587,21 @@ exports.leave_bank_report = async (req, res) => {
 
         let count_query = `
             SELECT COUNT(*) as totalCount
-            FROM bank_leaves bl
-            JOIN users u ON u.id = bl.user_id
-            WHERE u.is_disabled = false`;
-
-        if (month) {
-            count_query += ` AND MONTH(bl.createdAt) = :month`;
-        } else {
-            count_query += ` AND MONTH(bl.createdAt) = MONTH(CURDATE())`;
-        }
-
-        if (year) {
-            count_query += ` AND YEAR(bl.createdAt) = :year`;
-        }
-
-        if (session) {
-            count_query += ` AND bl.session = :session`;
-        }
+            FROM users u
+            LEFT JOIN bank_leaves bl 
+            ON u.id = bl.employee_id
+                AND (MONTH(bl.createdAt) = :month OR :month IS NULL)
+                AND (YEAR(bl.createdAt) = :year OR :year IS NULL)
+                AND (bl.session = :session OR :session IS NULL)
+            WHERE u.is_disabled = false
+        `;
 
         const totalRecordsResult = await sequelize.query(count_query, {
             type: sequelize.QueryTypes.SELECT,
             replacements: {
-                month: month ? parseInt(month) : undefined,
-                year: year ? parseInt(year) : undefined,
-                session: session ? session : undefined,
+                month: month ? parseInt(month) : null,
+                year: year ? parseInt(year) : null,
+                session: session || null,
             },
         });
 
@@ -635,12 +623,16 @@ exports.leave_bank_report = async (req, res) => {
     }
 };
 
+
+
+
+
 exports.get_user_applied_leaves = async (req, res) => {
     try {
         const user_id = req.result.user_id;
         const { month, year } = req.query;
 
-       
+
         let query = `
             SELECT l.id, l.from_date, l.to_date, l.count, l.description, l.createdAt, l.type, l.status, l.remark, u.name 
             FROM leaves l 
@@ -648,25 +640,25 @@ exports.get_user_applied_leaves = async (req, res) => {
             WHERE u.is_disabled = false
         `;
 
-      
+
         if (user_id) {
             query += ` AND u.id = '${user_id}'`;
         }
 
-       
+
         if (month) {
             query += ` AND MONTH(l.createdAt) = ${month}`;
         }
 
-       
+
         if (year) {
             query += ` AND YEAR(l.createdAt) = ${year}`;
         }
 
-   
+
         query += ` ORDER BY l.createdAt DESC;`;
 
-       
+
         let is_leaves_exist = await sequelize.query(query, {
             type: sequelize.QueryTypes.SELECT,
         });
@@ -709,7 +701,7 @@ async function process_cron_job() {
 
             const pending_leaves = monthsWorked - total_allowed_leaves[0]?.Taken_leaves
 
-            const insert_pending_leaves_query = `INSERT INTO bank_leaves (user_id,paid_leave,taken_leave,month_year,session,created_at,updated_at) VALUES (?,?,?,CURDATE(),?,CURDATE(),CURDATE())`;
+            const insert_pending_leaves_query = `INSERT INTO bank_leaves (employee_id,paid_leave,taken_leave,month_year,session,createdAt,updatedAt) VALUES (?,?,?,CURDATE(),?,CURDATE(),CURDATE())`;
             const insert_pending_leave = await sequelize.query(insert_pending_leaves_query, {
                 replacements: [id, pending_leaves, 0, session],
                 type: sequelize.QueryTypes.INSERT,
@@ -726,8 +718,8 @@ async function process_cron_job() {
 const job = new CronJob('0 0 1 * *', () => {
     console.log('This job runs at midnight on the first day of every month');
     process_cron_job()
-    
-}, null, true, 'Asia/Kolkata'); 
+
+}, null, true, 'Asia/Kolkata');
 
 
 job.start();
@@ -737,7 +729,74 @@ console.log('Cron job has been scheduled.');
 
 
 
+exports.update_user_leave_bank = async (req, res) => {
+    try {
+        const userId = req.query.employeeId;
+        const paid_leave = parseFloat(req.query.paid_leaves);
+        const taken_leaves = parseFloat(req.query.taken_leaves);
+
+        let t = sequelize.transaction()
+        if (!userId) {
+            return res.status(400).json(errorResponse("Please provide employee Id in the query params"));
+        }
+
+        if (isNaN(paid_leave) || isNaN(taken_leaves)) {
+            return res.status(400).json(errorResponse("Invalid paid or taken leaves. Must be a valid number."));
+        }
 
 
+        let getUserQuery = `SELECT id FROM users WHERE id = ${userId}`;
+        let [isUserExist] = await sequelize.query(getUserQuery);
+
+        if (isUserExist.length < 1) {
+            return res.status(400).json(errorResponse("User not found with this user Id"));
+        }
+
+
+        let leavesDataQuery = `SELECT paid_leave, taken_leave FROM bank_leaves WHERE employee_id = ${userId}`;
+        let [leaves] = await sequelize.query(leavesDataQuery);
+
+        if (leaves.length >= 1) {
+            let userleaves = leaves[0];
+
+
+            if (userleaves.paid_leave === paid_leave) {
+
+                userleaves.paid_leave = userleaves.paid_leave - taken_leaves;
+            } else {
+
+                userleaves.paid_leave = paid_leave - taken_leaves;
+            }
+
+
+            let updateLeaveQuery = `
+                UPDATE bank_leaves
+                SET paid_leave = ${userleaves.paid_leave}, 
+                    taken_leave = ${userleaves.taken_leave + taken_leaves}
+                WHERE employee_id = ${userId};
+            `;
+
+
+            await sequelize.query(updateLeaveQuery);
+
+            return res.status(200).json(successResponse("Leave bank updated successfully."));
+        } else {
+         let addLeaveRecord =  `INSERT INTO bank_leaves
+             (employee_id,paid_leave,taken_leave,month_year,session,createdAt,updatedAt) 
+             VALUES 
+             (?,?,?,CURDATE(),?,CURDATE(),CURDATE())`;
+            
+             await sequelize.query(addLeaveRecord, {
+                replacements: [userId, paid_leave,  taken_leaves,],
+                type: sequelize.QueryTypes.INSERT,
+                transaction: t
+            });
+        }
+
+    } catch (error) {
+        console.log("ERROR::", error);
+        return res.status(500).json(errorResponse(error.message));
+    }
+};
 
 
