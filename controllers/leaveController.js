@@ -3,6 +3,9 @@ let moment = require('moment');
 let { send_email } = require("../utils/commonFuntions")
 const { CronJob } = require('cron');
 
+
+
+
 exports.apply_leave = async (req, res) => {
     let user_id = req?.result?.user_id;
     let username = req?.result?.username;
@@ -131,6 +134,10 @@ exports.apply_leave = async (req, res) => {
         });
     }
 };
+
+
+
+
 
 exports.all_applied_leaves = async (req, res) => {
     try {
@@ -267,6 +274,10 @@ exports.calculate_pending_leaves_for_selected_user = async (req, res) => {
     }
 };
 
+
+
+
+
 exports.update_pending_leave = async (req, res) => {
     const { leave_id, status, remark, user_id, leave_count, email, name, from_date, to_date } = req.body;
     const transaction = await sequelize.transaction();
@@ -345,6 +356,10 @@ exports.update_pending_leave = async (req, res) => {
     }
 };
 
+
+
+
+
 exports.get_all_users_pending_leaves = async (req, res) => {
     try {
         const { name, month, year } = req.query;
@@ -382,6 +397,10 @@ exports.get_all_users_pending_leaves = async (req, res) => {
     }
 };
 
+
+
+
+
 exports.get_applied_leave_details = async (req, res) => {
     const leave_id = req.query.leave_id;
     if (!leave_id) return res.status(400).json({
@@ -402,6 +421,10 @@ exports.get_applied_leave_details = async (req, res) => {
         })
     }
 }
+
+
+
+
 
 exports.calculate_pending_leaves_for_all_users = async (req, res) => {
     try {
@@ -486,6 +509,9 @@ exports.calculate_pending_leaves_for_all_users = async (req, res) => {
     }
 };
 
+
+
+
 exports.leave_bank_report = async (req, res) => {
     try {
         const { session, month, year, page = 1, limit = 10 } = req.query;
@@ -502,18 +528,18 @@ exports.leave_bank_report = async (req, res) => {
             FROM 
                 users u
             LEFT JOIN 
-                bank_leaves bl ON u.id = bl.user_id
+                bank_leaves bl ON u.id = bl.employee_id
             WHERE 
                 u.is_disabled = false`;
 
         if (month) {
-            bank_report_query += ` AND MONTH(bl.created_at) = :month`;
+            bank_report_query += ` AND MONTH(bl.createdAt) = :month`;
         } else {
-            bank_report_query += ` AND MONTH(bl.created_at) = MONTH(CURDATE())`;
+            bank_report_query += ` AND MONTH(bl.createdAt) = MONTH(CURDATE())`;
         }
 
         if (year) {
-            bank_report_query += ` AND YEAR(bl.created_at) = :year`;
+            bank_report_query += ` AND YEAR(bl.createdAt) = :year`;
         }
 
         if (session) {
@@ -569,13 +595,13 @@ exports.leave_bank_report = async (req, res) => {
             WHERE u.is_disabled = false`;
 
         if (month) {
-            count_query += ` AND MONTH(bl.created_at) = :month`;
+            count_query += ` AND MONTH(bl.createdAt) = :month`;
         } else {
-            count_query += ` AND MONTH(bl.created_at) = MONTH(CURDATE())`;
+            count_query += ` AND MONTH(bl.createdAt) = MONTH(CURDATE())`;
         }
 
         if (year) {
-            count_query += ` AND YEAR(bl.created_at) = :year`;
+            count_query += ` AND YEAR(bl.createdAt) = :year`;
         }
 
         if (session) {
