@@ -517,7 +517,7 @@ exports.leave_bank_report = async (req, res) => {
         const { session, month, year, page = 1, limit = 10 } = req.query;
         const offset = (page - 1) * limit;
 
-
+      
         let bank_report_query = `
             SELECT 
                 u.id, 
@@ -528,30 +528,21 @@ exports.leave_bank_report = async (req, res) => {
             FROM 
                 users u
             LEFT JOIN 
-                bank_leaves bl ON u.id = bl.employee_id
+                bank_leaves bl 
+            ON 
+                u.id = bl.employee_id
+                AND (MONTH(bl.createdAt) = :month OR :month IS NULL)
+                AND (YEAR(bl.createdAt) = :year OR :year IS NULL)
+                AND (bl.session = :session OR :session IS NULL)
             WHERE 
-                u.is_disabled = false`;
-
-        if (month) {
-            bank_report_query += ` AND MONTH(bl.createdAt) = :month`;
-        } else {
-            bank_report_query += ` AND MONTH(bl.createdAt) = MONTH(CURDATE())`;
-        }
-
-        if (year) {
-            bank_report_query += ` AND YEAR(bl.createdAt) = :year`;
-        }
-
-        if (session) {
-            bank_report_query += ` AND bl.session = :session`;
-        }
-
-        bank_report_query += ` LIMIT :limit OFFSET :offset`;
+                u.is_disabled = false
+            LIMIT :limit OFFSET :offset
+        `;
 
         const replacements = {
-            month: month ? parseInt(month) : undefined,
-            year: year ? parseInt(year) : undefined,
-            session: session ? session : undefined,
+            month: month ? parseInt(month) : null,
+            year: year ? parseInt(year) : null,
+            session: session || null,
             limit: parseInt(limit),
             offset: offset,
         };
@@ -563,7 +554,7 @@ exports.leave_bank_report = async (req, res) => {
 
         console.log("Query Result:", all_bank_records);
 
-
+       
         if (!all_bank_records || all_bank_records.length === 0) {
             const defaultUsersQuery = `
                 SELECT 
@@ -575,10 +566,16 @@ exports.leave_bank_report = async (req, res) => {
                 FROM 
                     users u 
                 WHERE 
-                    u.is_disabled = false`;
+                    u.is_disabled = false
+                LIMIT :limit OFFSET :offset
+            `;
 
             const defaultUsers = await sequelize.query(defaultUsersQuery, {
                 type: sequelize.QueryTypes.SELECT,
+                replacements: {
+                    limit: parseInt(limit),
+                    offset: offset
+                }
             });
 
             return res.status(200).json({
@@ -587,33 +584,24 @@ exports.leave_bank_report = async (req, res) => {
             });
         }
 
-
+       
         let count_query = `
             SELECT COUNT(*) as totalCount
-            FROM bank_leaves bl
-            JOIN users u ON u.id = bl.user_id
-            WHERE u.is_disabled = false`;
-
-        if (month) {
-            count_query += ` AND MONTH(bl.createdAt) = :month`;
-        } else {
-            count_query += ` AND MONTH(bl.createdAt) = MONTH(CURDATE())`;
-        }
-
-        if (year) {
-            count_query += ` AND YEAR(bl.createdAt) = :year`;
-        }
-
-        if (session) {
-            count_query += ` AND bl.session = :session`;
-        }
+            FROM users u
+            LEFT JOIN bank_leaves bl 
+            ON u.id = bl.employee_id
+                AND (MONTH(bl.createdAt) = :month OR :month IS NULL)
+                AND (YEAR(bl.createdAt) = :year OR :year IS NULL)
+                AND (bl.session = :session OR :session IS NULL)
+            WHERE u.is_disabled = false
+        `;
 
         const totalRecordsResult = await sequelize.query(count_query, {
             type: sequelize.QueryTypes.SELECT,
             replacements: {
-                month: month ? parseInt(month) : undefined,
-                year: year ? parseInt(year) : undefined,
-                session: session ? session : undefined,
+                month: month ? parseInt(month) : null,
+                year: year ? parseInt(year) : null,
+                session: session || null,
             },
         });
 
@@ -634,6 +622,7 @@ exports.leave_bank_report = async (req, res) => {
         return res.status(400).json({ type: "error", message: error.message });
     }
 };
+
 
 
 
@@ -800,6 +789,5 @@ exports.update_user_leave_bank = async (req, res) => {
         return res.status(500).json(errorResponse(error.message));
     }
 };
-
 
 
