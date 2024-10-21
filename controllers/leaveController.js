@@ -298,9 +298,9 @@ exports.update_pending_leave = async (req, res) => {
         if (status === "ACCEPTED") {
             const select_current_month_leaves = `
                 SELECT * FROM bank_leaves 
-                WHERE user_id = ? 
-                AND MONTH(created_at) = MONTH(NOW()) 
-                AND YEAR(created_at) = YEAR(NOW())`;
+                WHERE employee_id = ? 
+                AND MONTH(createdAt) = MONTH(NOW()) 
+                AND YEAR(createdAt) = YEAR(NOW())`;
 
             const [selected_leave_details] = await sequelize.query(select_current_month_leaves, {
                 replacements: [user_id],
@@ -517,7 +517,7 @@ exports.leave_bank_report = async (req, res) => {
         const { session, month, year, page = 1, limit = 10 } = req.query;
         const offset = (page - 1) * limit;
 
-      
+
         let bank_report_query = `
             SELECT 
                 u.id, 
@@ -554,7 +554,7 @@ exports.leave_bank_report = async (req, res) => {
 
         console.log("Query Result:", all_bank_records);
 
-       
+
         if (!all_bank_records || all_bank_records.length === 0) {
             const defaultUsersQuery = `
                 SELECT 
@@ -584,7 +584,7 @@ exports.leave_bank_report = async (req, res) => {
             });
         }
 
-       
+
         let count_query = `
             SELECT COUNT(*) as totalCount
             FROM users u
@@ -701,7 +701,7 @@ async function process_cron_job() {
 
             const pending_leaves = monthsWorked - total_allowed_leaves[0]?.Taken_leaves
 
-            const insert_pending_leaves_query = `INSERT INTO bank_leaves (user_id,paid_leave,taken_leave,month_year,session,created_at,updated_at) VALUES (?,?,?,CURDATE(),?,CURDATE(),CURDATE())`;
+            const insert_pending_leaves_query = `INSERT INTO bank_leaves (employee_id,paid_leave,taken_leave,month_year,session,createdAt,updatedAt) VALUES (?,?,?,CURDATE(),?,CURDATE(),CURDATE())`;
             const insert_pending_leave = await sequelize.query(insert_pending_leaves_query, {
                 replacements: [id, pending_leaves, 0, session],
                 type: sequelize.QueryTypes.INSERT,
@@ -732,10 +732,10 @@ console.log('Cron job has been scheduled.');
 exports.update_user_leave_bank = async (req, res) => {
     try {
         const userId = req.query.employeeId;
-        const paid_leave = parseFloat(req.query.paid_leaves);  
-        const taken_leaves = parseFloat(req.query.taken_leaves); 
+        const paid_leave = parseFloat(req.query.paid_leaves);
+        const taken_leaves = parseFloat(req.query.taken_leaves);
 
-      
+        let t = sequelize.transaction()
         if (!userId) {
             return res.status(400).json(errorResponse("Please provide employee Id in the query params"));
         }
@@ -744,7 +744,7 @@ exports.update_user_leave_bank = async (req, res) => {
             return res.status(400).json(errorResponse("Invalid paid or taken leaves. Must be a valid number."));
         }
 
-       
+
         let getUserQuery = `SELECT id FROM users WHERE id = ${userId}`;
         let [isUserExist] = await sequelize.query(getUserQuery);
 
@@ -752,23 +752,23 @@ exports.update_user_leave_bank = async (req, res) => {
             return res.status(400).json(errorResponse("User not found with this user Id"));
         }
 
-      
+
         let leavesDataQuery = `SELECT paid_leave, taken_leave FROM bank_leaves WHERE employee_id = ${userId}`;
         let [leaves] = await sequelize.query(leavesDataQuery);
 
         if (leaves.length >= 1) {
-            let userleaves = leaves[0];  
+            let userleaves = leaves[0];
 
-           
+
             if (userleaves.paid_leave === paid_leave) {
-               
+
                 userleaves.paid_leave = userleaves.paid_leave - taken_leaves;
             } else {
-              
+
                 userleaves.paid_leave = paid_leave - taken_leaves;
             }
 
-         
+
             let updateLeaveQuery = `
                 UPDATE bank_leaves
                 SET paid_leave = ${userleaves.paid_leave}, 
@@ -776,12 +776,21 @@ exports.update_user_leave_bank = async (req, res) => {
                 WHERE employee_id = ${userId};
             `;
 
-         
+
             await sequelize.query(updateLeaveQuery);
 
             return res.status(200).json(successResponse("Leave bank updated successfully."));
         } else {
-            return res.status(404).json(errorResponse("Leave bank not found for the user."));
+         let addLeaveRecord =  `INSERT INTO bank_leaves
+             (employee_id,paid_leave,taken_leave,month_year,session,createdAt,updatedAt) 
+             VALUES 
+             (?,?,?,CURDATE(),?,CURDATE(),CURDATE())`;
+            
+             await sequelize.query(addLeaveRecord, {
+                replacements: [userId, paid_leave,  taken_leaves,],
+                type: sequelize.QueryTypes.INSERT,
+                transaction: t
+            });
         }
 
     } catch (error) {
