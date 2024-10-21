@@ -730,12 +730,17 @@ console.log('Cron job has been scheduled.');
 
 
 exports.update_user_leave_bank = async (req, res) => {
+    let t;
     try {
+       
         const userId = req.query.employeeId;
         const paid_leave = parseFloat(req.query.paid_leaves);
         const taken_leaves = parseFloat(req.query.taken_leaves);
+        const session = req.query.session;
 
-        let t = sequelize.transaction()
+      
+        t = await sequelize.transaction();
+
         if (!userId) {
             return res.status(400).json(errorResponse("Please provide employee Id in the query params"));
         }
@@ -744,59 +749,73 @@ exports.update_user_leave_bank = async (req, res) => {
             return res.status(400).json(errorResponse("Invalid paid or taken leaves. Must be a valid number."));
         }
 
-
-        let getUserQuery = `SELECT id FROM users WHERE id = ${userId}`;
-        let [isUserExist] = await sequelize.query(getUserQuery);
+        
+        let getUserQuery = `SELECT id FROM users WHERE id = :userId`;
+        let [isUserExist] = await sequelize.query(getUserQuery, {
+            replacements: { userId },
+            transaction: t
+        });
 
         if (isUserExist.length < 1) {
             return res.status(400).json(errorResponse("User not found with this user Id"));
         }
 
-
-        let leavesDataQuery = `SELECT paid_leave, taken_leave FROM bank_leaves WHERE employee_id = ${userId}`;
-        let [leaves] = await sequelize.query(leavesDataQuery);
+        
+        let leavesDataQuery = `SELECT paid_leave, taken_leave FROM bank_leaves WHERE employee_id = :userId`;
+        let [leaves] = await sequelize.query(leavesDataQuery, {
+            replacements: { userId },
+            transaction: t
+        });
 
         if (leaves.length >= 1) {
             let userleaves = leaves[0];
 
-
-            if (userleaves.paid_leave === paid_leave) {
-
-                userleaves.paid_leave = userleaves.paid_leave - taken_leaves;
-            } else {
-
-                userleaves.paid_leave = paid_leave - taken_leaves;
-            }
-
+           
+            userleaves.paid_leave = userleaves.paid_leave === paid_leave
+                ? userleaves.paid_leave - taken_leaves
+                : paid_leave - taken_leaves;
 
             let updateLeaveQuery = `
                 UPDATE bank_leaves
-                SET paid_leave = ${userleaves.paid_leave}, 
-                    taken_leave = ${userleaves.taken_leave + taken_leaves}
-                WHERE employee_id = ${userId};
-            `;
+                SET paid_leave = :paid_leave, 
+                    taken_leave = :taken_leave
+                WHERE employee_id = :userId`;
 
-
-            await sequelize.query(updateLeaveQuery);
-
-            return res.status(200).json(successResponse("Leave bank updated successfully."));
-        } else {
-         let addLeaveRecord =  `INSERT INTO bank_leaves
-             (employee_id,paid_leave,taken_leave,month_year,session,createdAt,updatedAt) 
-             VALUES 
-             (?,?,?,CURDATE(),?,CURDATE(),CURDATE())`;
-            
-             await sequelize.query(addLeaveRecord, {
-                replacements: [userId, paid_leave,  taken_leaves,],
-                type: sequelize.QueryTypes.INSERT,
+            await sequelize.query(updateLeaveQuery, {
+                replacements: { paid_leave: userleaves.paid_leave, taken_leave: userleaves.taken_leave + taken_leaves, userId },
                 transaction: t
             });
+
+            await t.commit();
+            return res.status(200).json(successResponse("Leave bank updated successfully."));
+        } else {
+            
+            if (!session) {
+                return res.status(400).json(errorResponse('Please provide session in the query params'));
+            }
+
+          
+            let addLeaveRecord = `INSERT INTO bank_leaves
+                (employee_id, paid_leave, taken_leave, month_year, session, createdAt, updatedAt) 
+                VALUES 
+                (?, ?, ?, CURDATE(), ?, CURDATE(), CURDATE())`;
+
+            await sequelize.query(addLeaveRecord, {
+                replacements: [userId, paid_leave - taken_leaves, taken_leaves, session],
+                type: sequelize.QueryTypes.INSERT,
+                transaction: t 
+            });
+
+            await t.commit(); 
+            return res.status(200).json(successResponse("Leave bank updated successfully."));
         }
 
     } catch (error) {
+        if (t) await t.rollback(); 
         console.log("ERROR::", error);
         return res.status(500).json(errorResponse(error.message));
     }
 };
+
 
 
