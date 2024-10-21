@@ -2,7 +2,7 @@ let { sequelize } = require('../models');
 let moment = require('moment');
 let { send_email } = require("../utils/commonFuntions")
 const { CronJob } = require('cron');
-
+const { errorResponse, successResponse } = require('../utils/responseHandler');
 
 
 
@@ -189,8 +189,8 @@ exports.all_applied_leaves = async (req, res) => {
 
 exports.calculate_pending_leaves_for_selected_user = async (req, res) => {
     try {
-       
-        const userId = req.result?.user_id; 
+
+        const userId = req.result?.user_id;
 
         if (!userId) {
             return res.status(400).json({
@@ -199,7 +199,7 @@ exports.calculate_pending_leaves_for_selected_user = async (req, res) => {
             });
         }
 
-        
+
         const select_user_query = `
             SELECT 
                 u.id AS userId,
@@ -635,12 +635,15 @@ exports.leave_bank_report = async (req, res) => {
     }
 };
 
+
+
+
 exports.get_user_applied_leaves = async (req, res) => {
     try {
         const user_id = req.result.user_id;
         const { month, year } = req.query;
 
-       
+
         let query = `
             SELECT l.id, l.from_date, l.to_date, l.count, l.description, l.createdAt, l.type, l.status, l.remark, u.name 
             FROM leaves l 
@@ -648,25 +651,25 @@ exports.get_user_applied_leaves = async (req, res) => {
             WHERE u.is_disabled = false
         `;
 
-      
+
         if (user_id) {
             query += ` AND u.id = '${user_id}'`;
         }
 
-       
+
         if (month) {
             query += ` AND MONTH(l.createdAt) = ${month}`;
         }
 
-       
+
         if (year) {
             query += ` AND YEAR(l.createdAt) = ${year}`;
         }
 
-   
+
         query += ` ORDER BY l.createdAt DESC;`;
 
-       
+
         let is_leaves_exist = await sequelize.query(query, {
             type: sequelize.QueryTypes.SELECT,
         });
@@ -726,8 +729,8 @@ async function process_cron_job() {
 const job = new CronJob('0 0 1 * *', () => {
     console.log('This job runs at midnight on the first day of every month');
     process_cron_job()
-    
-}, null, true, 'Asia/Kolkata'); 
+
+}, null, true, 'Asia/Kolkata');
 
 
 job.start();
@@ -737,7 +740,66 @@ console.log('Cron job has been scheduled.');
 
 
 
+exports.update_user_leave_bank = async (req, res) => {
+    try {
+        const userId = req.query.employeeId;
+        const paid_leave = parseFloat(req.query.paid_leaves);  
+        const taken_leaves = parseFloat(req.query.taken_leaves); 
 
+      
+        if (!userId) {
+            return res.status(400).json(errorResponse("Please provide employee Id in the query params"));
+        }
+
+        if (isNaN(paid_leave) || isNaN(taken_leaves)) {
+            return res.status(400).json(errorResponse("Invalid paid or taken leaves. Must be a valid number."));
+        }
+
+       
+        let getUserQuery = `SELECT id FROM users WHERE id = ${userId}`;
+        let [isUserExist] = await sequelize.query(getUserQuery);
+
+        if (isUserExist.length < 1) {
+            return res.status(400).json(errorResponse("User not found with this user Id"));
+        }
+
+      
+        let leavesDataQuery = `SELECT paid_leave, taken_leave FROM bank_leaves WHERE employee_id = ${userId}`;
+        let [leaves] = await sequelize.query(leavesDataQuery);
+
+        if (leaves.length >= 1) {
+            let userleaves = leaves[0];  
+
+           
+            if (userleaves.paid_leave === paid_leave) {
+               
+                userleaves.paid_leave = userleaves.paid_leave - taken_leaves;
+            } else {
+              
+                userleaves.paid_leave = paid_leave - taken_leaves;
+            }
+
+         
+            let updateLeaveQuery = `
+                UPDATE bank_leaves
+                SET paid_leave = ${userleaves.paid_leave}, 
+                    taken_leave = ${userleaves.taken_leave + taken_leaves}
+                WHERE employee_id = ${userId};
+            `;
+
+         
+            await sequelize.query(updateLeaveQuery);
+
+            return res.status(200).json(successResponse("Leave bank updated successfully."));
+        } else {
+            return res.status(404).json(errorResponse("Leave bank not found for the user."));
+        }
+
+    } catch (error) {
+        console.log("ERROR::", error);
+        return res.status(500).json(errorResponse(error.message));
+    }
+};
 
 
 

@@ -120,6 +120,7 @@ router.get("/get_applied_leave_detail", authenticateToken, leaveController.get_a
 router.get("/all_users_pending_leaves", authenticateToken, leaveController.calculate_pending_leaves_for_all_users)
 router.get("/leave_bank_report", authenticateToken, leaveController.leave_bank_report)
 router.get("/user_applied_leaves", authenticateToken, leaveController.get_user_applied_leaves)
+router.put("/update_user_leave_bank",authenticateToken,leaveController.update_user_leave_bank)
 
 
 
