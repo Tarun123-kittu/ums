@@ -317,7 +317,7 @@ exports.update_pending_leave = async (req, res) => {
 
                 const update_bank_leaves_query = `
                     UPDATE bank_leaves 
-                    SET taken_leave = ?, paid_leave = ?, updated_at = CURDATE() 
+                    SET taken_leave = ?, paid_leave = ?, updatedAt = CURDATE() 
                     WHERE id = ?`;
 
                 const is_bank_leave_updated = await sequelize.query(update_bank_leaves_query, {
