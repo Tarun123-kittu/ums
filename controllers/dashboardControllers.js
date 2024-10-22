@@ -14,10 +14,13 @@ exports.get_dashboard_leaves = async (req, res) => {
 
         const leavesQuery = `
             SELECT 
+                u.email,
                 u.name, 
-                u.position, 
+                u.position,
+                l.id AS leave_id, 
                 l.createdAt AS date_of_application,
                 l.type,
+                l.user_id,
                 CONCAT(DATE_FORMAT(l.from_date, '%Y-%m-%d'), ' - ', DATE_FORMAT(l.to_date, '%Y-%m-%d')) AS duration, 
                 l.status
             FROM 
