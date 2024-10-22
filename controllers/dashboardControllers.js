@@ -20,6 +20,7 @@ exports.get_dashboard_leaves = async (req, res) => {
                 l.id AS leave_id, 
                 l.createdAt AS date_of_application,
                 l.type,
+                l.count,
                 l.user_id,
                 CONCAT(DATE_FORMAT(l.from_date, '%Y-%m-%d'), ' - ', DATE_FORMAT(l.to_date, '%Y-%m-%d')) AS duration, 
                 l.status
@@ -144,8 +145,8 @@ exports.get_dashboard_interview_leads_overview = async (req, res) => {
 
 exports.get_employees_working_time = async (req, res) => {
     try {
-        const current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
-        const current_date = moment().tz('Asia/Kolkata').format('YYYY-MM-DD');
+        let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
+
 
         const query = `
             SELECT 
