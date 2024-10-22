@@ -141,9 +141,30 @@ exports.apply_leave = async (req, res) => {
 
 exports.all_applied_leaves = async (req, res) => {
     try {
-        let select_all_applied_leaves_query = `
+        // Get page and limit from request query, use default values if not provided
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+
+        // Count total records for pagination
+        const count_query = `
+            SELECT COUNT(*) AS total
+            FROM leaves l
+            JOIN users u ON l.user_id = u.id
+            WHERE u.is_disabled = false
+            AND l.status = "PENDING"
+        `;
+
+        const totalResult = await sequelize.query(count_query, {
+            type: sequelize.QueryTypes.SELECT
+        });
+        const totalRecords = totalResult[0].total;
+        const totalPages = Math.ceil(totalRecords / limit);
+
+        // Fetch paginated records
+        const select_all_applied_leaves_query = `
             SELECT 
-            l.id ,
+                l.id,
                 l.from_date AS date_from,
                 l.to_date AS to_date,
                 l.count AS count,
@@ -159,30 +180,43 @@ exports.all_applied_leaves = async (req, res) => {
             FROM leaves l 
             JOIN users u ON l.user_id = u.id 
             WHERE u.is_disabled = false
-            AND l.status = "PENDING"`;
+            AND l.status = "PENDING"
+            LIMIT :limit OFFSET :offset
+        `;
 
-        let get_all_applied_leaves = await sequelize.query(select_all_applied_leaves_query, {
+        const get_all_applied_leaves = await sequelize.query(select_all_applied_leaves_query, {
+            replacements: { limit, offset },
             type: sequelize.QueryTypes.SELECT
         });
 
-        if (get_all_applied_leaves?.length === 0) {
+        if (get_all_applied_leaves.length === 0) {
             return res.status(200).json({
                 type: "Success",
-                message: "No pending leaves found"
+                message: "No pending leaves found",
+                currentPage: page,
+                totalPages,
+                totalRecords,
+                currentPageRecords: 0,
+                data: []
             });
         }
 
         return res.status(200).json({
-            type: "success",
+            type: "Success",
+            currentPage: page,
+            totalPages,
+            totalRecords,
+            currentPageRecords: get_all_applied_leaves.length,
             data: get_all_applied_leaves
         });
     } catch (error) {
         return res.status(500).json({
-            type: "error",
+            type: "Error",
             message: error.message
         });
     }
 };
+
 
 
 
@@ -362,44 +396,83 @@ exports.update_pending_leave = async (req, res) => {
 
 exports.get_all_users_pending_leaves = async (req, res) => {
     try {
-        const { name, month, year } = req.query;
+        const { name, month, year, page = 1, limit = 10 } = req.query;
 
-        let query = `SELECT l.id, l.from_date, l.to_date, l.count, l.description, l.createdAt, l.type, l.createdAt, l.status, l.remark, u.name 
-                     FROM leaves l 
-                     JOIN users u ON u.id = l.user_id 
-                     WHERE u.is_disabled = false`;
+        const offset = (page - 1) * limit;
+        let countQuery = `
+            SELECT COUNT(*) AS total
+            FROM leaves l
+            JOIN users u ON u.id = l.user_id
+            WHERE u.is_disabled = false
+        `;
+
+        let query = `
+            SELECT 
+                l.id, 
+                l.from_date, 
+                l.to_date, 
+                l.count, 
+                l.description, 
+                l.createdAt, 
+                l.type, 
+                l.status, 
+                l.remark, 
+                u.name
+            FROM leaves l 
+            JOIN users u ON u.id = l.user_id 
+            WHERE u.is_disabled = false
+        `;
 
         if (name) {
+            countQuery += ` AND u.id = '${name}'`;
             query += ` AND u.id = '${name}'`;
         }
         if (month) {
+            countQuery += ` AND MONTH(l.createdAt) = ${month}`;
             query += ` AND MONTH(l.createdAt) = ${month}`;
         }
         if (year) {
+            countQuery += ` AND YEAR(l.createdAt) = ${year}`;
             query += ` AND YEAR(l.createdAt) = ${year}`;
         }
 
-        query += ';';
+        const totalResult = await sequelize.query(countQuery, {
+            type: sequelize.QueryTypes.SELECT,
+        });
+        const totalRecords = totalResult[0].total;
+        const totalPages = Math.ceil(totalRecords / limit);
 
-        let is_leaves_exist = await sequelize.query(query, {
+        query += ` LIMIT :limit OFFSET :offset`;
+
+        const leavesResult = await sequelize.query(query, {
+            replacements: { limit: parseInt(limit), offset: parseInt(offset) },
             type: sequelize.QueryTypes.SELECT,
         });
 
-        console.log(is_leaves_exist, "is_leaves_exist")
-
-        if (!is_leaves_exist) {
-            return res.status(200).json({ type: "success", message: "No leaves found" });
+        if (leavesResult.length === 0) {
+            return res.status(200).json({
+                type: "success",
+                message: "No leaves found",
+                currentPage: page,
+                totalPages,
+                totalRecords,
+                currentPageRecords: 0,
+                data: []
+            });
         }
 
-        return res.status(200).json({ type: "success", data: is_leaves_exist });
+        return res.status(200).json({
+            type: "success",
+            currentPage: parseInt(page),
+            totalPages,
+            totalRecords,
+            currentPageRecords: leavesResult.length,
+            data: leavesResult
+        });
     } catch (error) {
         return res.status(400).json({ type: "error", message: error.message });
     }
 };
-
-
-
-
 
 exports.get_applied_leave_details = async (req, res) => {
     const leave_id = req.query.leave_id;
@@ -714,7 +787,7 @@ async function process_cron_job() {
 
         }
     } catch (error) {
-          console.log("ERROR::",error)
+        console.log("ERROR::", error)
     }
 }
 
@@ -739,13 +812,13 @@ console.log('Cron job has been scheduled.');
 exports.update_user_leave_bank = async (req, res) => {
     let t;
     try {
-       
+
         const userId = req.query.employeeId;
         const paid_leave = parseFloat(req.query.paid_leaves);
         const taken_leaves = parseFloat(req.query.taken_leaves);
         const session = req.query.session;
 
-      
+
         t = await sequelize.transaction();
 
         if (!userId) {
@@ -756,7 +829,7 @@ exports.update_user_leave_bank = async (req, res) => {
             return res.status(400).json(errorResponse("Invalid paid or taken leaves. Must be a valid number."));
         }
 
-        
+
         let getUserQuery = `SELECT id FROM users WHERE id = :userId`;
         let [isUserExist] = await sequelize.query(getUserQuery, {
             replacements: { userId },
@@ -767,7 +840,7 @@ exports.update_user_leave_bank = async (req, res) => {
             return res.status(400).json(errorResponse("User not found with this user Id"));
         }
 
-        
+
         let leavesDataQuery = `SELECT paid_leave, taken_leave FROM bank_leaves WHERE employee_id = :userId`;
         let [leaves] = await sequelize.query(leavesDataQuery, {
             replacements: { userId },
@@ -777,7 +850,7 @@ exports.update_user_leave_bank = async (req, res) => {
         if (leaves.length >= 1) {
             let userleaves = leaves[0];
 
-           
+
             userleaves.paid_leave = userleaves.paid_leave === paid_leave
                 ? userleaves.paid_leave - taken_leaves
                 : paid_leave - taken_leaves;
@@ -796,12 +869,12 @@ exports.update_user_leave_bank = async (req, res) => {
             await t.commit();
             return res.status(200).json(successResponse("Leave bank updated successfully."));
         } else {
-            
+
             if (!session) {
                 return res.status(400).json(errorResponse('Please provide session in the query params'));
             }
 
-          
+
             let addLeaveRecord = `INSERT INTO bank_leaves
                 (employee_id, paid_leave, taken_leave, month_year, session, createdAt, updatedAt) 
                 VALUES 
@@ -810,15 +883,15 @@ exports.update_user_leave_bank = async (req, res) => {
             await sequelize.query(addLeaveRecord, {
                 replacements: [userId, paid_leave - taken_leaves, taken_leaves, session],
                 type: sequelize.QueryTypes.INSERT,
-                transaction: t 
+                transaction: t
             });
 
-            await t.commit(); 
+            await t.commit();
             return res.status(200).json(successResponse("Leave bank updated successfully."));
         }
 
     } catch (error) {
-        if (t) await t.rollback(); 
+        if (t) await t.rollback();
         console.log("ERROR::", error);
         return res.status(500).json(errorResponse(error.message));
     }
