@@ -498,7 +498,36 @@ exports.get_attendance_details = async (req, res) => {
 exports.update_attendance_details = async (req, res) => {
     try {
         const id = req.query.attendanceId;
-        const { total_time, rating, in_time, out_time, report, remark } = req.body;
+        const { rating, in_time, out_time, report, remark } = req.body;
+        console.log(in_time, out_time);
+
+        let total_time = null;
+
+        if (out_time && in_time) {
+            // Convert time strings to seconds since midnight
+            const [inHours, inMinutes, inSeconds] = in_time.split(':').map(Number);
+            const [outHours, outMinutes, outSeconds] = out_time.split(':').map(Number);
+
+            const inTimeInSeconds = inHours * 3600 + inMinutes * 60 + inSeconds;
+            let outTimeInSeconds = outHours * 3600 + outMinutes * 60 + outSeconds;
+
+            // If out_time is earlier in the day than in_time, assume it's the next day
+            if (outTimeInSeconds < inTimeInSeconds) {
+                outTimeInSeconds += 24 * 3600; // Add 24 hours in seconds
+            }
+
+            // Calculate the total difference in seconds
+            const diffInSeconds = outTimeInSeconds - inTimeInSeconds;
+
+            // Convert total seconds back to HH:mm:ss format
+            const hours = Math.floor(diffInSeconds / 3600);
+            const minutes = Math.floor((diffInSeconds % 3600) / 60);
+            const seconds = diffInSeconds % 60;
+
+            total_time = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        console.log(total_time, "this is the total time");
 
         const [results] = await sequelize.query(`
             SELECT * FROM attendances WHERE id = :id
@@ -507,21 +536,20 @@ exports.update_attendance_details = async (req, res) => {
             type: sequelize.QueryTypes.SELECT
         });
 
-        if (results.length === 0) { return res.status(404).json(errorResponse("Attendance not found.")) }
+        if (!results) {
+            return res.status(404).json(errorResponse("Attendance not found."));
+        }
 
         const existingAttendance = results;
 
-        const totalTime = (in_time && out_time) && find_the_total_time(in_time)
         const updatedValues = {
-            total_time: total_time !== undefined ? total_time : existingAttendance.total_time,
+            total_time: total_time !== null ? total_time : existingAttendance.total_time,
             rating: rating !== undefined ? rating : existingAttendance.rating,
             in_time: in_time !== undefined ? in_time : existingAttendance.in_time,
             out_time: out_time !== undefined ? out_time : existingAttendance.out_time,
             report: report !== undefined ? report : existingAttendance.report,
             remark: remark !== undefined ? remark : existingAttendance.remark,
-            total_time: totalTime
         };
-
 
         await sequelize.query(`
             UPDATE attendances
@@ -530,8 +558,7 @@ exports.update_attendance_details = async (req, res) => {
                 in_time = :in_time,
                 out_time = :out_time,
                 report = :report,
-                remark = :remark,
-                total_time = :total_time
+                remark = :remark
             WHERE id = :id
         `, {
             replacements: {
@@ -548,10 +575,6 @@ exports.update_attendance_details = async (req, res) => {
         return res.status(500).json(errorResponse(error.message));
     }
 };
-
-
-
-
 
 exports.get_user_monthly_report = async (req, res) => {
     try {

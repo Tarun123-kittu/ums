@@ -782,7 +782,7 @@ exports.update_user = async (req, res) => {
 
 exports.get_all_users_name = async (req, res) => {
   try {
-    const get_users_query = `SELECT username,name,id FROM users WHERE is_disabled = false`;
+    const get_users_query = `SELECT username,name,id,role FROM users WHERE is_disabled = false`;
     const all_users = await sequelize.query(get_users_query, {
       type: sequelize.QueryTypes.SELECT,
     });
