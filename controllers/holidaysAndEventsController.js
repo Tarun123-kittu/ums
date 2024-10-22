@@ -335,13 +335,14 @@ exports.get_events_and_birthdays = async (req, res) => {
 
 
 
+
 exports.get_current_and_next_month_events = async (req, res) => {
     try {
         const currentYear = new Date().getFullYear(); 
         const currentMonth = new Date().getMonth(); 
         const nextMonth = (currentMonth + 1) % 12; 
 
-       
+    
         const getHolidaysAndEventsQuery = `
             SELECT 
                 occasion_name, 
@@ -355,7 +356,7 @@ exports.get_current_and_next_month_events = async (req, res) => {
             ORDER BY date ASC
         `;
 
-       
+    
         const getAllBirthdaysAndJoiningQuery = `
             SELECT 
                 name, 
@@ -371,82 +372,73 @@ exports.get_current_and_next_month_events = async (req, res) => {
 
         const t = await sequelize.transaction();
 
-        
+       
         const [holidaysAndEvents] = await sequelize.query(getHolidaysAndEventsQuery, {
             replacements: { currentYear },
             transaction: t,
         });
 
-  
         const [allBirthdaysAndJoining] = await sequelize.query(getAllBirthdaysAndJoiningQuery, {
             transaction: t,
         });
 
         await t.commit();
 
-        const currentMonthResults = [];
-        const nextMonthResults = [];
-        let idCounter = 1; 
+        const events = [];
+        let idCounter = 1;
 
        
         holidaysAndEvents.forEach(event => {
             const eventDate = new Date(event.date);
             const month = eventDate.getMonth();
+            const year = eventDate.getFullYear();
 
-            if (month === currentMonth || month === nextMonth) {
-                currentMonthResults.push({
+         
+            if (year === currentYear && (month === currentMonth || month === nextMonth)) {
+                events.push({
                     id: idCounter++,
                     title: event.occasion_name,
-                    start: new Date(currentYear, eventDate.getMonth(), eventDate.getDate()),
-                    end: new Date(currentYear, eventDate.getMonth(), eventDate.getDate(), 23, 59), 
-                    color: event.occasion_type === 'holiday' ? '#28B463' : '#E74C3C', 
+                    date: new Date(currentYear, month, eventDate.getDate()).toISOString().split('T')[0], // Format to YYYY-MM-DD
+                    color: event.occasion_type === 'holiday' ? '#28B463' : '#E74C3C',
                 });
             }
         });
 
-        
+    
         allBirthdaysAndJoining.forEach(entry => {
             const birthdayDate = new Date(entry.dob);
             const joiningDate = new Date(entry.doj);
 
-            
+           
             if (entry.dob) {
                 birthdayDate.setFullYear(currentYear);
-                const birthdayEvent = {
+                events.push({
                     id: idCounter++,
                     title: `${entry.name}'s Birthday`,
-                    start: new Date(currentYear, birthdayDate.getMonth(), birthdayDate.getDate()),
-                    end: new Date(currentYear, birthdayDate.getMonth(), birthdayDate.getDate(), 23, 59), 
-                    color: '#3498DB', 
-                };
-
-                if (birthdayDate.getMonth() === currentMonth) {
-                    currentMonthResults.push(birthdayEvent);
-                } else if (birthdayDate.getMonth() === nextMonth) {
-                    nextMonthResults.push(birthdayEvent);
-                }
+                    date: birthdayDate.toISOString().split('T')[0], 
+                    color: '#3498DB',
+                });
             }
 
-            
+          
             if (entry.doj) {
                 joiningDate.setFullYear(currentYear);
-                const joiningEvent = {
-                    id: idCounter++,
+                events.push({
+                    id: idCounter++, 
                     title: `${entry.name}'s Anniversary`,
-                    start: new Date(currentYear, joiningDate.getMonth(), joiningDate.getDate()),
-                    end: new Date(currentYear, joiningDate.getMonth(), joiningDate.getDate(), 23, 59),
-                    color: '#F39C12', 
-                };
-
-                if (joiningDate.getMonth() === currentMonth) {
-                    currentMonthResults.push(joiningEvent);
-                } else if (joiningDate.getMonth() === nextMonth) {
-                    nextMonthResults.push(joiningEvent);
-                }
+                    date: joiningDate.toISOString().split('T')[0], 
+                    color: '#F39C12',
+                });
             }
         });
 
-        // Return the results for the current and next month
+        events.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+       
+        const currentMonthResults = events.filter(event => new Date(event.date).getMonth() === currentMonth);
+        const nextMonthResults = events.filter(event => new Date(event.date).getMonth() === nextMonth);
+
+       
         return res.status(200).json({
             type: 'success',
             data: {
@@ -458,7 +450,11 @@ exports.get_current_and_next_month_events = async (req, res) => {
 
     } catch (error) {
         console.log("ERROR::", error);
-        return res.status(500).json(errorResponse(error.message));
+        return res.status(500).json({
+            type: 'error',
+            message: error.message
+        });
     }
 };
+
 
