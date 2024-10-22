@@ -132,6 +132,7 @@ router.get("/get_all_leads", authenticateToken, interviewLeadsController.get_all
 router.delete("/delete_lead", authenticateToken, validateUpdateLead, interviewLeadsController.delete_lead)
 router.get("/get_face_to_face_round_leads", authenticateToken, interviewLeadsController.get_face_to_face_round_leads)
 router.get("/get_final_round_leads", authenticateToken, interviewLeadsController.get_final_round_leads)
+router.delete('/delete_lead_records',authenticateToken,interviewLeadsController.delete_lead_records)
 
 
 //hr round 

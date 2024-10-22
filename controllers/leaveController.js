@@ -656,7 +656,7 @@ exports.get_user_applied_leaves = async (req, res) => {
         }
 
 
-        query += ` ORDER BY l.createdAt DESC;`;
+        query += ` ORDER BY l.createdAt DESC`;
 
 
         let is_leaves_exist = await sequelize.query(query, {
@@ -674,6 +674,9 @@ exports.get_user_applied_leaves = async (req, res) => {
         return res.status(400).json({ type: "error", message: error.message });
     }
 };
+
+
+
 
 
 async function process_cron_job() {
@@ -711,9 +714,13 @@ async function process_cron_job() {
 
         }
     } catch (error) {
-
+          console.log("ERROR::",error)
     }
 }
+
+
+
+
 
 const job = new CronJob('0 0 1 * *', () => {
     console.log('This job runs at midnight on the first day of every month');
