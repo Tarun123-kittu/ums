@@ -146,6 +146,7 @@ exports.get_dashboard_interview_leads_overview = async (req, res) => {
 exports.get_employees_working_time = async (req, res) => {
     try {
         let current_time = moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss');
+        let current_date = moment().tz('Asia/Kolkata').format('YYYY-MM-DD');
 
 
         const query = `
@@ -178,12 +179,10 @@ exports.get_employees_working_time = async (req, res) => {
 
         result.forEach(entry => {
             const seconds = entry.working_seconds;
-            const hours = seconds / 3600;  // Convert seconds to hours (number format)
+            const hours = seconds / 3600;
 
-            // Add total_time as a number (hours with decimal minutes)
-            entry.total_time = hours.toFixed(2); // Keeping 2 decimal places
+            entry.total_time = hours.toFixed(2);
 
-            // Optional: Remove working_seconds from the response
             delete entry.working_seconds;
         });
 
