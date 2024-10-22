@@ -536,3 +536,60 @@ exports.get_final_round_leads = async (req, res) => {
         return res.status(500).json({ type: "error", message: error.message });
     }
 };
+
+
+
+
+
+
+exports.delete_lead_records = async (req, res) => {
+    const t = await sequelize.transaction();  
+    try {
+        const leadId = req.query.leadId;
+
+       
+        if (!leadId) {
+            return res.status(400).json(errorResponse('Please provide lead Id in the query params'));
+        }
+
+       
+        const findLeadQuery = `SELECT id FROM interview_leads WHERE id = :leadId`;
+        const [isLeadExist] = await sequelize.query(findLeadQuery, {
+            replacements: { leadId },
+            type: sequelize.QueryTypes.SELECT,
+            transaction: t
+        });
+
+      
+        if (!isLeadExist) {
+            await t.rollback(); 
+            return res.status(400).json(errorResponse("Data not exist with this lead Id"));
+        }
+
+        
+        const deleteQueries = [
+            `DELETE FROM interview_leads WHERE id = :leadId`,
+            `DELETE FROM interviews WHERE lead_id = :leadId`,
+            `DELETE FROM hr_rounds WHERE lead_id = :leadId`,
+            `DELETE FROM technical_round WHERE lead_id = :leadId`
+        ];
+
+        for (const query of deleteQueries) {
+            await sequelize.query(query, {
+                replacements: { leadId },
+                transaction: t
+            });
+        }
+
+        
+        await t.commit();
+        return res.status(200).json(successResponse("Interview Lead and related records deleted successfully"));
+
+    } catch (error) {
+        console.log("ERROR::", error);
+        await t.rollback();
+        return res.status(500).json(errorResponse(error.message));
+    }
+};
+
+
