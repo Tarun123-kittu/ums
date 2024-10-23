@@ -341,7 +341,8 @@ exports.forgot_password = async (req, res) => {
     });
 
     if (isUserExist.length === 0) { return res.status(404).json(errorResponse("No user found related to this email")); }
-
+    console.log(isUserExist)
+    const username = isUserExist[0]?.name
     const resetToken = await passwordResetToken();
 
     const update_password_reset_token = 'UPDATE users SET password_reset_token = ? WHERE email = ?';
@@ -352,13 +353,131 @@ exports.forgot_password = async (req, res) => {
 
     if (isUserUpdated) { return res.status(400).json(errorResponse("Unable to generate the key, please try again later")); }
 
-    const resetUrl = `${req.protocol}://${req.get('host')}/reset_password/${resetToken}`;
+    const resetUrl = `http://localhost:3000/reset_password/${resetToken}`;
     const message = `You can reset your password from this URL ${resetUrl}. Ignore if you don't need to reset your password.`;
 
     await send_email({
       email: email,
       subject: "Recovery Email",
-      message
+      message,
+      html: `
+      
+    <div dir="ltr" class="es-wrapper-color" lang="en" style="background-color:#F6F6F6">
+      <!--[if gte mso 9]>
+        <v:background xmlns:v="urn:schemas-microsoft-com:vml" fill="t">
+          <v:fill type="tile" color="#f6f6f6"></v:fill>
+        </v:background>
+      <![endif]-->
+      <table width="100%" cellspacing="0" cellpadding="0" class="es-wrapper" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;padding:0;Margin:0;width:100%;height:100%;background-repeat:repeat;background-position:center top;background-color:#F6F6F6">
+        <tr>
+          <td valign="top" style="padding:0;Margin:0">
+            <table cellspacing="0" cellpadding="0" align="center" class="es-header" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;width:100%;table-layout:fixed !important;background-color:transparent;background-repeat:repeat;background-position:center top">
+              <tr>
+                <td align="center" style="padding:0;Margin:0">
+                  <table cellspacing="0" cellpadding="0" bgcolor="#ffffff" align="center" class="es-header-body" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:#FFFFFF;width:600px">
+                    <tr>
+                      <td align="left" bgcolor="#F7E3E3" style="Margin:0;padding-top:32px;padding-right:20px;padding-bottom:32px;padding-left:20px;background-color:#F7E3E3">
+                        <table cellspacing="0" cellpadding="0" align="right" class="es-right" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:right">
+                          <tr>
+                            <td align="left" style="padding:0;Margin:0;width:560px">
+                              <table width="100%" cellspacing="0" cellpadding="0" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                <tr>
+                                  <td align="center" style="padding:0;Margin:0;font-size:0"><img src="https://frokhjs.stripocdn.email/content/guids/CABINET_aae6c46012051069e562276d25ce47940f57b1ff51be9d9cb73cc6e756acef1f/images/frame_230.png" alt="" width="219" height="67" style="display:block;font-size:14px;border:0;outline:none;text-decoration:none"></td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+            <table cellspacing="0" cellpadding="0" align="center" class="es-content" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;width:100%;table-layout:fixed !important">
+              <tr>
+                <td align="center" style="padding:0;Margin:0">
+                  <table cellspacing="0" cellpadding="0" bgcolor="#ffffff" align="center" class="es-content-body" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:#FFFFFF;width:600px">
+                    <tr>
+                      <td align="left" style="padding:0;Margin:0;padding-right:20px;padding-left:20px;padding-top:20px">
+                        <table width="100%" cellspacing="0" cellpadding="0" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                          <tr>
+                            <td valign="top" align="center" style="padding:0;Margin:0;width:560px">
+                              <table width="100%" cellspacing="0" cellpadding="0" role="presentation" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                <tr>
+                                  <td align="center" class="es-text-6241" style="padding:0;Margin:0;padding-bottom:14px">
+                                    <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:36px !important;letter-spacing:0;color:#333333;font-size:14px"><span class="es-text-mobile-size-24" style="line-height:36px !important;font-size:24px"> Welcome to Ultivic </span>&nbsp;</p>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td align="center" class="es-text-4106" style="padding:0;Margin:0;padding-bottom:24px">
+                                    <p class="es-text-mobile-size-16" style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:24px !important;letter-spacing:0;color:#333333;font-size:16px">Hi ${username}</p>
+                                    <p class="es-text-mobile-size-16" style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:24px !important;letter-spacing:0;color:#333333;font-size:16px">We've received a request to reset your password. </p>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td align="center" style="padding:0;Margin:0">
+                                    <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;color:#333333;font-size:14px">You can change your password by clicking the button below.</p>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td align="center" style="padding:0;Margin:0;padding-bottom:24px">
+                                    <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;color:#333333;font-size:14px"><a target="_blank" href="${resetUrl}" style="mso-line-height-rule:exactly;text-decoration:underline;color:#2CB543;font-size:14px">Click Here</a>&nbsp;</p>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td align="center" style="padding:0;Margin:0">
+                                    <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;color:#333333;font-size:14px">If you are having any issues with your account, please don’t hesitate to contact Us</p>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td align="center" style="padding:0;Margin:0;padding-top:24px">
+                                    <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;color:#333333;font-size:14px">Thanks</p>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td align="center" style="padding:0;Margin:0">
+                                    <p style="Margin:0;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;letter-spacing:0;color:#333333;font-size:14px"><u style="color:#000"><a href="https://ultivic.com/" target="_blank" style="mso-line-height-rule:exactly;text-decoration:underline;color:#000;font-size:14px">Ultivic Private Limited</a></u></p>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+            <table cellspacing="0" cellpadding="0" align="center" class="es-footer" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;width:100%;table-layout:fixed !important;background-color:transparent;background-repeat:repeat;background-position:center top">
+              <tr>
+                <td align="center" style="padding:0;Margin:0">
+                  <table cellspacing="0" cellpadding="0" bgcolor="#ffffff" align="center" class="es-footer-body" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;background-color:#FFFFFF;width:600px">
+                    <tr>
+                      <td align="left" style="Margin:0;padding-right:20px;padding-left:20px;padding-top:20px;padding-bottom:20px">
+                        <table cellspacing="0" cellpadding="0" align="right" class="es-right" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;float:right">
+                          <tr>
+                            <td align="left" style="padding:0;Margin:0;width:560px">
+                              <table width="100%" cellspacing="0" cellpadding="0" role="none" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px">
+                                <tr>
+                                  <td align="center" style="padding:0;Margin:0;display:none"></td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+      `
     });
 
     res.status(200).json(successResponse("Email sent successfully"));
@@ -378,11 +497,6 @@ exports.forgot_password = async (req, res) => {
     res.status(500).json({ type: "error", message: "An error occurred. Please try again later." });
   }
 };
-
-
-
-
-
 
 exports.reset_password = async (req, res, next) => {
 
@@ -798,24 +912,22 @@ exports.get_all_users_name = async (req, res) => {
 
 exports.get_user_documents = async (req, res) => {
   try {
-    let userId = req.query.userId
+    let userId = req.query.userId;
 
-    if (!userId) { return res.status(400).json(errorResponse("Please provide user id in the query params")) }
+    if (!userId) { return res.status(400).json(errorResponse("Please provide user id in the query params")) };
 
-    let [findUser] = await sequelize.query(`SELECT * FROM users WHERE id = ${userId}`)
+    let [findUser] = await sequelize.query(`SELECT * FROM users WHERE id = ${userId}`);
 
-    if (findUser.length < 1) { return res.status(400).json(errorResponse("User not found with this user Id")) }
+    if (findUser.length < 1) { return res.status(400).json(errorResponse("User not found with this user Id")) };
 
-    let findDocumentsQuery = `SELECT document_name FROM documents WHERE user_id = ${userId}`
+    let findDocumentsQuery = `SELECT document_name FROM documents WHERE user_id = ${userId}`;
 
-    let [getDocuments] = await sequelize.query(findDocumentsQuery)
+    let [getDocuments] = await sequelize.query(findDocumentsQuery);
 
-    return res.status(200).json(successResponse(getDocuments.length < 1 ? "No documents added for this employee" : "Documents retrieved successfully", getDocuments))
+    return res.status(200).json(successResponse(getDocuments.length < 1 ? "No documents added for this employee" : "Documents retrieved successfully", getDocuments));
 
   } catch (error) {
     console.log('ERROR::', error)
-    return res.status(400).json({ type: "error", message: error.message })
-  }
+    return res.status(400).json({ type: "error", message: error.message });
+  };
 }
-
-

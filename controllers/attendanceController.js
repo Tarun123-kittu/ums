@@ -136,6 +136,7 @@ exports.get_attendances = async (req, res) => {
                 SELECT 
                     u.username,
                     u.name,
+                    u.role,
                     a.date,
                     DATE_FORMAT(a.date, '%W') AS date_in_week_day,
                     a.id,
@@ -250,6 +251,7 @@ exports.get_attendance_report = async (req, res) => {
                 SELECT 
                     u.username,
                     u.name,
+                    u.role,
                     a.date,
                     DATE_FORMAT(a.date, '%W') AS date_in_week_day,
                     a.id,

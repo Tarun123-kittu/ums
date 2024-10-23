@@ -61,7 +61,7 @@ router.post("/create_user", authenticateToken, createUserValidator, userControll
 router.post("/login", loginValidator, validateLoginDAtaTypes, userController.login)
 router.post("/forgot_password", forgetPasswordValidator, validateForgotPasswordDataTypes, userController.forgot_password)
 router.post("/reset_password/:token", validateResetPasswordDataTypes, userController.reset_password)
-router.post("/change_password", validateChangePassword, validateChangePasswordDataTypes, userController.change_password)
+router.post("/change_password", authenticateToken, validateChangePassword, validateChangePasswordDataTypes, userController.change_password)
 router.get("/get_employee_details/:id", authenticateToken, userController.get_employee_details)
 router.get("/get_employees", authenticateToken, userController.get_employees)
 router.patch("/delete_employee/:id", authenticateToken, userController.delete_employee)
@@ -120,7 +120,7 @@ router.get("/get_applied_leave_detail", authenticateToken, leaveController.get_a
 router.get("/all_users_pending_leaves", authenticateToken, leaveController.calculate_pending_leaves_for_all_users)
 router.get("/leave_bank_report", authenticateToken, leaveController.leave_bank_report)
 router.get("/user_applied_leaves", authenticateToken, leaveController.get_user_applied_leaves)
-router.put("/update_user_leave_bank",authenticateToken,leaveController.update_user_leave_bank)
+router.put("/update_user_leave_bank", authenticateToken, leaveController.update_user_leave_bank)
 
 
 
@@ -132,7 +132,7 @@ router.get("/get_all_leads", authenticateToken, interviewLeadsController.get_all
 router.delete("/delete_lead", authenticateToken, validateUpdateLead, interviewLeadsController.delete_lead)
 router.get("/get_face_to_face_round_leads", authenticateToken, interviewLeadsController.get_face_to_face_round_leads)
 router.get("/get_final_round_leads", authenticateToken, interviewLeadsController.get_final_round_leads)
-router.delete('/delete_lead_records',authenticateToken,interviewLeadsController.delete_lead_records)
+router.delete('/delete_lead_records', authenticateToken, interviewLeadsController.delete_lead_records)
 
 
 //hr round 

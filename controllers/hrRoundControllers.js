@@ -416,7 +416,539 @@ exports.sendLeadInterviewLink = async (req, res) => {
         await send_email({
             email: isLead?.email,
             subject: `Interview test from Ultivic`,
-            message: `Hey, Please open this link to continue with your test: http://localhost:3000/leads/technical-round/${isLead?.id}/${token}`
+            text: `Hey, Your Test Link`,
+            html: `
+    <div
+      dir="ltr"
+      class="es-wrapper-color"
+      lang="en"
+      style="background-color: #f6f6f6"
+    >
+      <!--[if gte mso 9]>
+        <v:background xmlns:v="urn:schemas-microsoft-com:vml" fill="t">
+          <v:fill type="tile" color="#f6f6f6"></v:fill>
+        </v:background>
+      <![endif]-->
+      <table
+        width="100%"
+        cellspacing="0"
+        cellpadding="0"
+        class="es-wrapper"
+        role="none"
+        style="
+          mso-table-lspace: 0pt;
+          mso-table-rspace: 0pt;
+          border-collapse: collapse;
+          border-spacing: 0px;
+          padding: 0;
+          margin: 0;
+          width: 100%;
+          height: 100%;
+          background-repeat: repeat;
+          background-position: center top;
+          background-color: #f6f6f6;
+        "
+      >
+        <tr>
+          <td valign="top" style="padding: 0; margin: 0">
+            <table
+              cellspacing="0"
+              cellpadding="0"
+              align="center"
+              class="es-header"
+              role="none"
+              style="
+                mso-table-lspace: 0pt;
+                mso-table-rspace: 0pt;
+                border-collapse: collapse;
+                border-spacing: 0px;
+                width: 100%;
+                table-layout: fixed !important;
+                background-color: transparent;
+                background-repeat: repeat;
+                background-position: center top;
+              "
+            >
+              <tr>
+                <td align="center" style="padding: 0; margin: 0">
+                  <table
+                    cellspacing="0"
+                    cellpadding="0"
+                    bgcolor="#ffffff"
+                    align="center"
+                    class="es-header-body"
+                    role="none"
+                    style="
+                      mso-table-lspace: 0pt;
+                      mso-table-rspace: 0pt;
+                      border-collapse: collapse;
+                      border-spacing: 0px;
+                      background-color: #ffffff;
+                      width: 600px;
+                    "
+                  >
+                    <tr>
+                      <td
+                        align="left"
+                        bgcolor="#F7E3E3"
+                        style="
+                          margin: 0;
+                          padding-top: 32px;
+                          padding-right: 20px;
+                          padding-bottom: 32px;
+                          padding-left: 20px;
+                          background-color: #f7e3e3;
+                        "
+                      >
+                        <table
+                          cellspacing="0"
+                          cellpadding="0"
+                          align="right"
+                          class="es-right"
+                          role="none"
+                          style="
+                            mso-table-lspace: 0pt;
+                            mso-table-rspace: 0pt;
+                            border-collapse: collapse;
+                            border-spacing: 0px;
+                            float: right;
+                          "
+                        >
+                          <tr>
+                            <td
+                              align="left"
+                              style="padding: 0; margin: 0; width: 560px"
+                            >
+                              <table
+                                width="100%"
+                                cellspacing="0"
+                                cellpadding="0"
+                                role="presentation"
+                                style="
+                                  mso-table-lspace: 0pt;
+                                  mso-table-rspace: 0pt;
+                                  border-collapse: collapse;
+                                  border-spacing: 0px;
+                                "
+                              >
+                                <tr>
+                                  <td
+                                    align="center"
+                                    style="padding: 0; margin: 0; font-size: 0"
+                                  >
+                                    <img
+                                      src="https://frokhjs.stripocdn.email/content/guids/CABINET_aae6c46012051069e562276d25ce47940f57b1ff51be9d9cb73cc6e756acef1f/images/frame_230.png"
+                                      alt=""
+                                      width="219"
+                                      height="67"
+                                      style="
+                                        display: block;
+                                        font-size: 14px;
+                                        border: 0;
+                                        outline: none;
+                                        text-decoration: none;
+                                      "
+                                    />
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+            <table
+              cellspacing="0"
+              cellpadding="0"
+              align="center"
+              class="es-content"
+              role="none"
+              style="
+                mso-table-lspace: 0pt;
+                mso-table-rspace: 0pt;
+                border-collapse: collapse;
+                border-spacing: 0px;
+                width: 100%;
+                table-layout: fixed !important;
+              "
+            >
+              <tr>
+                <td align="center" style="padding: 0; margin: 0">
+                  <table
+                    cellspacing="0"
+                    cellpadding="0"
+                    bgcolor="#ffffff"
+                    align="center"
+                    class="es-content-body"
+                    role="none"
+                    style="
+                      mso-table-lspace: 0pt;
+                      mso-table-rspace: 0pt;
+                      border-collapse: collapse;
+                      border-spacing: 0px;
+                      background-color: #ffffff;
+                      width: 600px;
+                    "
+                  >
+                    <tr>
+                      <td
+                        align="left"
+                        style="
+                          padding: 0;
+                          margin: 0;
+                          padding-right: 20px;
+                          padding-left: 20px;
+                          padding-top: 20px;
+                        "
+                      >
+                        <table
+                          width="100%"
+                          cellspacing="0"
+                          cellpadding="0"
+                          role="none"
+                          style="
+                            mso-table-lspace: 0pt;
+                            mso-table-rspace: 0pt;
+                            border-collapse: collapse;
+                            border-spacing: 0px;
+                          "
+                        >
+                          <tr>
+                            <td
+                              valign="top"
+                              align="center"
+                              style="padding: 0; margin: 0; width: 560px"
+                            >
+                              <table
+                                width="100%"
+                                cellspacing="0"
+                                cellpadding="0"
+                                role="presentation"
+                                style="
+                                  mso-table-lspace: 0pt;
+                                  mso-table-rspace: 0pt;
+                                  border-collapse: collapse;
+                                  border-spacing: 0px;
+                                "
+                              >
+                                <tr>
+                                  <td
+                                    align="center"
+                                    class="es-text-6241"
+                                    style="
+                                      padding: 0;
+                                      margin: 0;
+                                      padding-bottom: 14px;
+                                    "
+                                  >
+                                    <p
+                                      style="
+                                        margin: 0;
+                                        mso-line-height-rule: exactly;
+                                        font-family: arial, 'helvetica neue',
+                                          helvetica, sans-serif;
+                                        line-height: 36px !important;
+                                        letter-spacing: 0;
+                                        color: #333333;
+                                        font-size: 14px;
+                                      "
+                                    >
+                                      <span
+                                        class="es-text-mobile-size-24"
+                                        style="
+                                          font-size: 24px;
+                                          line-height: 36px !important;
+                                        "
+                                        >Welcome to Ultivic</span
+                                      >
+                                    </p>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td
+                                    align="center"
+                                    class="es-text-4106"
+                                    style="
+                                      padding: 0;
+                                      margin: 0;
+                                      padding-bottom: 24px;
+                                    "
+                                  >
+                                    <p
+                                      class="es-text-mobile-size-16"
+                                      style="
+                                        margin: 0;
+                                        mso-line-height-rule: exactly;
+                                        font-family: arial, 'helvetica neue',
+                                          helvetica, sans-serif;
+                                        line-height: 24px !important;
+                                        letter-spacing: 0;
+                                        color: #333333;
+                                        font-size: 16px;
+                                      "
+                                    >
+                                      Thank you for applying to
+                                      <strong>Ultivic Interview</strong>
+                                      Process. As a next step, you are requested
+                                      to appear for the online Test.
+                                    </p>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td
+                                    align="center"
+                                    style="padding: 0; margin: 0"
+                                  >
+                                    <p
+                                      style="
+                                        margin: 0;
+                                        mso-line-height-rule: exactly;
+                                        font-family: arial, 'helvetica neue',
+                                          helvetica, sans-serif;
+                                        line-height: 21px;
+                                        letter-spacing: 0;
+                                        color: #333333;
+                                        font-size: 14px;
+                                      "
+                                    >
+                                      Here is your test link. answer them
+                                      carefully.
+                                    </p>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td
+                                    align="center"
+                                    style="
+                                      padding: 0;
+                                      margin: 0;
+                                      padding-bottom: 24px;
+                                    "
+                                  >
+                                    <p
+                                      style="
+                                        margin: 0;
+                                        mso-line-height-rule: exactly;
+                                        font-family: arial, 'helvetica neue',
+                                          helvetica, sans-serif;
+                                        line-height: 21px;
+                                        letter-spacing: 0;
+                                        color: #333333;
+                                        font-size: 14px;
+                                      "
+                                    >
+                                      <a
+                                        target="_blank"
+                                        href="http://localhost:3000/leads/technical-round/${isLead?.id}/${token}"
+                                        style="
+                                          mso-line-height-rule: exactly;
+                                          text-decoration: underline;
+                                          color: #1a90d9;
+                                          font-size: 14px;
+                                        "
+                                        >Click Here</a
+                                      >
+                                    </p>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td
+                                    align="center"
+                                    style="padding: 0; margin: 0"
+                                  >
+                                    <p
+                                      style="
+                                        margin: 0;
+                                        mso-line-height-rule: exactly;
+                                        font-family: arial, 'helvetica neue',
+                                          helvetica, sans-serif;
+                                        line-height: 21px;
+                                        letter-spacing: 0;
+                                        color: #333333;
+                                        font-size: 14px;
+                                      "
+                                    >
+                                      If you are having any issues with your
+                                      account, please don’t hesitate to contact
+                                      Customer Services.
+                                    </p>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td
+                                    align="center"
+                                    style="
+                                      padding: 0;
+                                      margin: 0;
+                                      padding-top: 24px;
+                                    "
+                                  >
+                                    <p
+                                      style="
+                                        margin: 0;
+                                        mso-line-height-rule: exactly;
+                                        font-family: arial, 'helvetica neue',
+                                          helvetica, sans-serif;
+                                        line-height: 21px;
+                                        letter-spacing: 0;
+                                        color: #333333;
+                                        font-size: 14px;
+                                      "
+                                    >
+                                      Thanks
+                                    </p>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td
+                                    align="center"
+                                    style="padding: 0; margin: 0"
+                                  >
+                                    <p
+                                      style="
+                                        margin: 0;
+                                        mso-line-height-rule: exactly;
+                                        font-family: arial, 'helvetica neue',
+                                          helvetica, sans-serif;
+                                        line-height: 21px;
+                                        letter-spacing: 0;
+                                        color: #333333;
+                                        font-size: 14px;
+                                      "
+                                    >
+                                      <u style="color: #000"
+                                        ><a
+                                          href="https://ultivic.com/"
+                                          target="_blank"
+                                          style="
+                                            mso-line-height-rule: exactly;
+                                            text-decoration: underline;
+                                            color: #000;
+                                            font-size: 14px;
+                                          "
+                                          >Ultivic Private Limited</a
+                                        ></u
+                                      >
+                                    </p>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+            <table
+              cellspacing="0"
+              cellpadding="0"
+              align="center"
+              class="es-footer"
+              role="none"
+              style="
+                mso-table-lspace: 0pt;
+                mso-table-rspace: 0pt;
+                border-collapse: collapse;
+                border-spacing: 0px;
+                width: 100%;
+                table-layout: fixed !important;
+                background-color: transparent;
+                background-repeat: repeat;
+                background-position: center top;
+              "
+            >
+              <tr>
+                <td align="center" style="padding: 0; margin: 0">
+                  <table
+                    cellspacing="0"
+                    cellpadding="0"
+                    bgcolor="#ffffff"
+                    align="center"
+                    class="es-footer-body"
+                    role="none"
+                    style="
+                      mso-table-lspace: 0pt;
+                      mso-table-rspace: 0pt;
+                      border-collapse: collapse;
+                      border-spacing: 0px;
+                      background-color: #ffffff;
+                      width: 600px;
+                    "
+                  >
+                    <tr>
+                      <td
+                        align="left"
+                        style="
+                          margin: 0;
+                          padding-right: 20px;
+                          padding-left: 20px;
+                          padding-top: 20px;
+                          padding-bottom: 20px;
+                        "
+                      >
+                        <table
+                          cellspacing="0"
+                          cellpadding="0"
+                          align="right"
+                          class="es-right"
+                          role="none"
+                          style="
+                            mso-table-lspace: 0pt;
+                            mso-table-rspace: 0pt;
+                            border-collapse: collapse;
+                            border-spacing: 0px;
+                            float: right;
+                          "
+                        >
+                          <tr>
+                            <td
+                              align="left"
+                              style="padding: 0; margin: 0; width: 560px"
+                            >
+                              <table
+                                width="100%"
+                                cellspacing="0"
+                                cellpadding="0"
+                                role="none"
+                                style="
+                                  mso-table-lspace: 0pt;
+                                  mso-table-rspace: 0pt;
+                                  border-collapse: collapse;
+                                  border-spacing: 0px;
+                                "
+                              >
+                                <tr>
+                                  <td
+                                    align="center"
+                                    style="padding: 0; margin: 0; display: none"
+                                  ></td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+
+
+            
+            `
         });
 
         await t.commit();
