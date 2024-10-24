@@ -86,6 +86,8 @@ router.get("/get_all_roles", authenticateToken, rolesPermissionsController.get_a
 
 
 
+
+
 //holidays and events
 router.post("/add_holidayOrEvent", authenticateToken, validateHolidaysAndEvents, holidaysAndEventsController.add_holidayOrEvent)
 router.put("/update_holidayOrEvent", authenticateToken, holidaysAndEventsController.update_holidayOrEvent)
@@ -94,6 +96,8 @@ router.delete("/delete_holidayOrEvent", authenticateToken, holidaysAndEventsCont
 router.get("/get_holiday_and_event", authenticateToken, holidaysAndEventsController.get_holidayOrEvent)
 router.get("/get_events_and_birthdays", authenticateToken, holidaysAndEventsController.get_events_and_birthdays)
 router.get("/get_current_and_next_month_events", authenticateToken, holidaysAndEventsController.get_current_and_next_month_events)
+
+
 
 
 
@@ -107,6 +111,7 @@ router.get("/get_attendances_report", authenticateToken, attendanceController.ge
 router.put("/mark_break", authenticateToken, attendanceController.mark_break)
 router.put("/unmark_break", authenticateToken, attendanceController.unmark_break)
 router.get("/get_user_monthly_report", authenticateToken, attendanceController.get_user_monthly_report)
+
 
 
 
@@ -124,6 +129,7 @@ router.put("/update_user_leave_bank",authenticateToken,leaveController.update_us
 
 
 
+
 //interview leads
 router.post("/create_lead", authenticateToken, validateCreateLeads, interviewLeadsController.create_lead)
 router.get("/get_lead", authenticateToken, validateUpdateLead, interviewLeadsController.get_lead)
@@ -133,6 +139,8 @@ router.delete("/delete_lead", authenticateToken, validateUpdateLead, interviewLe
 router.get("/get_face_to_face_round_leads", authenticateToken, interviewLeadsController.get_face_to_face_round_leads)
 router.get("/get_final_round_leads", authenticateToken, interviewLeadsController.get_final_round_leads)
 router.delete('/delete_lead_records',authenticateToken,interviewLeadsController.delete_lead_records)
+
+
 
 
 //hr round 
@@ -156,6 +164,8 @@ router.put("/update_language", authenticateToken, ValidateUpdateLanguage, langua
 router.delete("/delete_language", authenticateToken, ValidateGetLanguage, languageController.delete_language)
 
 
+
+
 //test series 
 router.post("/create_series", authenticateToken, ValidateCreateSeries, testSeriesController.create_series)
 router.get("/get_all_series", authenticateToken, testSeriesController.get_all_series)
@@ -163,6 +173,8 @@ router.get("/get_series", authenticateToken, ValidateGetSeries, testSeriesContro
 router.put("/update_series", authenticateToken, ValidateUpdateSeries, testSeriesController.update_series)
 router.delete("/delete_series", authenticateToken, ValidateGetSeries, testSeriesController.delete_series)
 router.get("/get_language_test_series", authenticateToken, testSeriesController.get_specific_language_series)
+
+
 
 
 //technical round questions
@@ -185,6 +197,8 @@ router.put("/start_test", technicalQuestionsController.start_test)
 router.put("/technical_round_result", authenticateToken, technicalQuestionsController.technical_round_result)
 router.get("/get_lead_technical_response", authenticateToken, technicalQuestionsController.get_lead_technical_response)
 router.put("/check_lead_answer", authenticateToken, validateCheckLeadAnswer, technicalQuestionsController.check_lead_answer)
+
+
 
 
 //final and face-to-face round

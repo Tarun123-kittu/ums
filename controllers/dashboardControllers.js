@@ -8,9 +8,9 @@ const moment = require('moment-timezone');
 
 exports.get_dashboard_leaves = async (req, res) => {
     try {
-        const { month } = req.query;
+        let { month } = req.query;
         const currentDate = new Date();
-        const queryMonth = month || (currentDate.getMonth() + 1);
+        let queryMonth = month || (currentDate.getMonth() + 1);
 
         const leavesQuery = `
             SELECT 
@@ -29,7 +29,7 @@ exports.get_dashboard_leaves = async (req, res) => {
             JOIN 
                 users u ON u.id = l.user_id
             WHERE 
-                MONTH(l.createdAt) = :queryMonth
+                MONTH(l.createdAt) = :queryMonth AND l.status = 'PENDING'
             ORDER BY 
                 l.createdAt DESC;
         `;
@@ -39,10 +39,41 @@ exports.get_dashboard_leaves = async (req, res) => {
             replacements: { queryMonth },
             type: sequelize.QueryTypes.SELECT,
         });
-
+        
+        
         if (leaves.length === 0) {
-            return res.status(200).json(successResponse("No leaves found for the given month."));
+            queryMonth = parseInt(queryMonth)
+            let month_name;
+            switch(queryMonth){
+                case 1: month_name = 'January';
+                    break;
+                case 2: month_name = 'February';
+                    break;
+                case 3: month_name = 'March';
+                    break;
+                case 4: month_name = 'April';
+                    break;
+                case 5: month_name = 'May';
+                    break;
+                case 6: month_name = 'June';
+                    break;
+                case 7: month_name = 'July';
+                    break;
+                case 8: month_name = 'August';
+                    break;
+                case 9: month_name = 'September';
+                    break;
+                case 10: month_name = 'October';
+                    break;
+                case 11: month_name = 'November';
+                    break;
+                case 12: month_name = 'December';
+                    break;
+                default: month_name = 'Unknown';
+            }
+            return res.status(200).json(successResponse(`No pending leaves found for ${month_name}`));
         }
+        
 
 
         return res.status(200).json(successResponse("Data retrieved successfully", leaves));
