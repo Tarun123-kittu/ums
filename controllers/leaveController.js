@@ -238,6 +238,7 @@ exports.calculate_pending_leaves_for_selected_user = async (req, res) => {
             SELECT 
                 u.id AS userId,
                 u.name AS name,
+                u.role,
                 u.username AS username,
                 u.doj AS doj
             FROM users u
@@ -417,7 +418,8 @@ exports.get_all_users_pending_leaves = async (req, res) => {
                 l.type, 
                 l.status, 
                 l.remark, 
-                u.name
+                u.name,
+                u.role
             FROM leaves l 
             JOIN users u ON u.id = l.user_id 
             WHERE u.is_disabled = false
@@ -595,6 +597,7 @@ exports.leave_bank_report = async (req, res) => {
             SELECT 
                 u.id, 
                 u.username, 
+                u.role,
                 u.name, 
                 COALESCE(bl.taken_leave, 0) AS taken_leave, 
                 COALESCE(bl.paid_leave, 0) AS paid_leave

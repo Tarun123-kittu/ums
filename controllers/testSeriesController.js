@@ -9,7 +9,7 @@ exports.create_series = async (req, res) => {
     try {
         let userId = req.result.user_id
         const { language_id, series_name, time_taken, description, experience_level } = req.body;
-       
+
         let checkLanguageExistQuery = `SELECT id FROM Languages where id = ?`
 
         let [language] = await sequelize.query(checkLanguageExistQuery, {
@@ -60,12 +60,12 @@ exports.get_all_series = async (req, res) => {
     try {
         let id = req.query.languageId;
 
-        
+
         const MIN_OBJECTIVE = 3;
         const MIN_SUBJECTIVE = 3;
         const MIN_LOGICAL = 1;
 
-        
+
         if (id) {
             let checkLanguageExistQuery = `SELECT id FROM Languages WHERE id = ?`;
 
@@ -103,7 +103,7 @@ exports.get_all_series = async (req, res) => {
                     ts.id
             `;
 
-           
+
             let [result] = await sequelize.query(getAllSeriesQuery, {
                 replacements: [id]
             });
@@ -112,7 +112,7 @@ exports.get_all_series = async (req, res) => {
                 return res.status(400).json(errorResponse("No test series created for this language."));
             }
 
-          
+
             result = result.map(series => {
                 series.isCompleted = (
                     series.objective_count >= MIN_OBJECTIVE &&
@@ -126,7 +126,7 @@ exports.get_all_series = async (req, res) => {
             return res.status(200).json(successResponse("Test series fetched successfully.", result));
 
         } else {
-         
+
             let getAllSeriesQuery = `
                 SELECT 
                     ts.id,
@@ -157,7 +157,7 @@ exports.get_all_series = async (req, res) => {
                 return res.status(200).json(successResponse("No test series available."));
             }
 
-           
+
             result = result.map(series => {
                 series.isCompleted = (
                     series.objective_count >= MIN_OBJECTIVE &&
@@ -210,7 +210,7 @@ exports.get_series = async (req, res) => {
 exports.update_series = async (req, res) => {
     try {
         const id = req.body.seriesId;
-        const { series_name, language_id, time_taken, description } = req.body;
+        const { series_name, language_id, time_taken, description, experience_level } = req.body;
 
         const currentTestSeriesQuery = `SELECT * FROM test_series  WHERE id = ? `;
 
@@ -229,11 +229,11 @@ exports.update_series = async (req, res) => {
 
         const updateTestSeriesQuery = `
             UPDATE test_series 
-            SET  series_name = ?,language_id=?,time_taken=?,description=?, updatedAt = NOW() 
+            SET  series_name = ?,language_id=?,time_taken=?,description=?,experience_level=?, updatedAt = NOW() 
             WHERE id = ?
         `;
 
-        const values = [updatedSeriesName, language_id, time_taken, description, id];
+        const values = [updatedSeriesName, language_id, time_taken, description, experience_level, id];
 
         const t = await sequelize.transaction();
 
