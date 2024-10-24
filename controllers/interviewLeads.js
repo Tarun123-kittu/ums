@@ -235,9 +235,10 @@ exports.get_all_leads = async (req, res) => {
             SELECT 
                 i.id, i.name, i.phone_number, i.email, i.gender, i.dob, 
                 i.experience, i.current_salary, i.expected_salary, 
-                i.profile, i.last_company, i.state, i.house_address, i.in_round
+                l.language AS profile, i.last_company, i.state, i.house_address, i.in_round
             FROM 
                 Interview_Leads i
+                JOIN languages l ON l.id = i.profile
             WHERE 
                 i.in_round = 0
         `;
@@ -405,7 +406,7 @@ exports.get_face_to_face_round_leads = async (req, res) => {
 
 
         const all_technical_round_leads = `
-            SELECT il.id, il.name, il.experience, il.profile, il.assigned_test_series, il.expected_salary, 
+            SELECT il.id, il.name, il.experience, l.language AS profile, il.assigned_test_series, il.expected_salary, 
                    i.face_to_face_result, i.id AS interview_id, l.id AS language_id
             FROM interview_leads il
             JOIN interviews i ON i.lead_id = il.id
@@ -499,7 +500,7 @@ exports.get_final_round_leads = async (req, res) => {
 
 
         const all_final_round_leads = `
-            SELECT il.id, il.name, il.experience, il.profile, 
+            SELECT il.id, il.name, il.experience, l.language AS profile, 
                    il.assigned_test_series, il.expected_salary, 
                    i.final_result, i.id AS interview_id, l.id AS language_id
             FROM interview_leads il
@@ -543,16 +544,16 @@ exports.get_final_round_leads = async (req, res) => {
 
 
 exports.delete_lead_records = async (req, res) => {
-    const t = await sequelize.transaction();  
+    const t = await sequelize.transaction();
     try {
         const leadId = req.query.leadId;
 
-       
+
         if (!leadId) {
             return res.status(400).json(errorResponse('Please provide lead Id in the query params'));
         }
 
-       
+
         const findLeadQuery = `SELECT id FROM interview_leads WHERE id = :leadId`;
         const [isLeadExist] = await sequelize.query(findLeadQuery, {
             replacements: { leadId },
@@ -560,13 +561,13 @@ exports.delete_lead_records = async (req, res) => {
             transaction: t
         });
 
-      
+
         if (!isLeadExist) {
-            await t.rollback(); 
+            await t.rollback();
             return res.status(400).json(errorResponse("Data not exist with this lead Id"));
         }
 
-        
+
         const deleteQueries = [
             `DELETE FROM interview_leads WHERE id = :leadId`,
             `DELETE FROM interviews WHERE lead_id = :leadId`,
@@ -581,7 +582,7 @@ exports.delete_lead_records = async (req, res) => {
             });
         }
 
-        
+
         await t.commit();
         return res.status(200).json(successResponse("Interview Lead and related records deleted successfully"));
 
